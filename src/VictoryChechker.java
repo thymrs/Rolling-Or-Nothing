@@ -1,5 +1,5 @@
 package RollingOrNothing.src.model.service;
 
-public class VictorySystem {
+public class VictoryChechker {
 	
 }
