@@ -1,5 +1,3 @@
-package RollingOrNothing.src.enums;
-
 public enum TurnPhase {
 	READY_TO_ROLL, 
 	MOVING, 

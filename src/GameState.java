@@ -1,26 +1,4 @@
-package RollingOrNothing.src.model.cores;
-
-package model;
-
-import model.entities.board.Board;
-import model.entities.player.Player;
-import model.enums.TurnPhase;
-import model.services.Bank;
-import model.services.CardDeck;
-import model.items.Dice;
-import java.util.List;
-
-import RollingOrNothing.src.model.entities.board.Dice;
-
-import RollingOrNothing.src.model.service.Bank;
-
-import RollingOrNothing.src.model.service.Bank;
-
-import RollingOrNothing.src.model.service.Bank;
-
-import RollingOrNothing.src.model.entities.card.CardDeck;
-
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Represents the complete state of the game at any moment
@@ -45,7 +23,7 @@ public class GameState {
         // TODO: Initialize other components (finished)
         this.dice = new Dice();
         this.bank = new Bank();
-        this.CardDeck = new CardDeck();
+        this.deck = new CardDeck();
 
         this.players = new ArrayList<>();
         this.board = null;

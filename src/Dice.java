@@ -1,7 +1,3 @@
-package RollingOrNothing.src.model.entities.board;
-
-package model.items;
-
 import java.util.Random;
 
 /**

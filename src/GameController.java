@@ -1,36 +1,3 @@
-package RollingOrNothing.src.controller;
-
-package controller;
-
-import model.GameState;
-import model.utilities.GameConfig;
-import model.utilities.MapLoader;
-import model.utilities.VictoryChecker;
-import model.entities.board.Board;
-import model.entities.player.Player;
-import model.entities.player.HumanPlayer;
-import model.entities.player.BotPlayer;
-import view.GameWindow;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import RollingOrNothing.src.view.GameWindow;
-
-import RollingOrNothing.src.model.cores.GameConfig;
-
-import RollingOrNothing.src.model.cores.GameState;
-
-import RollingOrNothing.src.model.entities.board.Board;
-
-import java.util.ArrayList;
-
-import RollingOrNothing.src.enums.TurnPhase;
-
-import RollingOrNothing.src.model.entities.player.BotPlayer;
-
 /**
  * Main controller that manages game flow and coordinates between model and view
  */

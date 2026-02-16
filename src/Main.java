@@ -1,11 +1,3 @@
-package RollingOrNothing.src.main;
-
-package main;
-
-import controller.GameController;
-import model.utilities.GameConfig;
-import model.enums.DifficultyLevel;
-
 /**
  * Main entry point for the Monopoly game
  */
