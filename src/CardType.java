@@ -1,4 +1,3 @@
-
 public enum CardType{
     ANGEL,
     SHIELD,

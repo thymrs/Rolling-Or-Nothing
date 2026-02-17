@@ -1,3 +1,3 @@
-public class PropertyTile extends Tile {
+public class PropertyTile{
 	
 }
