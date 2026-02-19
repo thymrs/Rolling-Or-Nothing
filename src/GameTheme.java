@@ -1,45 +1,57 @@
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 
-public class GameMenuSystem implements PageNavigator {
+public class GameTheme {
+    // --- Constants: Colors ---
+    public static final Color BG_COLOR = new Color(39, 119, 20); // เขียวสักหลาด
+    public static final Color WOOD_COLOR = new Color(233, 198, 150); // ไม้ครีม
+    public static final Color WOOD_BORDER = new Color(139, 90, 43); // ขอบไม้เข้ม
+    public static final Color TEXT_COLOR = Color.WHITE;
+    public static final Color GOLD_COLOR = new Color(255, 215, 0); // สีทอง
+    public static final Color ACTIVE_MENU_COLOR = new Color(255, 240, 200); // สีปุ่มตอนเลือก
 
-    private JPanel mainContainer;
-    private CardLayout cardLayout;
-    private GameWindow gameWindow;
+    // --- Fonts ---
+    public static String THAI_FONT = "Mali"; 
 
-    public GameMenuSystem(GameWindow gameWindow) {
-        this.gameWindow = gameWindow;
-        createInterface();
+    public static void setupGameFont() {
+        try {
+            // ตรวจสอบ Path ไฟล์ฟอนต์ (ต้องสร้างโฟลเดอร์ assets ใน src และวางไฟล์ Mali-Bold.ttf)
+            // ถ้าไม่เจอไฟล์ จะ fallback ไปใช้ Tahoma อัตโนมัติ
+            File fontFile = new File("src/assets/Mali-Bold.ttf"); 
+            
+            if (fontFile.exists()) {
+                Font gameFont = Font.createFont(Font.TRUETYPE_FONT, fontFile).deriveFont(16f);
+                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(gameFont);
+                THAI_FONT = gameFont.getFamily(); 
+                updateUIManager(gameFont);
+                System.out.println("Font Loaded Successfully: " + THAI_FONT);
+            } else {
+                System.err.println("Font file not found at: " + fontFile.getAbsolutePath());
+                useFallbackFont();
+            }
+        } catch (Exception e) {
+            System.err.println("Font Load Failed: " + e.getMessage());
+            useFallbackFont();
+        }
     }
 
-    public JPanel getMainPanel() {
-        return mainContainer;
+    private static void useFallbackFont() {
+        THAI_FONT = "Tahoma"; // Fallback Font ที่อ่านไทยได้แน่นอน
+        Font fallback = new Font("Tahoma", Font.PLAIN, 14);
+        updateUIManager(fallback);
+        System.out.println("Using Fallback Font: " + THAI_FONT);
     }
 
-    private void createInterface() {
-        cardLayout = new CardLayout();
-        mainContainer = new JPanel(cardLayout);
-
-        mainContainer.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(GameTheme.WOOD_BORDER, 5),
-                BorderFactory.createMatteBorder(20, 20, 20, 20, GameTheme.WOOD_COLOR)));
-
-        // แก้ไข: เรียกใช้ Static Inner Class จาก MenuPanels อย่างถูกต้อง
-        mainContainer.add(new MenuPanels.MainMenuPanel(this), "Menu");
-        mainContainer.add(new MenuPanels.SetupPanel(this), "Setup");
-        mainContainer.add(new MenuPanels.SettingsPanel(this), "Settings");
-        mainContainer.add(new HowToPlayPanel(this), "HowToPlay");
-
-        navigateTo("Menu");
-    }
-
-    @Override
-    public void navigateTo(String pageName) {
-        cardLayout.show(mainContainer, pageName);
-    }
-
-    @Override
-    public void startGame(int human, int bot, String diff) {
-        gameWindow.startGame(human, bot, diff);
+    private static void updateUIManager(Font font) {
+        java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value instanceof javax.swing.plaf.FontUIResource) {
+                UIManager.put(key, font);
+            }
+        }
     }
 }

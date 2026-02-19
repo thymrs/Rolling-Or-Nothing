@@ -14,6 +14,8 @@ public class GameWindow extends JFrame {
     private JPanel gameplayPanel;
     private BoardPanel boardPanel;
     private ControlPanel controlPanel;
+    
+    private GameController gameController;
 
     public static void main(String[] args) {
         GameTheme.setupGameFont();
@@ -51,8 +53,13 @@ public class GameWindow extends JFrame {
 
     private void initializeGameplay() {
         gameplayPanel = new JPanel(new BorderLayout());
+        
         boardPanel = new BoardPanel();
         controlPanel = new ControlPanel();
+        
+        gameController = new GameController(this, boardPanel, controlPanel);
+        controlPanel.setController(gameController);
+
         gameplayPanel.add(boardPanel, BorderLayout.CENTER);
         gameplayPanel.add(controlPanel, BorderLayout.EAST);
         mainContainer.add(gameplayPanel, SCREEN_GAME);
@@ -64,7 +71,10 @@ public class GameWindow extends JFrame {
 
     public void startGame(int human, int bot, String diff) {
         System.out.println(String.format("Starting: H=%d, B=%d, D=%s", human, bot, diff));
-        // TODO: Pass config to BoardPanel/Controller
+        
+        // เรียก Controller ให้เริ่มเกม (สร้างผู้เล่น, รีเซ็ตกระดาน)
+        gameController.startGame(human, bot, diff);
+        
         showScreen(SCREEN_GAME);
     }
 
