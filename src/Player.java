@@ -1,12 +1,4 @@
-package src.model.entities.player;
-
 import java.util.*;
-
-import DecisionType;
-import enums.*;
-import src.model.entities.card.*;
-import tiles.*;
-
 
 public abstract class Player {
     protected String name;

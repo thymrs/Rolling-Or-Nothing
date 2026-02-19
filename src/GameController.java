@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Main controller that manages game flow and coordinates between model and view
  */
@@ -130,6 +133,26 @@ public class GameController implements ActionListener {
      */
     private void handleBotTurn() {
         // TODO: Execute bot AI decisions
+        BotPlayer bot = (BotPlayer) state.getCurrentPlayer();
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+
+                handleRollDice();
+
+                Thread.sleep(1000);
+
+                Tile tile = state.getBoard().getTile(bot.getPosition());
+                if (tile instanceof PropertyTile) {
+                    if (bot.makeDecision(DecisionType.BUY_LAND, tile)) {
+                        handleBuyProperty();
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
     
     /**
@@ -137,6 +160,31 @@ public class GameController implements ActionListener {
      */
     private void handleCardAction() {
         // TODO: Process card usage
+        Player player = state.getCurrentPlayer();
+
+        Card card = player.getHeldCard();
+
+        if (card != null) {
+            Player target = null;
+
+            if (card.requiresTarget()) {
+                List<Player> opponents = getOpponents(player);
+                target = view.showSelectTargetDialog(opponents);
+
+                if (target == null) {
+                    return;
+                }
+            }
+            player.useHeldCard();
+            
+            card.applyEffect(player, target, state);
+
+            state.getDeck().discard(card);
+
+            view.showPopup("ใช้การ์ด " + card.getName() + " แล้ว!");
+            view.updateView(state);
+        }
+
     }
     
     private void handleRollDice() {
@@ -184,7 +232,8 @@ public class GameController implements ActionListener {
     }
 
     private void handleEndTurn() {
-        
+        state.incrementTurn();
+        processPhase();
     }
 
     /**
@@ -203,5 +252,15 @@ public class GameController implements ActionListener {
             payer.declareBankruptcy();
             victoryChecker.checkWinCondition(state);
         }
+    }
+
+    private List<Player> getOpponents(Player currentPlayer) {
+        List<Player> opponents = new ArrayList<>();
+        for (Player p : state.getPlayers()) {
+            if (p != currentPlayer && !p.isBankrupt()) {
+                opponents.add(p);
+            }
+        }
+        return opponents;
     }
 }

@@ -1,5 +1,3 @@
-package Class;
-import Enum.VictoryType;
 import java.util.List;
 
 public class VictoryChecker {
