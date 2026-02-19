@@ -1,5 +1,3 @@
-package Rollblabla;
-
 import java.util.Objects;
 
 public class GameConfig {

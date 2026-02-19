@@ -1,10 +1,4 @@
-package src.model.entities.player;
-
-import enums.*;
-import src.model.tiles.PropertyTile;
 import java.util.Random;
-
-import DecisionType;
 
 public class BotPlayer extends Player {
     private DifficultyLevel difficulty;
