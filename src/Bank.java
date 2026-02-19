@@ -1,5 +1,3 @@
-package Class;
-
 public class Bank {
 
     public boolean processPurchase(Player player, PropertyTile tile) {

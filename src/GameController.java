@@ -3,7 +3,7 @@
  */
 public class GameController implements ActionListener {
     private GameWindow view;
-    private model.cores.GameState state;
+    private GameState state;
     private VictoryChecker victoryChecker;
     private MapLoader mapLoader;
     
@@ -140,21 +140,68 @@ public class GameController implements ActionListener {
     }
     
     private void handleRollDice() {
+        Player player = state.getCurrentPlayer();
 
+        state.getDice().roll();
+        int steps = state.getDice().getValue();
+
+        int oldPos = player.getPosition();
+        int newPos = state.getBoard().getNextIndex(oldPos, steps);
+        player.setPosition(newPos);
+
+        if (newPos < oldPos) {
+            state.getBank().paySalary(player);
+            view.showPopup(player.getName() + "เดินครบรอบ รับเงินเดือน");
+        }
+
+        Tile currentTile = state.getBoard().getTile(newPos);
+        currentTile.onPlayerEnter(player, state);
+
+        if (currentTile instanceof PropertyTile && ((PropertyTile) currentTile).getOwner() == null) {
+            state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
+        } else {
+            state.setCurrentPhase(TurnPhase.END_TURN);
+        }
+
+        view.updateView(state);
     }
 
     private void handleBuyProperty() {
+        Player player = state.getCurrentPlayer();
+        Tile tile = state.getBoard().getTile(player.position());
 
+        if  (tile instanceof PropertyTile property) {
+            boolean success = state.getBank().processPurchase(player, property);
+
+            if (success) {
+            view.showPopup("ซื้อที่ดิน" + property.getName() + " เรียบร้อย!");
+            state.setCurrentPhase(TurnPhase.END_TURN);
+            } else {
+                view.showPopup("เงินไม่พอ");
+            }
+        }
+        view.updateView(state);
     }
 
     private void handleEndTurn() {
-
+        
     }
 
     /**
      * Processes financial transactions
      */
-    private void processTransaction() {
-        // TODO: Handle money transfers
+    private void processTransaction(Player payer, Player receiver, int amount) {
+        boolean paid = payer.payMoney(amount);
+
+        if (paid) {
+            if (receiver != null) {
+                receiver.receiveMoney(amount);
+            }
+            view.showPopup(payer.getName() + " จ่ายเงิน" + amount + " ให้ " + (receiver != null ? receiver.getName() : กองกลาง));
+        } else {
+            view.showPopup("เงินไม่พอจ่าย! เลือกขายสินทรัพย์หรือล้มละลาย");
+            payer.declareBankruptcy();
+            victoryChecker.checkWinCondition(state);
+        }
     }
 }

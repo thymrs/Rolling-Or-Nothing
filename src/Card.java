@@ -1,12 +1,3 @@
-package src.model.entities.card;
-
-import CardType;
-import enums.*;
-import src.model.entities.player.*;
-import model.tiles.*;
-import model.cores;
-
-
 public class Card {
     private CardType type;
     private int value;
