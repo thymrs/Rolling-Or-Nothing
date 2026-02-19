@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class MapLoader {
@@ -18,14 +19,70 @@ public class MapLoader {
             String trimmed = line.trim();
             if (trimmed.isEmpty()) continue;
             if (trimmed.startsWith("#")) continue;
+
             Tile t = parseTile(trimmed);
             if (t != null) tiles.add(t);
         }
 
+        tiles.sort(Comparator.comparingInt(Tile::getIndex));
+
         if (!validateBoardSize(tiles)) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Invalid tiles for board.");
         }
+
         return new Board(tiles);
+    }
+
+    public Tile[][] loadMapSegments(String mapName) {
+        String filePath = "maps/" + mapName + ".csv";
+        List<String> lines = readMapFile(filePath);
+
+        List<Tile> tiles = new ArrayList<>();
+        for (String line : lines) {
+            if (line == null) continue;
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) continue;
+            if (trimmed.startsWith("#")) continue;
+
+            Tile t = parseTile(trimmed);
+            if (t != null) tiles.add(t);
+        }
+
+        tiles.sort(Comparator.comparingInt(Tile::getIndex));
+
+        if (!validateBoardSize(tiles)) {
+            throw new IllegalStateException("Invalid tiles for board.");
+        }
+
+        int total = tiles.size();
+        if (total % 4 != 0) {
+            throw new IllegalStateException("Total tiles must be divisible by 4.");
+        }
+
+        int sideLen = total / 4;
+        int edgeLen = sideLen - 1;
+
+        Tile[][] seg = new Tile[8][];
+
+        seg[0] = new Tile[] { tiles.get(0) };
+        seg[2] = new Tile[] { tiles.get(sideLen) };
+        seg[4] = new Tile[] { tiles.get(sideLen * 2) };
+        seg[6] = new Tile[] { tiles.get(sideLen * 3) };
+
+        seg[1] = slice(tiles, 1, edgeLen);
+        seg[3] = slice(tiles, sideLen + 1, edgeLen);
+        seg[5] = slice(tiles, sideLen * 2 + 1, edgeLen);
+        seg[7] = slice(tiles, sideLen * 3 + 1, edgeLen);
+
+        return seg;
+    }
+
+    private Tile[] slice(List<Tile> tiles, int startInclusive, int length) {
+        Tile[] out = new Tile[length];
+        for (int i = 0; i < length; i++) {
+            out[i] = tiles.get(startInclusive + i);
+        }
+        return out;
     }
 
     private List<String> readMapFile(String filePath) {
@@ -34,7 +91,8 @@ public class MapLoader {
             throw new IllegalArgumentException();
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(is, StandardCharsets.UTF_8))) {
             List<String> out = new ArrayList<>();
             String line;
             while ((line = br.readLine()) != null) out.add(line);
