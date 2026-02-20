@@ -88,6 +88,10 @@ public abstract class Player {
         return this.position;
     }
 
+     public void setPosition(int position){
+        this.position = position;
+    }
+
     public void addAsset(PropertyTile tile){
         this.ownedLands.add(tile);
     }
