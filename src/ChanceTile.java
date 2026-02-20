@@ -1,24 +1,9 @@
-<<<<<<< HEAD
-class ChanceTile extends Tile {
-=======
 public class ChanceTile extends Tile {
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     public ChanceTile(int index, String name) {
         super(index, name);
     }
 
     public void drawCard(GameState state) {
-<<<<<<< HEAD
-        if (state == null) return;
-        if (state.getDeck() == null) return;
-        Card c = state.getDeck().draw();
-        if (c == null) return;
-        Player p = state.getCurrentPlayer();
-        if (p != null) {
-            c.applyEffect(p, state);
-        }
-        state.getDeck().discard(c);
-=======
         if (state == null || state.getDeck() == null) return;
 
         Card c = state.getDeck().draw();
@@ -44,7 +29,6 @@ public class ChanceTile extends Tile {
 				}
 			}
         }
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     }
 
     @Override

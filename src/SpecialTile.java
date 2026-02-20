@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-class SpecialTile extends Tile {
-=======
 public class SpecialTile extends Tile {
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     private final EffectType effect;
 
     public SpecialTile(int index, String name, EffectType effect) {

@@ -1,13 +1,15 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 import java.util.Random;
 
 public class BotPlayer extends Player{
 =======
+=======
+>>>>>>> ffebc07515603e8fc4d45d035e6a5f9aa5d44508
 import java.util.Random;
 
 public class BotPlayer extends Player {
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     private DifficultyLevel difficulty;
     private Random random = new Random();
 

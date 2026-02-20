@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
 import java.util.Objects;
 
 public class GameConfig {
