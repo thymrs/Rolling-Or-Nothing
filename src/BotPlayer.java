@@ -1,7 +1,5 @@
 <<<<<<< HEAD
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class BotPlayer extends Player{
@@ -143,7 +141,7 @@ public class BotPlayer extends Player {
         int countInSet = 0;
 
         for(PropertyTile land : this.getOwnedLands()){
-            if(land.getColorGroup().equals(color)) countInSet++;
+            if(land.getColorGroup().equls(color)) countInSet++;
         }
 
         return countInSet == 2;
@@ -196,34 +194,10 @@ public class BotPlayer extends Player {
     }
 
     private boolean hasExpensiveAssets(){
-        for(PropertyTile land : this.getOwnedLands()){
+        for(PropertyTile land : this.ownedLands){
             if(land.getBuildingLevel() >= 2) return true;
         }
 
         return false;
     }
-
-    public int getMaxRentOnBoard(Board board) {
-    int maxRent = 0;
-    for (Tile t : board.getTilesReadOnly()) {
-        if (t instanceof PropertyTile p) {
-            if (!p.isMortgaged()) {
-                maxRent = Math.max(maxRent, p.calculateRent());
-            }
-        }
-    }
-    return maxRent;
-}
-
-    private List<PropertyTile> getOpponentAssets(Player currentPlayer, GameState state) {
-    List<PropertyTile> opponentAssets = new ArrayList<>();
-    
-    for (Player opponent : state.getPlayers()) {
-        if (opponent != currentPlayer && !opponent.isBankrupt()) {
-            opponentAssets.addAll(opponent.getOwnedLands()); 
-        }
-    }
-    
-    return opponentAssets;
-}
 }
