@@ -14,8 +14,6 @@ public abstract class Tile {
     public abstract void onPlayerEnter(Player player, GameState state);
 }
 
-<<<<<<< HEAD
-=======
 //class PropertyTile extends Tile {
 //    private final int purchasePrice;
 //    private final int baseRent;
@@ -150,6 +148,5 @@ public abstract class Tile {
 //    }
 //}
 
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
 enum ActionType { START, JAIL, WORLD_TRAVEL, TAX_OFFICE, ISLAND }
 enum EffectType { OLYMPIC, FESTIVAL, BLACKOUT, FREEZE }

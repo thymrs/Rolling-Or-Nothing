@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-class ActionTile extends Tile {
-=======
 public class ActionTile extends Tile {
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     private final ActionType type;
 
     public ActionTile(int index, String name, ActionType type) {
@@ -17,8 +13,8 @@ public class ActionTile extends Tile {
         switch (type) {
             case START -> { }
             case JAIL -> {
-                player.setJailed(true);
-                player.setJailTurnCount(0);
+                player.setIsJailed(true);
+                player.addJailTurnCount(0);
             }
             case WORLD_TRAVEL -> player.setPosition(0);
             case TAX_OFFICE -> {

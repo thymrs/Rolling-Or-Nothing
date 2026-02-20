@@ -1,15 +1,6 @@
-<<<<<<< HEAD
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-public class BotPlayer extends Player{
-=======
 import java.util.Random;
 
 public class BotPlayer extends Player {
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     private DifficultyLevel difficulty;
     private Random random = new Random();
 

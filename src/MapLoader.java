@@ -1,17 +1,10 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-<<<<<<< HEAD
-=======
 import java.util.Comparator;
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
 import java.util.List;
 
 public class MapLoader {
@@ -29,10 +22,7 @@ public class MapLoader {
 <<<<<<< HEAD
 =======
 
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
-            Tile t = parseTile(trimmed);
             if (t != null) tiles.add(t);
-        }
 
 <<<<<<< HEAD
         if (!validateBoardSize(tiles)) {

@@ -51,8 +51,4 @@ public class PropertyTile extends Tile {
             }
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142

@@ -198,10 +198,10 @@ public class GameController implements ActionListener {
         player.setPosition(newPos);
 
         if (newPos < oldPos) {
-            state.getBank().paySalary(player);
+            state.getBank().paySalary(player, 2000);
             view.showPopup(player.getName() + "เดินครบรอบ รับเงินเดือน");
         }
-
+Tile tile = state.getBoard().getTile(player.position());
         Tile currentTile = state.getBoard().getTile(newPos);
         currentTile.onPlayerEnter(player, state);
 
@@ -216,7 +216,7 @@ public class GameController implements ActionListener {
 
     private void handleBuyProperty() {
         Player player = state.getCurrentPlayer();
-        Tile tile = state.getBoard().getTile(player.position());
+        Tile tile = state.getBoard().getTile(player.getPosition());
 
         if  (tile instanceof PropertyTile property) {
             boolean success = state.getBank().processPurchase(player, property);
@@ -246,7 +246,7 @@ public class GameController implements ActionListener {
             if (receiver != null) {
                 receiver.receiveMoney(amount);
             }
-            view.showPopup(payer.getName() + " จ่ายเงิน" + amount + " ให้ " + (receiver != null ? receiver.getName() : กองกลาง));
+            view.showPopup(payer.getName() + " จ่ายเงิน" + amount + " ให้ " + (receiver != null ? receiver.getName() : "กองกลาง"));
         } else {
             view.showPopup("เงินไม่พอจ่าย! เลือกขายสินทรัพย์หรือล้มละลาย");
             payer.declareBankruptcy();
