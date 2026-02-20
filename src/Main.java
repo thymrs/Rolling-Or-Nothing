@@ -21,7 +21,7 @@ public class Main {
                 .build();
         
         // Initialize and start game
-        GameController controller = new GameController();
+        GameController controller = new GameController(new GameWindow());
         controller.startGame(config);
         
         System.out.println("Monopoly Game Started!");
