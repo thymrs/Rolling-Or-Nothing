@@ -30,8 +30,4 @@ public class ActionTile extends Tile {
     public void onPlayerEnter(Player player, GameState state) {
         performAction(player, state);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142

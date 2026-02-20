@@ -19,19 +19,9 @@ public class MapLoader {
             String trimmed = line.trim();
             if (trimmed.isEmpty()) continue;
             if (trimmed.startsWith("#")) continue;
-<<<<<<< HEAD
-=======
 
             if (t != null) tiles.add(t);
 
-<<<<<<< HEAD
-        if (!validateBoardSize(tiles)) {
-            throw new IllegalStateException();
-        }
-        return new Board(tiles);
-    }
-
-=======
         tiles.sort(Comparator.comparingInt(Tile::getIndex));
 
         if (!validateBoardSize(tiles)) {
@@ -93,28 +83,26 @@ public class MapLoader {
         return out;
     }
 
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     private List<String> readMapFile(String filePath) {
         InputStream is = getClass().getClassLoader().getResourceAsStream(filePath);
         if (is == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Map file not found: " + filePath);
         }
 
-<<<<<<< HEAD
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-=======
         try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(is, StandardCharsets.UTF_8))) {
->>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
-            List<String> out = new ArrayList<>();
-            String line;
-            while ((line = br.readLine()) != null) out.add(line);
-            return out;
+            new InputStreamReader(is, StandardCharsets.UTF_8))) {
+
+        List<String> out = new ArrayList<>();
+        String line;
+        while ((line = br.readLine()) != null) {
+            out.add(line);
+        }
+        return out;
+
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error reading map file", e);
         }
     }
-
     private Tile parseTile(String csvLine) {
         String[] data = csvLine.split("\\s*,\\s*");
         if (data.length < 3) {

@@ -1,13 +1,12 @@
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Main controller that manages game flow and coordinates between model and view
  */
-public class GameController implements ActionListener {
-    private GameWindow view;
+public class GameControllerTest{
+    //private GameWindow view;
+    private ConsoleView view;
     private GameState state;
     private VictoryChecker victoryChecker;
     private MapLoader mapLoader;
@@ -15,14 +14,14 @@ public class GameController implements ActionListener {
     /**
      * Constructor for GameController
      */
-    public GameController(GameWindow view) {
+    public GameControllerTest(ConsoleView view) {
         // TODO: Initialize components (finished)
         this.view = view;
 
         this.mapLoader = new MapLoader();
         this.victoryChecker = new VictoryChecker();
 
-        this.view.setActionListener(this);
+        //this.view.setActionListener(this);
     }
     
     /**
@@ -44,31 +43,49 @@ public class GameController implements ActionListener {
      * Handles action events from UI
      * @param event The action event
      */
-    @Override
-    public void actionPerformed(ActionEvent event) {
-        // TODO: Route actions to appropriate handlers (finished)
-        String command = event.getActionCommand();
+    //@Override
+    //public void actionPerformed(ActionEvent event) {
+    //    // TODO: Route actions to appropriate handlers (finished)
+    //    String command = event.getActionCommand();
 
-        System.out.println("User pressed: " + command);
+    //    System.out.println("User pressed: " + command);
     
+    //    switch (command) {
+    //        case "ROLL":
+    //            handleRollDice();
+    //            break;
+    //        case "BUY":
+    //            handleBuyProperty();
+    //            break;
+    //        case "END_TURN":
+    //            handleEndTurn();
+    //            break;
+    //        case "USE_CARD":
+    //            handleCardAction();
+    //            break;
+    //    }
+
+    //    processPhase();
+    //}
+    
+    // เปลี่ยนจากรับ Event เป็นรับ String ตรงๆ
+    public void processCommand(String command) {
+        System.out.println(">> System: กำลังรันคำสั่ง " + command);
+        
         switch (command) {
-            case "ROLL":
-                handleRollDice();
-                break;
-            case "BUY":
-                handleBuyProperty();
-                break;
-            case "END_TURN":
-                handleEndTurn();
-                break;
-            case "USE_CARD":
-                handleCardAction();
-                break;
+            case "ROLL": handleRollDice(); break;
+            case "BUY": handleBuyProperty(); break;
+            case "END_TURN": handleEndTurn(); break;
+            case "USE_CARD": handleCardAction(); break;
+            default: System.out.println("คำสั่งไม่ถูกต้อง!"); return;
         }
-
-        processPhase();
+        
+        // ถ้าเป็นตาคน ให้แสดงสถานะล่าสุดหลังทำคำสั่งเสร็จ
+        if (!(state.getCurrentPlayer() instanceof BotPlayer)) {
+            view.updateView(state);
+        }
     }
-    
+
     /**
      * Initializes the game state
      */
