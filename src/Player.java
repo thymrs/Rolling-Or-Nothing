@@ -1,6 +1,9 @@
 import java.util.*;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
 public abstract class Player {
     private String name;
     private int money;

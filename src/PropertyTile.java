@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 class PropertyTile extends Tile {
+=======
+public class PropertyTile extends Tile {
+>>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142
     private final int purchasePrice;
     private final int baseRent;
     private int buildingLevel;
@@ -47,4 +51,8 @@ class PropertyTile extends Tile {
             }
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> f1b2a67b667dcb9c466699003c9fd517cf9c6142

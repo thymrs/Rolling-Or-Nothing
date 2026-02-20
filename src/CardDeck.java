@@ -1,4 +1,3 @@
-package src.model.entities.card;
 import java.util.*;
 
 public class CardDeck {
