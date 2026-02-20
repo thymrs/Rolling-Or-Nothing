@@ -81,4 +81,11 @@ public class Card {
     public CardType getTypeCard(){
         return this.type;
     }
+
+    public boolean requiresTarget() {
+    return switch (this.type) {
+        case FORCE_SELL, PUNISH -> true;
+        default -> false;
+    };
+}
 }
