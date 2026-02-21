@@ -50,16 +50,14 @@ public class Card {
 
             case FORCE_SELL:
                 if (target != null) {
-                    PropertyTile targetTile = state.getBoard().getTile(target.getPosition());
-                    if (targetTile instanceof PropertyTile targetProperty) {
+                    currentTile = state.getBoard().getTile(target.getPosition());
+                    
+                    if (currentTile instanceof PropertyTile targetProperty) {
                         if (targetProperty.getOwner() == target) {
-                            target.removeAsset(targetProperty);
-                            targetProperty.setOwner(player);
-                            target.addAsset(targetProperty);
+                            state.getBank().processPurchase(player, targetProperty, target);
                         }
                     }
                 }
-                ;
                 break;
 
             case REWARD:

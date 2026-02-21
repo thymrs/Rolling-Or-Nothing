@@ -187,7 +187,7 @@ public class BotPlayer extends Player {
     }
 
     private boolean hasExpensiveAssets(){
-        for(PropertyTile land : this.ownedLands){
+        for(PropertyTile land : this.ownedLands()){
             if(land.getBuildingLevel() >= 2) return true;
         }
 
