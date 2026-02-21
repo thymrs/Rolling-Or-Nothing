@@ -1,75 +1,291 @@
-import java.util.Scanner;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ConsoleView {
-    private Scanner scanner = new Scanner(System.in);
-    private GameController controller;
+/**
+ * Main controller that manages game flow and coordinates between model and view
+ */
+public class GameControllerTest{
+    //private GameWindow view;
+    private ConsoleView view;
+    private GameState state;
+    private VictoryChecker victoryChecker;
+    private MapLoader mapLoader;
+    
+    /**
+     * Constructor for GameController
+     */
+    public GameControllerTest(ConsoleView view) {
+        // TODO: Initialize components (finished)
+        this.view = view;
 
-    public void setController(GameControllerTest controller2) {
-        this.controller = controller2;
+        this.mapLoader = new MapLoader();
+        this.victoryChecker = new VictoryChecker();
+
+        //this.view.setActionListener(this);
     }
+    
+    /**
+     * Starts a new game with given configuration
+     * @param config Game configuration settings
+     */
+    public void startGame(GameConfig config) {
+        // TODO: Initialize game with config (finished)
+        System.out.println("Game Starting...");
+        initGame(config);
 
-    // เทียบเท่ากับ updateView ของ GUI แต่ใช้ Print แทน
-    public void updateView(GameState state) {
-        System.out.println("\n==================================");
-        System.out.println("รอบที่: " + state.getTurnCount() + " | Phase: " + state.getCurrentPhase());
-        System.out.println("ตาของ: " + state.getCurrentPlayer().getName());
-        System.out.println("เงิน: $" + state.getCurrentPlayer().getMoney());
-        System.out.println("ตำแหน่ง: ช่องที่ " + state.getCurrentPlayer().getPosition());
-        System.out.println("==================================");
+        view.updateView(state);
+        view.showPopup("Welcome");
 
-        // ถ้าไม่ใช่บอท ให้แสดงเมนูให้ผู้เล่นพิมพ์เลือก
+        processPhase();
+    }
+    
+    /**
+     * Handles action events from UI
+     * @param event The action event
+     */
+    //@Override
+    //public void actionPerformed(ActionEvent event) {
+    //    // TODO: Route actions to appropriate handlers (finished)
+    //    String command = event.getActionCommand();
+
+    //    System.out.println("User pressed: " + command);
+    
+    //    switch (command) {
+    //        case "ROLL":
+    //            handleRollDice();
+    //            break;
+    //        case "BUY":
+    //            handleBuyProperty();
+    //            break;
+    //        case "END_TURN":
+    //            handleEndTurn();
+    //            break;
+    //        case "USE_CARD":
+    //            handleCardAction();
+    //            break;
+    //    }
+
+    //    processPhase();
+    //}
+    
+    // เปลี่ยนจากรับ Event เป็นรับ String ตรงๆ
+    public void processCommand(String command) {
+        System.out.println(">> System: กำลังรันคำสั่ง " + command);
+        
+        switch (command) {
+            case "ROLL": handleRollDice(); break;
+            case "BUY": handleBuyProperty(); break;
+            case "END_TURN": handleEndTurn(); break;
+            case "USE_CARD": handleCardAction(); break;
+            default: System.out.println("คำสั่งไม่ถูกต้อง!"); return;
+        }
+        
+        // ถ้าเป็นตาคน ให้แสดงสถานะล่าสุดหลังทำคำสั่งเสร็จ
         if (!(state.getCurrentPlayer() instanceof BotPlayer)) {
-            showMenuAndPrompt(state.getCurrentPhase());
+            view.updateView(state);
         }
     }
 
-    public void showPopup(String message) {
-        System.out.println("\n📢 [ประกาศ]: " + message + "\n");
-    }
+    /**
+     * Initializes the game state
+     */
+    private void initGame(GameConfig config) {
+        // TODO: Set up board, players, and initial state (finished)
+        this.state = new GameState();
 
-    // แสดงตัวเลือกตาม Phase ปัจจุบัน
-    private void showMenuAndPrompt(TurnPhase phase) {
-        System.out.println("โปรดเลือกคำสั่ง:");
-        
-        if (phase == TurnPhase.READY_TO_ROLL) {
-            System.out.println("1. ทอยเต๋า (ROLL)");
-            System.out.println("2. ใช้การ์ด (USE_CARD)");
-        } else if (phase == TurnPhase.ACTION_REQUIRED) {
-            System.out.println("3. ซื้อที่ดิน (BUY)");
-            System.out.println("4. จบเทิร์น (END_TURN)");
-        } else if (phase == TurnPhase.END_TURN) {
-            System.out.println("4. จบเทิร์น (END_TURN)");
+        Board board = mapLoader.loadMap(config.getMapName());
+        state.setBoard(board);
+
+        List<Player> players = new ArrayList<>();
+        int startMoney = config.getInitialMoney();
+
+        for (int i = 0; i < config.getHumanCount(); i++) {
+            players.add(new HumanPlayer("Player " + (i + 1), startMoney));
         }
 
-        System.out.print(">> พิมพ์ตัวเลข: ");
-        String input = scanner.nextLine();
+        for (int i = 0; i < config.getBotCount(); i++) {
+            players.add(new BotPlayer("Bot " + (i + 1), startMoney, config.getBotDifficulty()));
+        }
 
-        // แปลงตัวเลขเป็น Command ส่งให้ Controller
-        switch (input) {
-            case "1": controller.processCommand("ROLL"); break;
-            case "2": controller.processCommand("USE_CARD"); break;
-            case "3": controller.processCommand("BUY"); break;
-            case "4": controller.processCommand("END_TURN"); break;
-            default: 
-                System.out.println("❌ ไม่เข้าใจคำสั่ง ลองใหม่");
-                showMenuAndPrompt(phase); // ให้พิมพ์ใหม่
+        state.setPlayers(players);
+
+        System.out.println("สร้างผู้เล่นเสร็จสิ้น: " + players.size() + " คน");
+    }
+    
+    /**
+     * Processes the current turn phase
+     */
+    private void processPhase() {
+        // TODO: Handle current phase logic
+        Player currentPlayer = state.getCurrentPlayer();
+        TurnPhase currentPhase = state.getCurrentPhase();
+
+        if (currentPlayer instanceof BotPlayer) {
+            handleBotTurn();
+            return;
+        }
+
+        switch (currentPhase) {
+            case READY_TO_ROLL:
+                view.getControlPanel().setButtonsEnabled(true, false, false, true);
+                view.showPopup("ตาของคุณแล้ว " + currentPlayer.getName());
+                break;
+            case MOVING:
+                break;
+            case ACTION_REQUIRED:
+                view.getControlPanel().setButtonEnabled(false, true, true, true);
+                break;
+            case END_TURN:
+                state.incrementTurn();
+                processPhase();
+                break;
+            case GAME_OVER:
+                view.showPopup("จบเกม! ผู้ชนะคือ " + victoryChecker.getWinner(state));
+                break;
+        }
+
+        view.updateView(state);
+    }
+    
+    /**
+     * Handles bot player's turn
+     */
+    private void handleBotTurn() {
+        // TODO: Execute bot AI decisions
+        BotPlayer bot = (BotPlayer) state.getCurrentPlayer();
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+
+                handleRollDice();
+
+                Thread.sleep(1000);
+
+                Tile tile = state.getBoard().getTile(bot.getPosition());
+                if (tile instanceof PropertyTile) {
+                    if (bot.makeDecision(DecisionType.BUY_LAND, tile)) {
+                        handleBuyProperty();
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+    
+    /**
+     * Handles card-related actions
+     */
+    private void handleCardAction() {
+        // TODO: Process card usage
+        Player player = state.getCurrentPlayer();
+
+        Card card = player.getHeldCard();
+
+        if (card != null) {
+            Player target = null;
+
+            if (card.requiresTarget()) {
+                List<Player> opponents = getOpponents(player);
+                target = view.showSelectTargetDialog(opponents);
+
+                if (target == null) {
+                    return;
+                }
+            }
+            player.useHeldCard();
+            
+            card.applyEffect(player, target, state);
+
+            state.getDeck().discard(card);
+
+            view.showPopup("ใช้การ์ด " + card.getName() + " แล้ว!");
+            view.updateView(state);
+        }
+
+    }
+    
+    private void handleRollDice() {
+        Player player = state.getCurrentPlayer();
+
+        state.getDice().roll();
+        int steps = state.getDice().getValue();
+
+        int oldPos = player.getPosition();
+        int newPos = state.getBoard().getNextIndex(oldPos, steps);
+        player.setPosition(newPos);
+
+        if (newPos < oldPos) {
+            state.getBank().paySalary(player, 2000);
+            view.showPopup(player.getName() + "เดินครบรอบ รับเงินเดือน");
+        }
+        Tile tile = state.getBoard().getTile(player.position());
+        Tile currentTile = state.getBoard().getTile(newPos);
+        currentTile.onPlayerEnter(player, state);
+
+        if (currentTile instanceof PropertyTile && ((PropertyTile) currentTile).getOwner() == null) {
+            state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
+        } else {
+            state.setCurrentPhase(TurnPhase.END_TURN);
+        }
+
+        view.updateView(state);
+    }
+
+    private void handleBuyProperty() {
+        Player player = state.getCurrentPlayer();
+        Tile tile = state.getBoard().getTile(player.getPosition());
+
+        if  (tile instanceof PropertyTile property) {
+            boolean success = state.getBank().processPurchase(player, property);
+
+            if (success) {
+            view.showPopup("ซื้อที่ดิน" + property.getName() + " เรียบร้อย!");
+            state.setCurrentPhase(TurnPhase.END_TURN);
+            } else {
+                view.showPopup("เงินไม่พอ");
+            }
+        }
+        view.updateView(state);
+    }
+
+    private void handleEndTurn() {
+        state.incrementTurn();
+        processPhase();
+    }
+
+    /**
+     * Processes financial transactions
+     */
+    private void processTransaction(Player payer, Player receiver, int amount) {
+        boolean paid = payer.payMoney(amount);
+
+        if (paid) {
+            if (receiver != null) {
+                receiver.receiveMoney(amount);
+            }
+            view.showPopup(payer.getName() + " จ่ายเงิน" + amount + " ให้ " + (receiver != null ? receiver.getName() : "กองกลาง"));
+        } else {
+            view.showPopup("เงินไม่พอจ่าย! เลือกขายสินทรัพย์หรือล้มละลาย");
+            payer.declareBankruptcy();
+            victoryChecker.checkWinCondition(state);
         }
     }
 
-    // จำลองหน้าต่างเลือกคนตอนใช้การ์ดปล้น
-    public Player showSelectTargetDialog(List<Player> opponents) {
-        System.out.println("โปรดเลือกเป้าหมาย:");
-        for (int i = 0; i < opponents.size(); i++) {
-            System.out.println((i + 1) + ". " + opponents.get(i).getName());
+    private List<Player> getOpponents(Player currentPlayer) {
+        List<Player> opponents = new ArrayList<>();
+        for (Player p : state.getPlayers()) {
+            if (p != currentPlayer && !p.isBankrupt()) {
+                opponents.add(p);
+            }
         }
-        System.out.println("0. ยกเลิก");
-        System.out.print(">> พิมพ์ตัวเลขเป้าหมาย: ");
-        
-        int choice = scanner.nextInt();
-        scanner.nextLine(); // clear buffer
-        
-        if (choice == 0 || choice > opponents.size()) return null;
-        return opponents.get(choice - 1);
+        return opponents;
     }
+
+    //@Override
+    //public void actionPerformed(ActionEvent e) {
+    //    // TODO Auto-generated method stub
+    //    throw new UnsupportedOperationException("Unimplemented method 'actionPerformed'");
+    //}
 }

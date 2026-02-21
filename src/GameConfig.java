@@ -67,5 +67,3 @@ public class GameConfig {
         public GameConfig build() { return new GameConfig(this); }
     }
 }
-
-enum DifficultyLevel { EASY, NORMAL, HARD }

@@ -1,14 +1,14 @@
-import java.util.*;
-
 /**
  * Represents the complete state of the game at any moment
  */
+import java.util.*;
 public class GameState {
     private Board board;
     private List<Player> players;
     private Bank bank;
     private CardDeck deck;
     private Dice dice;
+    private GameConfig config;
     private TurnPhase currentPhase;
     private int currentPlayerIndex;
     private int turnCount;
@@ -24,6 +24,7 @@ public class GameState {
         this.dice = new Dice();
         this.bank = new Bank();
         this.deck = new CardDeck();
+        this.config = new GameConfig(Builder());
 
         this.players = new ArrayList<>();
         this.board = null;
@@ -68,4 +69,6 @@ public class GameState {
     public void setCurrentPhase(TurnPhase phase) { this.currentPhase = phase; }
     
     public int getTurnCount() { return turnCount; }
+
+    public GameConfig getConfig() { return config; }
 }
