@@ -1,9 +1,5 @@
 import java.util.Scanner;
 import java.util.List;
-import model.GameState;
-import model.enums.TurnPhase;
-import model.entities.player.Player;
-import model.entities.player.BotPlayer;
 
 public class ConsoleView {
     private Scanner scanner = new Scanner(System.in);
