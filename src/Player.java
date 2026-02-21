@@ -85,6 +85,10 @@ public abstract class Player {
         return this.position;
     }
 
+    public void setFrozenTurns(int turns) {
+        this.frozenTurns = turns;
+    }
+
     public boolean isFrozen() {
         return this.frozenTurns > 0;
     }
