@@ -71,8 +71,30 @@ public class Bank {
         if (owner != null && !tile.isMortgaged()) { 
             int mortgageValue = tile.getPurchasePrice() / 2;
             owner.receiveMoney(mortgageValue);
+            tile.setMortgaged(true);
             return true;
         }
         return false;
+    }
+
+    public boolean payTax(Player player, int amount) {
+        boolean canPay = player.pay(amount);
+        if (canPay) {
+            return true;
+        } else {
+            player.pay(player.getMoney());
+            return false;
+        }
+    }
+
+    public void confiscateAssets(Player bankruptPlayer) {
+        if (bankruptPlayer.getOwnedLands() != null && !bankruptPlayer.getOwnedLands().isEmpty()) {
+            for (PropertyTile tile : bankruptPlayer.getOwnedLands()) {
+                tile.setOwner(null);         
+                tile.upgradeLevel();    
+                tile.setMortgaged(false);  
+            bankruptPlayer.getOwnedLands().clear();
+            }
+        }
     }
 }
