@@ -1,4 +1,3 @@
-package Rollblabla;
 
 public abstract class Tile {
     protected final int index;

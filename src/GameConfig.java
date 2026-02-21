@@ -1,4 +1,3 @@
-package Rollblabla;
 
 import java.util.Objects;
 
