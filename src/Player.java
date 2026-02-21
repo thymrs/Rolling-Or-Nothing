@@ -1,10 +1,10 @@
 import java.util.*;
 
 public abstract class Player {
-    protected String name;
-    protected int money;
-    protected int position;
-    protected List<PropertyTile> ownedLands;
+    private String name;
+    private int money;
+    private int position;
+    private List<PropertyTile> ownedLands;
     protected boolean isJailed;
     protected int jailTurnCount;
     protected int frozenTurns = 0;
@@ -63,7 +63,7 @@ public abstract class Player {
 
     }
 
-    public abstract boolean makeDecision(DecisionType type);
+    public abstract boolean makeDecision(DecisionType type, PropertyTile tile, GameState state);
 
     public void setIsJailed(boolean isJailed){
         this.isJailed = isJailed;
@@ -141,6 +141,10 @@ public abstract class Player {
 
     public void setHeldCard(Card heldCard) {
         this.heldCard = heldCard;
+    }
+
+    public List<PropertyTile> getOwnedLands(){
+        return this.ownedLands;
     }
 
 }

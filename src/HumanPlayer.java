@@ -1,3 +1,7 @@
+package src.model.entities.player;
+
+import DecisionType;
+
 public class HumanPlayer extends Player {
 
     public HumanPlayer(String name, int initialMoney) {

@@ -3,7 +3,7 @@ import java.util.List;
 
 public class ConsoleView {
     private Scanner scanner = new Scanner(System.in);
-    private GameControllerTest controller;
+    private GameController controller;
 
     public void setController(GameControllerTest controller2) {
         this.controller = controller2;

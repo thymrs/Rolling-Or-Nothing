@@ -68,7 +68,7 @@ public class Bank {
 
     public boolean mortgageProperty(PropertyTile tile) {
         Player owner = tile.getOwner();
-        if (owner != null && !tile.isMortgaged) { 
+        if (owner != null && !tile.isMortgaged()) { 
             int mortgageValue = tile.getPurchasePrice() / 2;
             owner.receiveMoney(mortgageValue);
             return true;
