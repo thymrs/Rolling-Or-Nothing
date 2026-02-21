@@ -24,7 +24,7 @@ public class GameState {
         this.dice = new Dice();
         this.bank = new Bank();
         this.deck = new CardDeck();
-        this.config = new GameConfig(Builder());
+        this.config = new GameConfig.Builder().build();
 
         this.players = new ArrayList<>();
         this.board = null;

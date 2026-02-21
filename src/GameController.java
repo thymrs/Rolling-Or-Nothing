@@ -101,6 +101,18 @@ public class GameController implements ActionListener {
         Player currentPlayer = state.getCurrentPlayer();
         TurnPhase currentPhase = state.getCurrentPhase();
 
+        if (currentPhase == TurnPhase.READY_TO_ROLL) {
+            if (currentPlayer.isFrozen()) {
+                view.showPopup("❄️ " + currentPlayer.getName() + " ถูกแช่แข็ง! ต้องข้ามเทิร์นนี้");
+                
+                currentPlayer.decrementFrozenTurns(); 
+                
+                state.setCurrentPhase(TurnPhase.END_TURN);
+                view.updateView(state);
+                return;
+            }
+        }
+        
         if (currentPlayer instanceof BotPlayer) {
             handleBotTurn();
             return;

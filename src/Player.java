@@ -7,6 +7,7 @@ public abstract class Player {
     protected List<PropertyTile> ownedLands;
     protected boolean isJailed;
     protected int jailTurnCount;
+    protected int frozenTurns = 0;
     protected boolean hasShield;
     protected Card heldCard;
     protected boolean isBankrupt;
@@ -82,6 +83,16 @@ public abstract class Player {
 
     public int getPosition(){
         return this.position;
+    }
+
+    public boolean isFrozen() {
+        return this.frozenTurns > 0;
+    }
+
+    public void decrementFrozenTurns() {
+        if (this.frozenTurns > 0) {
+            this.frozenTurns--;
+        }
     }
 
     public void addAsset(PropertyTile tile){
