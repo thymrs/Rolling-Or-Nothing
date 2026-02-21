@@ -192,7 +192,7 @@ public class GameController implements ActionListener {
                     return;
                 }
             }
-            player.useHeldCard();
+            player.;
             
             card.applyEffect(player, target, state);
 
