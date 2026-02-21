@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,12 +15,13 @@ import java.util.List;
 public class MapLoader {
 
     public Board loadMap(String mapName) {
-        String filePath = "maps/" + mapName + ".csv";
-        List<String> lines = readMapFile(filePath);
+        String relPath = "maps/" + mapName + ".csv";
+        List<String> lines = readMapFile(relPath);
 
         List<Tile> tiles = new ArrayList<>();
         for (String line : lines) {
             if (line == null) continue;
+
             String trimmed = line.trim();
             if (trimmed.isEmpty()) continue;
             if (trimmed.startsWith("#")) continue;
@@ -36,12 +40,13 @@ public class MapLoader {
     }
 
     public Tile[][] loadMapSegments(String mapName) {
-        String filePath = "maps/" + mapName + ".csv";
-        List<String> lines = readMapFile(filePath);
+        String relPath = "maps/" + mapName + ".csv";
+        List<String> lines = readMapFile(relPath);
 
         List<Tile> tiles = new ArrayList<>();
         for (String line : lines) {
             if (line == null) continue;
+
             String trimmed = line.trim();
             if (trimmed.isEmpty()) continue;
             if (trimmed.startsWith("#")) continue;
@@ -87,36 +92,46 @@ public class MapLoader {
         return out;
     }
 
-    private List<String> readMapFile(String filePath) {
-        InputStream is = getClass().getClassLoader().getResourceAsStream(filePath);
-        if (is == null) {
-            throw new IllegalArgumentException();
+    private List<String> readMapFile(String relPath) {
+        Path diskPath = Paths.get("src").resolve(relPath);
+        if (Files.exists(diskPath)) {
+            try {
+                return Files.readAllLines(diskPath, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read map file from disk: " + diskPath, e);
+            }
         }
 
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(is, StandardCharsets.UTF_8))) {
+        InputStream is = getClass().getClassLoader().getResourceAsStream(relPath);
+        if (is == null) {
+            throw new IllegalArgumentException(
+                "Map file not found. Tried disk: " + diskPath + " and classpath: " + relPath
+            );
+        }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             List<String> out = new ArrayList<>();
             String line;
             while ((line = br.readLine()) != null) out.add(line);
             return out;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to read map file from classpath: " + relPath, e);
         }
     }
 
     private Tile parseTile(String csvLine) {
         String[] data = csvLine.split("\\s*,\\s*");
         if (data.length < 3) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid CSV line (need at least 3 columns): " + csvLine);
         }
 
         String kind = data[0].trim().toUpperCase();
         return switch (kind) {
             case "PROPERTY" -> createPropertyTile(data);
-            case "SPECIAL" -> createSpecialTile(data);
-            case "CHANCE"  -> createChanceTile(data);
-            case "ACTION"  -> createActionTile(data);
-            default -> throw new IllegalArgumentException();
+            case "SPECIAL"  -> createSpecialTile(data);
+            case "CHANCE"   -> createChanceTile(data);
+            case "ACTION"   -> createActionTile(data);
+            default -> throw new IllegalArgumentException("Unknown tile type: " + data[0]);
         };
     }
 
@@ -161,11 +176,13 @@ public class MapLoader {
     }
 
     private int parseInt(String[] data, int i) {
-        if (i >= data.length) throw new IllegalArgumentException();
+        if (i >= data.length) {
+            throw new IllegalArgumentException("Missing int column at index " + i);
+        }
         try {
             return Integer.parseInt(data[i].trim());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(e);
+            throw new IllegalArgumentException("Invalid number at column " + i + ": " + data[i], e);
         }
     }
 }
