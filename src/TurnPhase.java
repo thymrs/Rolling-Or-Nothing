@@ -3,5 +3,6 @@ public enum TurnPhase {
 	MOVING, 
 	ACTION_REQUIRED, 
 	END_TURN, 
-	GAME_OVER;
+	GAME_OVER, 
+	SELECTING_DESTINATION;
 }

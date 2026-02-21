@@ -123,6 +123,9 @@ public class GameController implements ActionListener {
             case GAME_OVER:
                 view.showPopup("จบเกม! ผู้ชนะคือ " + victoryChecker.getWinner(state));
                 break;
+            case SELECTING_DESTINATION:
+                view.showPopup("✈️ คุณได้สิทธิ์ท่องเที่ยวรอบโลก! โปรดเลือกช่องที่จะไป");
+                break;
         }
 
         view.updateView(state);
@@ -198,7 +201,7 @@ public class GameController implements ActionListener {
         player.setPosition(newPos);
 
         if (newPos < oldPos) {
-            state.getBank().paySalary(player);
+            state.getBank().paySalary(player, 2000);
             view.showPopup(player.getName() + "เดินครบรอบ รับเงินเดือน");
         }
 
@@ -235,6 +238,8 @@ public class GameController implements ActionListener {
         state.incrementTurn();
         processPhase();
     }
+
+
 
     /**
      * Processes financial transactions

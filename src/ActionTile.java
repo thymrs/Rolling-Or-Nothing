@@ -13,10 +13,10 @@ public class ActionTile extends Tile {
         switch (type) {
             case START -> { }
             case JAIL -> {
-                player.setJailed(true);
-                player.setJailTurnCount(0);
+                player.setIsJailed(true);
+                player.addJailTurnCount(3);
             }
-            case WORLD_TRAVEL -> player.setPosition(0);
+            case WORLD_TRAVEL -> state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
             case TAX_OFFICE -> {
                 int tax = (int) Math.round(player.getMoney() * (state.getConfig().getTaxPercentage() / 100.0));
                 player.pay(tax);
