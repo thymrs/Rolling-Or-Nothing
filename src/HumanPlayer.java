@@ -1,3 +1,7 @@
+package src.model.entities.player;
+
+import DecisionType;
+
 public class HumanPlayer extends Player {
 
     public HumanPlayer(String name, int initialMoney) {
@@ -5,7 +9,7 @@ public class HumanPlayer extends Player {
     }
 
     @Override
-    public boolean makeDecision(DecisionType type, PropertyTile tile, GameState state){
+    public boolean makeDecision(DecisionType type){
         return false;
     }
 }
