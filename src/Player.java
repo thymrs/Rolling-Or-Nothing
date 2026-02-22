@@ -99,6 +99,22 @@ public abstract class Player {
         }
     }
 
+    public void declareBankruptcy() {
+        this.isBankrupt = true;
+        this.money = 0;
+        
+        for (PropertyTile land : this.ownedLands) {
+            land.setOwner(null);
+            land.resetBuildingLevel();
+        }
+        this.ownedLands.clear();
+        
+    }
+
+    public boolean isBankrupt() {
+        return this.isBankrupt;
+    }
+
     public void addAsset(PropertyTile tile){
         this.ownedLands.add(tile);
     }
@@ -145,6 +161,10 @@ public abstract class Player {
 
     public void setHeldCard(Card heldCard) {
         this.heldCard = heldCard;
+    }
+
+    public void setPosition(int newPos) {
+        this.position = newPos;
     }
 
     public List<PropertyTile> getOwnedLands(){

@@ -33,6 +33,10 @@ public class PropertyTile extends Tile {
         return true;
     }
 
+    public void resetBuildingLevel() {
+        this.buildingLevel = 0; 
+    }
+
     public Player getOwner() { return owner; }
     public void setOwner(Player owner) { this.owner = owner; }
     public void setMortgaged(boolean mortgaged) { this.isMortgaged = mortgaged; }

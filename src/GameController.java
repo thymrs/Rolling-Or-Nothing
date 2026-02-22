@@ -149,56 +149,73 @@ public class GameController implements ActionListener {
      * Handles bot player's turn
      */
     private void handleBotTurn() {
-        // TODO: Execute bot AI decisions
-        BotPlayer bot = (BotPlayer) state.getCurrentPlayer();
+        BotPlayer bot = (BotPlayer) state.getCurrentPlayer(); //
 
         new Thread(() -> {
             try {
                 Thread.sleep(1000);
 
-                handleRollDice();
+                if (bot.getHeldCard() != null) {
+                    boolean wantToUseCard = bot.makeDecision(DecisionType.USE_CARD, null, state);
+                    
+                    if (wantToUseCard) {
+                        handleCardAction();
+                        Thread.sleep(1000);
+                    }
+                }
 
+                handleRollDice(); //
                 Thread.sleep(1000);
 
                 Tile tile = state.getBoard().getTile(bot.getPosition());
-                if (tile instanceof PropertyTile) {
-                    if (bot.makeDecision(DecisionType.BUY_LAND, tile)) {
+                if (tile instanceof PropertyTile property && property.getOwner() == null) {
+                    if (bot.makeDecision(DecisionType.BUY_LAND, property, state)) {
                         handleBuyProperty();
                     }
                 }
+                
+                Thread.sleep(1000);
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    handleEndTurn(); //
+                });
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }).start();
+        }).start(); //
     }
     
     /**
      * Handles card-related actions
      */
     private void handleCardAction() {
-        // TODO: Process card usage
         Player player = state.getCurrentPlayer();
-
-        Card card = player.getHeldCard();
+        Card card = player.getHeldCard(); //
 
         if (card != null) {
             Player target = null;
 
             if (card.requiresTarget()) {
-                List<Player> opponents = getOpponents(player);
-                target = view.showSelectTargetDialog(opponents);
+                List<Player> opponents = getOpponents(player); //
+                
+                if (player instanceof BotPlayer bot) {
+                    target = bot.chooseTarget(opponents, state);
+                    view.showPopup("🤖 บอท " + bot.getName() + " เล็งเป้าไปที่ " + target.getName() + "!");
+                } else {
+                    target = view.showSelectTargetDialog(opponents);
+                }
 
                 if (target == null) {
-                    return;
+                    return; // ยกเลิกการใช้
                 }
             }
-            player.;
-            
+                
+            player.useCard();
             card.applyEffect(player, target, state);
 
             state.getDeck().discard(card);
 
-            view.showPopup("ใช้การ์ด " + card.getName() + " แล้ว!");
+            view.showPopup("ใช้การ์ด " + card.getType() + " แล้ว!");
             view.updateView(state);
         }
 
@@ -208,7 +225,7 @@ public class GameController implements ActionListener {
         Player player = state.getCurrentPlayer();
 
         state.getDice().roll();
-        int steps = state.getDice().getValue();
+        int steps = state.getDice().getTotal();
 
         int oldPos = player.getPosition();
         int newPos = state.getBoard().getNextIndex(oldPos, steps);
@@ -218,7 +235,7 @@ public class GameController implements ActionListener {
             state.getBank().paySalary(player, 2000);
             view.showPopup(player.getName() + "เดินครบรอบ รับเงินเดือน");
         }
-        Tile tile = state.getBoard().getTile(player.position());
+        Tile tile = state.getBoard().getTile(player.getPosition());
         Tile currentTile = state.getBoard().getTile(newPos);
         currentTile.onPlayerEnter(player, state);
 
@@ -249,17 +266,28 @@ public class GameController implements ActionListener {
     }
 
     private void handleEndTurn() {
-        state.incrementTurn();
+        VictoryType vType = victoryChecker.checkWinCondition(state);
+        
+        if (vType == VictoryType.LINE_VICTORY) {
+            view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + " ชนะแบบ LINE VICTORY!");
+            state.setCurrentPhase(TurnPhase.GAME_OVER);
+        } else if (vType == VictoryType.TRIPLE_VICTORY) {
+            view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + " ชนะแบบ TRIPLE VICTORY!");
+            state.setCurrentPhase(TurnPhase.GAME_OVER);
+        } else if (vType == VictoryType.TOURISM_VICTORY) {
+            view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + " ชนะแบบ TOURISM VICTORY!");
+            state.setCurrentPhase(TurnPhase.GAME_OVER);
+        } else {
+            state.incrementTurn();
+        }
         processPhase();
     }
-
-
 
     /**
      * Processes financial transactions
      */
     private void processTransaction(Player payer, Player receiver, int amount) {
-        boolean paid = payer.payMoney(amount);
+        boolean paid = payer.pay(amount);
 
         if (paid) {
             if (receiver != null) {
@@ -282,10 +310,4 @@ public class GameController implements ActionListener {
         }
         return opponents;
     }
-
-    //@Override
-    //public void actionPerformed(ActionEvent e) {
-    //    // TODO Auto-generated method stub
-    //    throw new UnsupportedOperationException("Unimplemented method 'actionPerformed'");
-    //}
 }

@@ -5,7 +5,7 @@ public class HumanPlayer extends Player {
     }
 
     @Override
-    public boolean makeDecision(DecisionType type){
+    public boolean makeDecision(DecisionType type, PropertyTile tile, GameState state) {
         return false;
     }
 }

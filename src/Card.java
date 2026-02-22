@@ -76,6 +76,10 @@ public class Card {
         }
     }
 
+    public boolean requiresTarget() {
+        return this.type == CardType.FORCE_SELL || this.type == CardType.PUNISH;
+    }
+
     public CardType getTypeCard(){
         return this.type;
     }

@@ -1,3 +1,4 @@
+import java.util.List;
 import java.util.Random;
 
 public class BotPlayer extends Player {
@@ -127,6 +128,42 @@ public class BotPlayer extends Player {
 
     public boolean evaluateSwapCard(){
         return shouldPerformAction();
+    }
+
+    public Player chooseTarget(List<Player> opponents, GameState state) {
+        if (opponents == null || opponents.isEmpty()) return null;
+
+        switch (this.difficulty) {
+            case EASY:
+                return opponents.get(random.nextInt(opponents.size()));
+
+            case NORMAL:
+                Player richest = opponents.get(0);
+                for (Player p : opponents) {
+                    if (p.getMoney() > richest.getMoney()) {
+                        richest = p;
+                    }
+                }
+                if (chance(80)) return richest; 
+                else return opponents.get(random.nextInt(opponents.size()));
+
+            case HARD:
+                Player biggestThreat = opponents.get(0);
+                int maxThreatScore = -1;
+                
+                for (Player p : opponents) {
+                    int threatScore = p.getMoney() + (p.getOwnedLands().size() * 500);
+                    
+                    if (threatScore > maxThreatScore) {
+                        maxThreatScore = threatScore;
+                        biggestThreat = p;
+                    }
+                }
+                return biggestThreat;
+
+            default:
+                return opponents.get(0);
+        }
     }
 
     private boolean willCompleteSet(PropertyTile tile){

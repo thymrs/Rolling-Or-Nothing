@@ -10,7 +10,7 @@ public class VictoryChecker {
         if (checkLineVictory(board, player)) return VictoryType.LINE_VICTORY;
         if (checkTripleVictory(board, player)) return VictoryType.TRIPLE_VICTORY;
         if (checkTourismVictory(board, player)) return VictoryType.TOURISM_VICTORY;
-        if (player.getMoney() < 0 && player.ownedLands.isEmpty()) return VictoryType.BANKRUPTCY;
+        if (player.getMoney() < 0 && player.getOwnedLands().isEmpty()) return VictoryType.BANKRUPTCY;
 
         return VictoryType.NONE;
     }
@@ -99,5 +99,30 @@ public class VictoryChecker {
             .filter(PropertyTile::isTourism)
             .count();
         return tourismCount >= 4;
+    }
+
+    public String getWinner(GameState state) {
+        Player winner = null;
+        int maxNetWorth = -1;
+
+        for (Player p : state.getPlayers()) {
+            if (!p.isBankrupt()) { //
+                int netWorth = p.getMoney(); //
+                
+                for (PropertyTile land : p.getOwnedLands()) {
+                    netWorth += land.getPurchasePrice(); 
+                }
+
+                if (netWorth > maxNetWorth) {
+                    maxNetWorth = netWorth;
+                    winner = p;
+                }
+            }
+        }
+
+        if (winner != null) {
+            return winner.getName() + " (ทรัพย์สิน: $" + maxNetWorth + ")";
+        }
+        return "ไม่มีผู้ชนะ";
     }
 }
