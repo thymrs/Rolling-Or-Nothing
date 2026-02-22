@@ -1,6 +1,7 @@
 import java.util.*;
 
 public abstract class Player {
+    private final int id;
     private final String name;
     private int money;
     private int position;
@@ -14,9 +15,11 @@ public abstract class Player {
     protected boolean isTollFree;
     protected int discountRate;
 
-    public Player(String name, int playerMoney){
+    public Player(int id, String name, int playerMoney){
+        this.id = id;
         this.name = name;
         this.money = playerMoney;
+        this.position = 0; // จุดเริ่มต้น
         this.ownedLands = new ArrayList<>();
     }
 
@@ -83,6 +86,10 @@ public abstract class Player {
 
     public int getPosition(){
         return this.position;
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     public void setFrozenTurns(int turns) {

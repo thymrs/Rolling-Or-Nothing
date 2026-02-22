@@ -17,11 +17,12 @@ public class GameController implements ActionListener {
      */
     public GameController(GameWindow view) {
         this.view = view;
+        this.state = new GameState();
 
         this.mapLoader = new MapLoader();
         this.victoryChecker = state.getVictoryChecker();
 
-        //this.view.setActionListener(this);
+        this.view.setActionListener(this);
     }
     
     /**
@@ -70,25 +71,21 @@ public class GameController implements ActionListener {
      * Initializes the game state
      */
     private void initGame(GameConfig config) {
-        this.state = new GameState();
-
-        Board board = mapLoader.loadMap(config.getMapName());
-        state.setBoard(board);
-
         List<Player> players = new ArrayList<>();
-        int startMoney = config.getInitialMoney();
+        int currentId = 0;
 
         for (int i = 0; i < config.getHumanCount(); i++) {
-            players.add(new HumanPlayer("Player " + (i + 1), startMoney));
+            players.add(new HumanPlayer(currentId++, "Player " + (i + 1), config.getInitialMoney()));
         }
 
+        // 2. สร้างบอท
         for (int i = 0; i < config.getBotCount(); i++) {
-            players.add(new BotPlayer("Bot " + (i + 1), startMoney, config.getBotDifficulty()));
+            players.add(new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
         }
 
-        state.setPlayers(players);
+        this.victoryChecker = new VictoryChecker(); 
 
-        System.out.println("สร้างผู้เล่นเสร็จสิ้น: " + players.size() + " คน");
+        view.updateView(state);
     }
     
     /**

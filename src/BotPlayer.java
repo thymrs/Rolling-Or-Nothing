@@ -5,8 +5,8 @@ public class BotPlayer extends Player {
     private final DifficultyLevel difficulty;
     private Random random = new Random();
 
-    public BotPlayer(String name, int initialMoney, DifficultyLevel difficulty) {
-        super(name, initialMoney);
+    public BotPlayer(int id, String name, int initialMoney, DifficultyLevel difficulty) {
+        super(id, name, initialMoney);
         this.difficulty = difficulty;
     }
 
@@ -27,39 +27,35 @@ public class BotPlayer extends Player {
         return random.nextInt(100) < percentage;
     }
 
+    @Override
     public boolean makeDecision(DecisionType type, PropertyTile currentTile, GameState state) {
-        switch (this.difficulty) {
-            case EASY:
-                return handleEasyDecision(type, currentTile);
-            case NORMAL:
-                return handleNormalDecision(type, currentTile);
-            case HARD:
-                return handleHardDecision(type, currentTile, state);
-            default:
-                return false;
-
-        }
+        return switch (this.difficulty) {
+            case EASY -> handleEasyDecision(type, currentTile);
+            case NORMAL -> handleNormalDecision(type, currentTile);
+            case HARD -> handleHardDecision(type, currentTile, state);
+            default -> false;
+        };
     }
 
     public boolean handleEasyDecision(DecisionType type, PropertyTile tile){
-        switch(type){
-            case BUY_LAND: return evaluateEasyBuyLand(tile);
-            case USE_CARD: return evaluateEasyUseCard();
-            case PAY_TOLL : return true;
-            case SURRENDER: return this.getMoney() < 0;
-            default: return false;
-        }
+        return switch (type) {
+            case BUY_LAND -> evaluateEasyBuyLand(tile);
+            case USE_CARD -> evaluateEasyUseCard();
+            case PAY_TOLL -> true;
+            case SURRENDER -> this.getMoney() < 0;
+            default -> false;
+        };
     }
 
     public boolean handleNormalDecision(DecisionType type, PropertyTile tile){
-        switch(type){
-            case BUY_LAND: return evaluateNormalBuyLand(tile);
-            case USE_CARD: return evaluateNormalUseCard();
-            case UPGRADE: return (this.getMoney() > 1000) && chance(60);
-            case PAY_TOLL : return true;
-            case SURRENDER: return this.getMoney() < 0;
-            default: return false;
-        }
+        return switch (type) {
+            case BUY_LAND -> evaluateNormalBuyLand(tile);
+            case USE_CARD -> evaluateNormalUseCard();
+            case UPGRADE -> (this.getMoney() > 1000) && chance(60);
+            case PAY_TOLL -> true;
+            case SURRENDER -> this.getMoney() < 0;
+            default -> false;
+        };
     }
 
     public boolean handleHardDecision(DecisionType type, PropertyTile tile, GameState state){
@@ -145,10 +141,11 @@ public class BotPlayer extends Player {
         if (opponents == null || opponents.isEmpty()) return null;
 
         switch (this.difficulty) {
-            case EASY:
+            case EASY -> {
                 return opponents.get(random.nextInt(opponents.size()));
+            }
 
-            case NORMAL:
+            case NORMAL -> {
                 Player richest = opponents.get(0);
                 for (Player p : opponents) {
                     if (p.getMoney() > richest.getMoney()) {
@@ -157,8 +154,9 @@ public class BotPlayer extends Player {
                 }
                 if (chance(80)) return richest; 
                 else return opponents.get(random.nextInt(opponents.size()));
+            }
 
-            case HARD:
+            case HARD -> {
                 Player biggestThreat = opponents.get(0);
                 int maxThreatScore = -1;
                 
@@ -167,7 +165,7 @@ public class BotPlayer extends Player {
                 for (Player p : opponents) {
                     int threatScore = p.getMoney() + (p.getOwnedLands().size() * 500); 
                     
-                    if (vc.isPlayerCloseToVictory(state.getBoard(), p)) { 
+                    if (vc.isPlayerCloseToVictory(state.getBoard(), p)) {
                         threatScore += 10000; 
                     }
                     
@@ -177,9 +175,11 @@ public class BotPlayer extends Player {
                     }
                 }
                 return biggestThreat;
+            }
 
-            default:
+            default -> {
                 return opponents.get(0);
+            }
         }
     }
 

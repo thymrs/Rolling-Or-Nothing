@@ -8,7 +8,6 @@ public class Main {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        // Create game configuration
         GameConfig config = new GameConfig.Builder()
                 .initialMoney(1500)
                 .maxTurns(100)
@@ -20,8 +19,16 @@ public class Main {
                 .taxPercentage(10)
                 .build();
         
-        // Initialize and start game
-        GameController controller = new GameController(new GameWindow());
+        MapLoader loader = new MapLoader();
+        
+        Board board = loader.loadMap(config.getMapName()); 
+
+        GameWindow gameWindow = new GameWindow(board);
+
+        GameController controller = new GameController(gameWindow);
+        
+        gameWindow.setVisible(true);
+
         controller.startGame(config);
         
         System.out.println("Monopoly Game Started!");
