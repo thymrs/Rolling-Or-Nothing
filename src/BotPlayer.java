@@ -177,7 +177,7 @@ public class BotPlayer extends Player {
         int countInSet = 0;
 
         for(PropertyTile land : this.getOwnedLands()){
-            if(land.getColorGroup().equls(color)) countInSet++;
+            if(land.getColorGroup().equals(color)) countInSet++;
         }
 
         return countInSet == 2;
@@ -221,7 +221,7 @@ public class BotPlayer extends Player {
     }
 
     private boolean isOpponentCloseToVictory(GameState state) {
-        VictoryChecker vc = new VictoryChecker();
+        VictoryChecker vc = state.getVictoryChecker();
         
         for (Player opponent : state.getPlayers()) {
             if (opponent == this) continue;

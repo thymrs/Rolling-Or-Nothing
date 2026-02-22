@@ -26,7 +26,7 @@ public class GameState {
         this.bank = new Bank();
         this.deck = new CardDeck();
         this.config = new GameConfig.Builder().build();
-        this.victoryChecker = new VictoryChecker()
+        this.victoryChecker = new VictoryChecker();
 
         this.players = new ArrayList<>();
         this.board = null;

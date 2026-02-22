@@ -4,8 +4,9 @@ public class PropertyTile extends Tile {
     private int buildingLevel;
     private Player owner;
     private boolean isMortgaged;
+    private final String colorGroup;
 
-    public PropertyTile(int index, String name, int purchasePrice, int baseRent) {
+    public PropertyTile(int index, String name, int purchasePrice, int baseRent, String colorGroup) {
         super(index, name);
         if (purchasePrice < 0) throw new IllegalArgumentException();
         if (baseRent < 0) throw new IllegalArgumentException();
@@ -14,6 +15,7 @@ public class PropertyTile extends Tile {
         this.buildingLevel = 0;
         this.owner = null;
         this.isMortgaged = false;
+        this.colorGroup = colorGroup;
     }
 
     public int getPurchasePrice() { return purchasePrice; }
@@ -38,6 +40,7 @@ public class PropertyTile extends Tile {
     }
 
     public Player getOwner() { return owner; }
+    public String getColorGroup() { return this.colorGroup; }
     public void setOwner(Player owner) { this.owner = owner; }
     public void setMortgaged(boolean mortgaged) { this.isMortgaged = mortgaged; }
 

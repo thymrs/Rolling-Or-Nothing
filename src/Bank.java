@@ -1,4 +1,5 @@
 public class Bank {
+    private int totalTaxCollected = 0;
 
     public boolean processPurchase(Player player, PropertyTile tile) {
         if (tile.getOwner() == null && player.getMoney() >= tile.getPurchasePrice()) {
@@ -80,8 +81,10 @@ public class Bank {
     public boolean payTax(Player player, int amount) {
         boolean canPay = player.pay(amount);
         if (canPay) {
+            receiveTax(amount);
             return true;
         } else {
+            receiveTax(player.getMoney());
             player.pay(player.getMoney());
             return false;
         }
@@ -95,6 +98,13 @@ public class Bank {
                 tile.setMortgaged(false);  
             bankruptPlayer.getOwnedLands().clear();
             }
+        }
+    }
+
+    public void receiveTax(int amount) {
+        if (amount > 0) {
+            this.totalTaxCollected += amount;
+            System.out.println("🏦 ธนาคารริบเงินภาษี " + amount + " บาทเข้าคลัง! (ยอดรวมทั้งหมด: " + totalTaxCollected + ")");
         }
     }
 }

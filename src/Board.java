@@ -1,4 +1,3 @@
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +31,22 @@ public class Board {
             }
         }
         return owned;
+    }
+
+    public int getMaxRentOnBoard() {
+        int maxRent = 0;
+
+        for (Tile t : this.tiles) {
+            if (t instanceof PropertyTile p) { 
+                int currentRent = p.calculateRent(); //
+                
+                if (currentRent > maxRent) {
+                    maxRent = currentRent;
+                }
+            }
+        }
+
+        return maxRent;
     }
 
     public int size() {
