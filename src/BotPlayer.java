@@ -151,8 +151,14 @@ public class BotPlayer extends Player {
                 Player biggestThreat = opponents.get(0);
                 int maxThreatScore = -1;
                 
+                VictoryChecker vc = state.getVictoryChecker();
+                
                 for (Player p : opponents) {
-                    int threatScore = p.getMoney() + (p.getOwnedLands().size() * 500);
+                    int threatScore = p.getMoney() + (p.getOwnedLands().size() * 500); 
+                    
+                    if (vc.isPlayerCloseToVictory(state.getBoard(), p)) { 
+                        threatScore += 10000; 
+                    }
                     
                     if (threatScore > maxThreatScore) {
                         maxThreatScore = threatScore;
@@ -223,7 +229,7 @@ public class BotPlayer extends Player {
             if (vc.isPlayerCloseToVictory(state.getBoard(), opponent)) {
                 return true; 
             }
-            
+
             if (opponent.getMoney() > 3000 || opponent.getOwnedLands().size() > 5) {
                 return true;
             }

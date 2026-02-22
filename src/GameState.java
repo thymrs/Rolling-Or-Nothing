@@ -9,6 +9,7 @@ public class GameState {
     private CardDeck deck;
     private Dice dice;
     final private GameConfig config;
+    private VictoryChecker victoryChecker;
     private TurnPhase currentPhase;
     private int currentPlayerIndex;
     private int turnCount;
@@ -25,6 +26,7 @@ public class GameState {
         this.bank = new Bank();
         this.deck = new CardDeck();
         this.config = new GameConfig.Builder().build();
+        this.victoryChecker = new VictoryChecker()
 
         this.players = new ArrayList<>();
         this.board = null;
@@ -71,4 +73,6 @@ public class GameState {
     public int getTurnCount() { return turnCount; }
 
     public GameConfig getConfig() { return config; }
+
+    public VictoryChecker getVictoryChecker() { return victoryChecker; }
 }

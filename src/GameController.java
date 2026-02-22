@@ -16,11 +16,10 @@ public class GameController implements ActionListener {
      * Constructor for GameController
      */
     public GameController(GameWindow view) {
-        // TODO: Initialize components (finished)
         this.view = view;
 
         this.mapLoader = new MapLoader();
-        this.victoryChecker = new VictoryChecker();
+        this.victoryChecker = state.getVictoryChecker();
 
         this.view.setActionListener(this);
     }
@@ -30,7 +29,6 @@ public class GameController implements ActionListener {
      * @param config Game configuration settings
      */
     public void startGame(GameConfig config) {
-        // TODO: Initialize game with config (finished)
         System.out.println("Game Starting...");
         initGame(config);
 
@@ -46,7 +44,6 @@ public class GameController implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent event) {
-        // TODO: Route actions to appropriate handlers (finished)
         String command = event.getActionCommand();
 
         System.out.println("User pressed: " + command);
@@ -73,7 +70,6 @@ public class GameController implements ActionListener {
      * Initializes the game state
      */
     private void initGame(GameConfig config) {
-        // TODO: Set up board, players, and initial state (finished)
         this.state = new GameState();
 
         Board board = mapLoader.loadMap(config.getMapName());
@@ -99,7 +95,6 @@ public class GameController implements ActionListener {
      * Processes the current turn phase
      */
     private void processPhase() {
-        // TODO: Handle current phase logic
         Player currentPlayer = state.getCurrentPlayer();
         TurnPhase currentPhase = state.getCurrentPhase();
 
@@ -149,7 +144,7 @@ public class GameController implements ActionListener {
      * Handles bot player's turn
      */
     private void handleBotTurn() {
-        BotPlayer bot = (BotPlayer) state.getCurrentPlayer(); //
+        BotPlayer bot = (BotPlayer) state.getCurrentPlayer();
 
         new Thread(() -> {
             try {
@@ -225,7 +220,7 @@ public class GameController implements ActionListener {
         Player player = state.getCurrentPlayer();
 
         state.getDice().roll();
-        int steps = state.getDice().getValue();
+        int steps = state.getDice().getTotal();
 
         int oldPos = player.getPosition();
         int newPos = state.getBoard().getNextIndex(oldPos, steps);
