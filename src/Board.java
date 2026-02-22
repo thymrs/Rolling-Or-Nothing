@@ -49,6 +49,15 @@ public class Board {
         return maxRent;
     }
 
+    public long getTotalTilesByColor(String color) {
+        if (color == null) return 0;
+        return tiles.stream()
+            .filter(t -> t instanceof PropertyTile)
+            .map(t -> (PropertyTile) t)
+            .filter(p -> color.equals(p.getColorGroup()))
+            .count();
+    }
+
     public int size() {
         return totalTiles;
     }

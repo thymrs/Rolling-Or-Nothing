@@ -72,7 +72,7 @@ public class VictoryChecker {
 
   // method เก้บสีสำหรับไปเชคทริปเปลคัลเลอ
     private int countCompletedColors(Board board, Player player) {
-        Map<String, Long> colorCount = player.ownedLands.stream()
+        Map<String, Long> colorCount = player.getOwnedLands().stream()
             .filter(p -> !p.isTourism())
             .filter(p -> p.getColorGroup() != null)
             .collect(Collectors.groupingBy(PropertyTile::getColorGroup, Collectors.counting()));

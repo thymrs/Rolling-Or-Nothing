@@ -44,6 +44,15 @@ public class PropertyTile extends Tile {
     public void setOwner(Player owner) { this.owner = owner; }
     public void setMortgaged(boolean mortgaged) { this.isMortgaged = mortgaged; }
 
+    public boolean isTourism() {
+        return "TOURISM".equalsIgnoreCase(this.colorGroup);
+    }
+
+    public int getBoardSide() {
+        int tilesPerSide = 8;
+        return (this.index / tilesPerSide) + 1; 
+    }
+
     @Override
     public void onPlayerEnter(Player player, GameState state) {
         if (player == null || state == null) return;
