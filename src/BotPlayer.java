@@ -2,7 +2,7 @@ import java.util.List;
 import java.util.Random;
 
 public class BotPlayer extends Player {
-    private DifficultyLevel difficulty;
+    private final DifficultyLevel difficulty;
     private Random random = new Random();
 
     public BotPlayer(String name, int initialMoney, DifficultyLevel difficulty) {
@@ -64,14 +64,25 @@ public class BotPlayer extends Player {
 
     public boolean handleHardDecision(DecisionType type, PropertyTile tile, GameState state){
         switch(type){
-            case BUY_LAND: return evaluateHardBuyLand(tile, state);
-            case USE_CARD: return evaluateHardUseCard(state);
-            case UPGRADE:
+            case BUY_LAND -> {
+                return evaluateHardBuyLand(tile, state);
+            }
+            case USE_CARD -> {
+                return evaluateHardUseCard(state);
+            }
+            case UPGRADE -> {
                 int maxRent = state.getBoard().getMaxRentOnBoard();
                 return (this.getMoney() > maxRent) && chance(90);
-            case PAY_TOLL : return true;
-            case SURRENDER: return this.getMoney() < -500;
-            default: return false;
+            }
+            case PAY_TOLL -> {
+                return true;
+            }
+            case SURRENDER -> {
+                return this.getMoney() < -500;
+            }
+            default -> {
+                return false;
+            }
         }
     }
 
@@ -243,5 +254,13 @@ public class BotPlayer extends Player {
         }
 
         return false;
+    }
+
+    public Random getRandom() {
+        return random;
+    }
+
+    public void setRandom(Random random) {
+        this.random = random;
     }
 }
