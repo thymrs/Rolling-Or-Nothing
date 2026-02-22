@@ -1,8 +1,12 @@
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class VictoryChecker {
+
+    private final int LINE_VICTORY_REQ = 8;
+    private final int TOURISM_VICTORY_REQ = 5;   
+    private final int TRIPLE_VICTORY_REQ = 3;    
+
     public VictoryType checkWinCondition(GameState state) {
         Player player = state.getCurrentPlayer();
         Board board = state.getBoard();
@@ -10,7 +14,8 @@ public class VictoryChecker {
         if (checkLineVictory(board, player)) return VictoryType.LINE_VICTORY;
         if (checkTripleVictory(board, player)) return VictoryType.TRIPLE_VICTORY;
         if (checkTourismVictory(board, player)) return VictoryType.TOURISM_VICTORY;
-        if (player.getMoney() < 0 && player.getOwnedLands().isEmpty()) return VictoryType.BANKRUPTCY;
+ 
+        if (player.getMoney() < 0 && player.getOwnedLands().isEmpty()) return VictoryType.BANKRUPTCY; //ล้มละลายยยย เงินเบิ่ด
 
         return VictoryType.NONE;
     }
@@ -21,15 +26,35 @@ public class VictoryChecker {
                isCloseToTourismVictory(board, player);
     }
 
+    private boolean checkLineVictory(Board board, Player player) {
+        List<PropertyTile> ownedProps = board.getPropertiesOwnedBy(player);
+        Map<Integer, Long> sideCount = ownedProps.stream()
+            .collect(Collectors.groupingBy(PropertyTile::getBoardSide, Collectors.counting()));
+
+        for (Long count : sideCount.values()) {
+            if (count >= LINE_VICTORY_REQ) return true; // ครองครบ 8 ช่อง
+        }
+        return false;
+    }
+
+   private boolean checkTripleVictory(Board board, Player player) {
+        return countCompletedColors(board, player) >= TRIPLE_VICTORY_REQ; // ครองครบ 3 สี
+    }
+
+    private boolean checkTourismVictory(Board board, Player player) {
+        List<PropertyTile> ownedProps = board.getPropertiesOwnedBy(player);
+        long tourismCount = ownedProps.stream().filter(PropertyTile::isTourism).count();
+        
+        return tourismCount >= TOURISM_VICTORY_REQ; // ครองเกาะครบ
+    }
+
     private boolean isCloseToLineVictory(Board board, Player player) {
         List<PropertyTile> ownedProps = board.getPropertiesOwnedBy(player);
         Map<Integer, Long> sideCount = ownedProps.stream()
             .collect(Collectors.groupingBy(PropertyTile::getBoardSide, Collectors.counting()));
-        int PROPS_PER_SIDE = 8; //รอว่าแถวนึงมีกี่ช่อง
+
         for (Long count : sideCount.values()) {
-            if (count == PROPS_PER_SIDE - 1) {
-                return true;
-            }
+            if (count == LINE_VICTORY_REQ - 1) return true; // ขาด 1 ช่อง
         }
         return false;
     }
@@ -37,68 +62,33 @@ public class VictoryChecker {
     private boolean isCloseToTourismVictory(Board board, Player player) {
         List<PropertyTile> ownedProps = board.getPropertiesOwnedBy(player);
         long ownedTourism = ownedProps.stream().filter(PropertyTile::isTourism).count();
-        int TOTAL_TOURISM = 5; //รอว่าแถวนึงมีกี่ช่อง
-        return ownedTourism == TOTAL_TOURISM - 1;
-    }
-
-    // private int countCompletedColorSets(Board board, List<PropertyTile> ownedProps) {
-    //     // จัดกลุ่มที่ดินที่ผู้เล่นครองตามสี
-    //     Map<String, Long> playerColorCount = ownedProps.stream()
-    //             .filter(p -> !p.isTourism())
-    //             .collect(Collectors.groupingBy(PropertyTile::getColorGroup, Collectors.counting()));
-
-    //     int completedSets = 0;
         
-    //     // วนลูปเช็คทีละสีที่ผู้เล่นมี
-    //     for (String color : playerColorCount.keySet()) {
-    //         long ownedCount = playerColorCount.get(color);
-    //         long totalInColor = board.getTotalTilesByColor(color); // ต้องมี Method นี้ใน Board
-            
-    //         if (ownedCount == totalInColor && totalInColor > 0) {
-    //             completedSets++;
-    //         }
-    //     }
-    //     return completedSets;
-    // }
-
-    private boolean checkLineVictory(Board board, Player player) {
-        List<PropertyTile> ownedProps = board.getPropertiesOwnedBy(player);
-
-        Map<Integer, Long> sideCount = ownedProps.stream()
-            .collect(Collectors.groupingBy(PropertyTile::getBoardSide, Collectors.counting()));
-
-        for (Long count : sideCount.values()) {
-            if (count >= 6) { 
-                return true;
-            }
-        }
-        return false;
+        return ownedTourism == TOURISM_VICTORY_REQ - 1; // ขาด 1 เกาะ
     }
 
-    private boolean checkTripleVictory(Board board, Player player) {
-        List<PropertyTile> ownedProps = board.getPropertiesOwnedBy(player);
+    private boolean isCloseToTripleVictory(Board board, Player player) {
+        return countCompletedColors(board, player) == TRIPLE_VICTORY_REQ - 1;  // ขาด 1 สี
+    }
 
-        Map<String, Long> colorCount = ownedProps.stream()
+  // method เก้บสีสำหรับไปเชคทริปเปลคัลเลอ
+    private int countCompletedColors(Board board, Player player) {
+        Map<String, Long> colorCount = player.ownedLands.stream()
             .filter(p -> !p.isTourism())
+            .filter(p -> p.getColorGroup() != null)
             .collect(Collectors.groupingBy(PropertyTile::getColorGroup, Collectors.counting()));
 
         int completedColors = 0;
         for (Map.Entry<String, Long> entry : colorCount.entrySet()) {
-            if (entry.getValue() >= 2) { 
+            String color = entry.getKey();
+            long ownedCount = entry.getValue();
+    
+            long totalInColor = board.getTotalTilesByColor(color);
+
+            if (ownedCount == totalInColor && totalInColor > 0) { 
                 completedColors++;
             }
         }
-        
-        return completedColors >= 3;
-    }
-
-    private boolean checkTourismVictory(Board board, Player player) {
-        List<PropertyTile> ownedProps = board.getPropertiesOwnedBy(player);
-        
-        long tourismCount = ownedProps.stream()
-            .filter(PropertyTile::isTourism)
-            .count();
-        return tourismCount >= 4;
+        return completedColors;
     }
 
     public String getWinner(GameState state) {

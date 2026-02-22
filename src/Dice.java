@@ -4,7 +4,7 @@ import java.util.Random;
  * Represents game dice for rolling
  */
 public class Dice {
-    private Random random;
+    final private Random random;
     private int die1;
     private int die2;
     

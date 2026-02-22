@@ -8,7 +8,7 @@ public class GameState {
     private Bank bank;
     private CardDeck deck;
     private Dice dice;
-    private GameConfig config;
+    final private GameConfig config;
     private TurnPhase currentPhase;
     private int currentPlayerIndex;
     private int turnCount;

@@ -214,17 +214,25 @@ public class BotPlayer extends Player {
         return false;
     }
 
-    private boolean isOpponentCloseToVictory(GameState state){
-        for(Player opponent : state.getPlayers()){
-            if(opponent == this) continue;
+    private boolean isOpponentCloseToVictory(GameState state) {
+        VictoryChecker vc = new VictoryChecker();
+        
+        for (Player opponent : state.getPlayers()) {
+            if (opponent == this) continue;
 
-            if(opponent.getMoney() > 3000 || opponent.getOwnedLands().size() > 5) return true;
+            if (vc.isPlayerCloseToVictory(state.getBoard(), opponent)) {
+                return true; 
+            }
+            
+            if (opponent.getMoney() > 3000 || opponent.getOwnedLands().size() > 5) {
+                return true;
+            }
         }
         return false;
     }
 
     private boolean hasExpensiveAssets(){
-        for(PropertyTile land : this.ownedLands()){
+        for(PropertyTile land : this.getOwnedLands()){
             if(land.getBuildingLevel() >= 2) return true;
         }
 

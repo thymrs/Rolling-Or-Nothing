@@ -225,26 +225,76 @@ public class GameController implements ActionListener {
         Player player = state.getCurrentPlayer();
 
         state.getDice().roll();
-        int steps = state.getDice().getTotal();
+        int steps = state.getDice().getValue();
 
         int oldPos = player.getPosition();
         int newPos = state.getBoard().getNextIndex(oldPos, steps);
-        player.setPosition(newPos);
+        player.setPosition(newPos); //
 
         if (newPos < oldPos) {
             state.getBank().paySalary(player, 2000);
-            view.showPopup(player.getName() + "เดินครบรอบ รับเงินเดือน");
+            view.showPopup(player.getName() + " เดินครบรอบ รับเงินเดือน 2000!");
         }
-        Tile tile = state.getBoard().getTile(player.getPosition());
+
         Tile currentTile = state.getBoard().getTile(newPos);
-        currentTile.onPlayerEnter(player, state);
+        
+        if (currentTile instanceof ChanceTile chanceTile) {
+            Card c = chanceTile.drawCard(state);
+            
+            if (c != null) {
+                CardType type = c.getType(); //
 
-        if (currentTile instanceof PropertyTile && ((PropertyTile) currentTile).getOwner() == null) {
-            state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
-        } else {
-            state.setCurrentPhase(TurnPhase.END_TURN);
+                if (type == CardType.ANGEL || type == CardType.SHIELD || 
+                    type == CardType.DISCOUNT || type == CardType.ESCAPE) {
+                    
+                    if (player instanceof BotPlayer) {
+                        player.receiveCard(c); //
+                        view.showPopup("🤖 " + player.getName() + " ได้รับไอเทม: " + type);
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                    } else {
+                        int choice = javax.swing.JOptionPane.showConfirmDialog(null, 
+                            "คุณจั่วได้ไอเทม: " + type + "\nต้องการเก็บไว้ในกระเป๋าหรือไม่?", 
+                            "เสี่ยงดวงได้การ์ด!", javax.swing.JOptionPane.YES_NO_OPTION);
+                        
+                        if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                            if (player.receiveCard(c)) { //
+                                view.showPopup("เก็บการ์ด " + type + " เรียบร้อย!");
+                            } else {
+                                view.showPopup("กระเป๋าเต็ม! การ์ดถูกทิ้งลงกอง");
+                                state.getDeck().discard(c);
+                            }
+                        } else {
+                            state.getDeck().discard(c);
+                            view.showPopup("คุณเลือกที่จะทิ้งการ์ด " + type);
+                        }
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                    }
+                } 
+                else {
+                    if (c.requiresTarget()) {
+                        player.setHeldCard(c); //
+                        state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
+                        view.showPopup("คุณได้การ์ดโจมตี! โปรดกดใช้งานและเลือกเป้าหมาย");
+                    } else {
+                        c.applyEffect(player, null, state); //
+                        state.getDeck().discard(c);
+                        view.showPopup("บังคับใช้งานการ์ด " + type + " อัตโนมัติ!");
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                    }
+                }
+            } else {
+                state.setCurrentPhase(TurnPhase.END_TURN); // กองการ์ดหมด
+            }
+        } 
+        else {
+            currentTile.onPlayerEnter(player, state);
+
+            if (currentTile instanceof PropertyTile property && property.getOwner() == null) {
+                state.setCurrentPhase(TurnPhase.ACTION_REQUIRED); // รอให้ตัดสินใจซื้อที่ดิน
+            } else {
+                state.setCurrentPhase(TurnPhase.END_TURN); // จ่ายค่าเช่าเสร็จ หรือยืนเฉยๆ รอจบเทิร์น
+            }
         }
-
         view.updateView(state);
     }
 
