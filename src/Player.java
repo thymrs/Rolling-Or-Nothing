@@ -1,10 +1,10 @@
 import java.util.*;
 
 public abstract class Player {
-    private String name;
+    private final String name;
     private int money;
     private int position;
-    private List<PropertyTile> ownedLands;
+    private final List<PropertyTile> ownedLands;
     protected boolean isJailed;
     protected int jailTurnCount;
     protected int frozenTurns = 0;
