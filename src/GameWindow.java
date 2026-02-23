@@ -1,46 +1,83 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-// ... (import อื่นๆ)
+import java.util.List;
 
 public class GameWindow extends JFrame {
-
-    private BoardPanel boardPanel;
+    
+    // UI Components
     private ControlPanel controlPanel;
-    private EventLogPanel eventLogPanel; // 1. ประกาศตัวแปรใหม่
+    // private BoardPanel boardPanel;      // คุณน่าจะมีคลาสนี้อยู่แล้ว
+    // private EventLogPanel eventLogPanel; // คุณน่าจะมีคลาสนี้อยู่แล้ว
 
-    public static final Color THEME_BG = new Color(30, 35, 45);
-
-    public GameWindow(int maxTurns) {
-        setTitle("Isometric Monopoly Game");
+    public GameWindow() {
+        setTitle("Rolling Or Nothing");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        getContentPane().setPreferredSize(new Dimension(1600, 900));
-        getContentPane().setBackground(THEME_BG);
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // เปิดมาเต็มจออัตโนมัติ
         setLayout(new BorderLayout());
-        // สร้างหน้าจอแสดงเทิร์น
-        TurnDisplayPanel turnDisplay = new TurnDisplayPanel();
-        boardPanel.add(turnDisplay);
-        boardPanel.setComponentZOrder(turnDisplay, 0); // ให้อยู่เลเยอร์หน้าสุด
 
-        // สร้าง 3 Component หลัก
-        boardPanel = new BoardPanel();
+        // 1. สร้าง Panels
         controlPanel = new ControlPanel();
-        eventLogPanel = new EventLogPanel(); // 2. สร้าง Object
+        
+        // *หมายเหตุ: ถ้าคุณมี BoardPanel และ EventLogPanel แล้ว ให้ Uncomment ด้านล่างนี้*
+        // boardPanel = new BoardPanel();
+        // eventLogPanel = new EventLogPanel();
 
-        // จัดวาง Layout (ซ้าย กลาง ขวา)
+        // 2. จัดวางลงหน้าต่าง
         add(controlPanel, BorderLayout.WEST);
-        add(boardPanel, BorderLayout.CENTER);
-        add(eventLogPanel, BorderLayout.EAST); // 3. แปะไว้ฝั่งขวา
-
-        pack();
-        setLocationRelativeTo(null);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        
+        // add(boardPanel, BorderLayout.CENTER);
+        // add(eventLogPanel, BorderLayout.EAST);
     }
 
-    // เมธอดใหม่: ให้ Controller สั่งพิมพ์ Log ได้
-    public void logEvent(String message) {
-        eventLogPanel.addLog(message);
+    // =========================================================
+    // Methods ที่ GameController ของเพื่อนเรียกใช้งาน
+    // =========================================================
+
+    /**
+     * รับ ActionListener จาก GameController ไปผูกกับปุ่มใน ControlPanel
+     */
+    public void setActionListener(ActionListener listener) {
+        controlPanel.setActionListener(listener);
     }
 
-    // ... (เมธอดอื่นๆ คงเดิม: setControlsEnabled, updateView, showPopup)
+    /**
+     * คืนค่า ControlPanel ให้ Controller สั่งเปิด/ปิดปุ่มได้
+     * (ตรงกับที่เพื่อนเรียก: view.getControlPanel().setButtonsEnabled(...))
+     */
+    public ControlPanel getControlPanel() {
+        return controlPanel;
+    }
+
+    /**
+     * อัปเดตหน้าจอทั้งหมดเมื่อ GameState เปลี่ยนแปลง
+     */
+    public void updateView(GameState state) {
+        // boardPanel.updateBoard(state); // ส่ง state ไปให้กระดานวาดใหม่
+        repaint();
+    }
+
+    /**
+     * แสดง Pop-up ข้อความแจ้งเตือนต่างๆ 
+     */
+    public void showPopup(String message) {
+        // เด้ง Dialog ให้ผู้เล่นเห็น
+        JOptionPane.showMessageDialog(this, message, "แจ้งเตือน", JOptionPane.INFORMATION_MESSAGE);
+        
+        // *ถ้ามี EventLogPanel ก็สั่งพิมพ์ลง Log ทางขวาด้วย จะดูดีมาก*
+        // if (eventLogPanel != null) {
+        //     eventLogPanel.logEvent(message);
+        // }
+    }
+
+    /**
+     * เปิดหน้าต่างเลือกเป้าหมายโจมตี สำหรับการ์ดที่ต้องการเป้าหมาย
+     * (ตรงกับที่เพื่อนเรียก: target = view.showSelectTargetDialog(opponents);)
+     */
+    public Player showSelectTargetDialog(List<Player> opponents) {
+        // เรียกใช้ GameDialogManager ที่เราเพิ่งเขียนไปมาแสดงผล
+        // (เราสร้าง Card จำลองขึ้นมาเป็น Title เฉยๆ เพราะ Controller เพื่อนไม่ได้ส่งชื่อการ์ดมาด้วย)
+        Card dummyCard = new Card("เลือกเป้าหมาย"); 
+        return GameDialogManager.showAttackCardDialog(this, dummyCard, opponents);
+    }
 }

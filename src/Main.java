@@ -23,7 +23,7 @@ public class Main {
         
         Board board = loader.loadMap(config.getMapName()); 
 
-        GameWindow gameWindow = new GameWindow(board);
+        GameWindow view = new GameWindow();
 
         GameController controller = new GameController(gameWindow);
         
