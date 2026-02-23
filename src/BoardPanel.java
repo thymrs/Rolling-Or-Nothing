@@ -1,10 +1,10 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.List;
+import javax.swing.*;
 
 public class BoardPanel extends JPanel {
 
@@ -167,80 +167,64 @@ public class BoardPanel extends JPanel {
     private void relayoutBoard() {
         int panelW = getWidth();
         int panelH = getHeight();
-        if (panelW == 0 || panelH == 0)
-            return;
+        if (panelW == 0 || panelH == 0) return;
 
-        // 1. จัดตำแหน่ง Turn Display ไว้ตรงกลางบน
+        // 1. จัดตำแหน่ง Turn Display (ปรับให้ยืดหยุ่นตามความกว้าง)
         if (turnDisplay != null) {
-            turnDisplay.setBounds((panelW - 200) / 2, 20, 200, 50);
+            int tdW = Math.min(300, (int)(panelW * 0.3));
+            turnDisplay.setBounds((panelW - tdW) / 2, 20, tdW, 50);
         }
 
-        // 2. ตั้งค่าขนาดสำหรับคำนวณบอร์ด (ปรับ scale และค่า Y
-        // เพื่อให้บอร์ดใหญ่และไม่แบน)
-        double scale = 0.72; // ปรับขนาดบอร์ดโดยรวม (1.0 - 1.5)
-        double D = 130.0 * scale; // ขนาดช่องมุม
-        double W = 100.0 * scale; // ขนาดช่องปกติ (ปรับเพิ่มจาก 75 เป็น 100 เพื่อให้ดูไม่ผอม)
-        double G = (2 * D) + (7 * W); // ขนาดรวมในแกน 2D
+        // --- 2. คำนวณ Dynamic Scale เพื่อให้ "ชิด" ขอบพื้นที่ที่สุด ---
+        
+        // ขนาดตรรกะพื้นฐานของช่อง (D = มุม, W = ปกติ)
+        double baseD = 130.0; 
+        double baseW = 100.0; 
+        double baseG = (2 * baseD) + (7 * baseW); // ความกว้างในแกน 2D = 960.0
+        
+        // ความกว้าง/สูงจริงของบอร์ดในโหมด Isometric (0.6 ratio)
+        // Width = 2 * G, Height = 1.2 * G
+        double boardBaseWidth = 2 * baseG;
+        double boardBaseHeight = 1.2 * baseG;
+        
+        // เผื่อ Margin 10% เพื่อไม่ให้ทับกับแผง Status ที่มุมจอ
+        double margin = 0.9; 
+        double scaleW = (panelW * margin) / boardBaseWidth;
+        double scaleH = (panelH * margin) / boardBaseHeight;
+        
+        // เลือก Scale ที่ดีที่สุด (ทำให้บอร์ดใหญ่ที่สุดเท่าที่จะทำได้)
+        double dynamicScale = Math.min(scaleW, scaleH);
+        
+        // ปรับค่าจริงตาม Scale
+        double D = baseD * dynamicScale;
+        double W = baseW * dynamicScale;
+        double G = (2 * D) + (7 * W);
 
-        // คำนวณจุดเริ่มต้น (กึ่งกลางจอ)
-        double boardScreenW = 2 * G;
-        double boardScreenH = G;
-        double startX = (panelW - boardScreenW) / 2.0 + G;
-        double startY = (panelH - boardScreenH) / 2.0 - 20; // +50 เพื่อขยับบอร์ดลงมาจาก UI ด้านบน
+        // คำนวณจุดกึ่งกลางที่แม่นยำ (เพื่อให้มุมบน-ล่าง-ซ้าย-ขวา อยู่กึ่งกลางพื้นที่)
+        double startX = panelW / 2.0;
+        double startY = (panelH - (1.2 * G)) / 2.0; 
 
+        // --- 3. วางตำแหน่ง Tiles และปรับขนาด Font ให้ Responsive ---
         for (int i = 0; i < 32; i++) {
             double gx = 0, gy = 0, gw = 0, gh = 0;
+            boolean isCorner = (i % 8 == 0);
 
-            // กำหนดพิกัด 2D (Logic เดียวกับที่คุณส่งมา)
-            if (i == 0) {
-                gx = D + 7 * W;
-                gy = D + 7 * W;
-                gw = D;
-                gh = D;
-            } else if (i >= 1 && i <= 7) {
-                gx = D + (7 - i) * W;
-                gy = D + 7 * W;
-                gw = W;
-                gh = D;
-            } else if (i == 8) {
-                gx = 0;
-                gy = D + 7 * W;
-                gw = D;
-                gh = D;
-            } else if (i >= 9 && i <= 15) {
-                gx = 0;
-                gy = D + (15 - i) * W;
-                gw = D;
-                gh = W;
-            } else if (i == 16) {
-                gx = 0;
-                gy = 0;
-                gw = D;
-                gh = D;
-            } else if (i >= 17 && i <= 23) {
-                gx = D + (i - 17) * W;
-                gy = 0;
-                gw = W;
-                gh = D;
-            } else if (i == 24) {
-                gx = D + 7 * W;
-                gy = 0;
-                gw = D;
-                gh = D;
-            } else if (i >= 25 && i <= 31) {
-                gx = D + 7 * W;
-                gy = D + (i - 25) * W;
-                gw = D;
-                gh = W;
-            }
+            // Logic กำหนดตำแหน่ง gx, gy (พิกัด 0 ถึง G)
+            if (i == 0) { gx = D + 7 * W; gy = D + 7 * W; gw = D; gh = D; }
+            else if (i >= 1 && i <= 7) { gx = D + (7 - i) * W; gy = D + 7 * W; gw = W; gh = D; }
+            else if (i == 8) { gx = 0; gy = D + 7 * W; gw = D; gh = D; }
+            else if (i >= 9 && i <= 15) { gx = 0; gy = D + (15 - i) * W; gw = D; gh = W; }
+            else if (i == 16) { gx = 0; gy = 0; gw = D; gh = D; }
+            else if (i >= 17 && i <= 23) { gx = D + (i - 17) * W; gy = 0; gw = W; gh = D; }
+            else if (i == 24) { gx = D + 7 * W; gy = 0; gw = D; gh = D; }
+            else if (i >= 25 && i <= 31) { gx = D + 7 * W; gy = D + (i - 25) * W; gw = D; gh = W; }
 
-            // แปลงเป็นพิกัด Isometric (ใช้ค่า 0.6 เพื่อให้อวบขึ้น ไม่แบนแบบ 0.5)
+            // แปลงเป็นพิกัด Isometric
             Point2D.Double p1 = iso(startX, startY, gx, gy);
             Point2D.Double p2 = iso(startX, startY, gx + gw, gy);
             Point2D.Double p3 = iso(startX, startY, gx + gw, gy + gh);
             Point2D.Double p4 = iso(startX, startY, gx, gy + gh);
 
-            // คำนวณ Bounding Box
             int minX = (int) Math.min(Math.min(p1.x, p2.x), Math.min(p3.x, p4.x));
             int minY = (int) Math.min(Math.min(p1.y, p2.y), Math.min(p3.y, p4.y));
             int maxX = (int) Math.max(Math.max(p1.x, p2.x), Math.max(p3.x, p4.x));
@@ -248,7 +232,10 @@ public class BoardPanel extends JPanel {
 
             tiles[i].setBounds(minX, minY, maxX - minX, maxY - minY);
 
-            // สร้าง Polygon สำหรับปุ่ม
+            // ปรับ Font ให้ขยายตามขนาดช่อง
+            float fSize = (float)((isCorner ? 20 : 16) * dynamicScale);
+            tiles[i].setFont(tiles[i].getFont().deriveFont(Math.max(9f, fSize)));
+
             Polygon poly = new Polygon();
             poly.addPoint((int) (p1.x - minX), (int) (p1.y - minY));
             poly.addPoint((int) (p2.x - minX), (int) (p2.y - minY));
@@ -257,31 +244,30 @@ public class BoardPanel extends JPanel {
             tiles[i].setShape(poly);
         }
 
-        // 3. จัดตำแหน่งหมากผู้เล่นให้สัมพันธ์กับช่องใหม่
+        // --- 4. จัดตำแหน่งหมากผู้เล่น (Scale ตามช่อง) ---
+        int mw = (int)(32 * dynamicScale); 
+        int mh = mw;
         for (int i = 0; i < 4; i++) {
             if (playerMarkers[i] != null && playerMarkers[i].isVisible()) {
                 int pos = playerPositions[i];
                 Rectangle tb = tiles[pos].getBounds();
-                int mw = 25, mh = 25;
-                int ox = (i % 2 == 0) ? -20 : 10;
-                int oy = (i < 2) ? -20 : 10;
-                playerMarkers[i].setBounds(tb.x + tb.width / 2 - mw / 2 + ox, tb.y + tb.height / 2 - mh / 2 + oy, mw,
-                        mh);
+                // Offset ให้หมากกระจายตัวในช่อง
+                int ox = (int)(((i % 2 == 0) ? -15 : 10) * dynamicScale);
+                int oy = (int)(((i < 2) ? -15 : 10) * dynamicScale);
+                playerMarkers[i].setBounds(tb.x + tb.width / 2 - mw / 2 + ox, 
+                                        tb.y + tb.height / 2 - mh / 2 + oy, mw, mh);
             }
         }
 
-        // 4. จัดวาง Player Status Panels ไว้ตามมุมจอ
-        int spW = 220, spH = 130, margin = 30;
-        if (playerStatusPanels[0] != null)
-            playerStatusPanels[0].setBounds(margin, margin, spW, spH);
-        if (playerStatusPanels[1] != null)
-            playerStatusPanels[1].setBounds(panelW - spW - margin, margin, spW, spH);
-        if (playerStatusPanels[2] != null)
-            playerStatusPanels[2].setBounds(margin, panelH - spH - margin, spW, spH);
-        if (playerStatusPanels[3] != null)
-            playerStatusPanels[3].setBounds(panelW - spW - margin, panelH - spH - margin, spW, spH);
+        // --- 5. จัด Player Status Panels ให้อยู่มุมจอเสมอ ---
+        int spW = (int)(panelW * 0.2); // กว้าง 20% ของจอ
+        int spH = (int)(panelH * 0.16); // สูง 16% ของจอ
+        int pad = 25; 
+        if (playerStatusPanels[0] != null) playerStatusPanels[0].setBounds(pad, pad, spW, spH);
+        if (playerStatusPanels[1] != null) playerStatusPanels[1].setBounds(panelW - spW - pad, pad, spW, spH);
+        if (playerStatusPanels[2] != null) playerStatusPanels[2].setBounds(pad, panelH - spH - pad, spW, spH);
+        if (playerStatusPanels[3] != null) playerStatusPanels[3].setBounds(panelW - spW - pad, panelH - spH - pad, spW, spH);
     }
-
     // เพิ่มฟังก์ชัน iso ไว้ท้ายไฟล์ BoardPanel.java (ถ้ายังไม่มี)
     private Point2D.Double iso(double startX, double startY, double x, double y) {
         return new Point2D.Double(startX + (x - y), startY + (x + y) * 0.6); // ใช้ 0.6 เพื่อความ "อวบ"
