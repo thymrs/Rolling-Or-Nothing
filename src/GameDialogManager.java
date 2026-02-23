@@ -5,7 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameDialogManager {
+class GameDialogManager {
 
     // สีหลักสำหรับ Theme
     private static final Color BG_COLOR = new Color(40, 45, 55);
@@ -63,7 +63,7 @@ public class GameDialogManager {
         ButtonGroup group = new ButtonGroup();
 
         String[] labels = {"ที่ดิน", "บ้าน 1", "บ้าน 2", "บ้าน 3"};
-        int currentLevel = tile.getUpgradeLevel(); // สมมติ 0=ว่าง, 1=ที่ดิน, 2=บ้าน1 ...
+        int currentLevel = tile.getBuildingLevel(); // สมมติ 0=ว่าง, 1=ที่ดิน, 2=บ้าน1 ...
 
         for (int i = 0; i < 4; i++) {
             JToggleButton btn = new JToggleButton(labels[i]);
@@ -104,7 +104,7 @@ public class GameDialogManager {
         final boolean[] result = {false};
 
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel("คุณต้องการใช้งานการ์ดป้องกัน [" + card.getName() + "] หรือไม่?", SwingConstants.CENTER);
+        JLabel label = new JLabel("คุณต้องการใช้งานการ์ดป้องกัน [" + card.getTypeCard() + "] หรือไม่?", SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 16));
         label.setForeground(TEXT_COLOR);
         panel.add(label, BorderLayout.CENTER);
@@ -129,7 +129,7 @@ public class GameDialogManager {
 
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         
-        JLabel label = new JLabel("เลือกเป้าหมายเพื่อใช้การ์ด [" + card.getName() + "]:", SwingConstants.CENTER);
+        JLabel label = new JLabel("เลือกเป้าหมายเพื่อใช้การ์ด [" + card.getTypeCard() + "]:", SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 14));
         label.setForeground(TEXT_COLOR);
         panel.add(label, BorderLayout.NORTH);
@@ -186,7 +186,7 @@ public class GameDialogManager {
         List<JCheckBox> checkBoxes = new ArrayList<>();
         
         for (PropertyTile prop : ownedProperties) {
-            JCheckBox cb = new JCheckBox(prop.getName() + " (ราคาขาย: " + (prop.getPrice() / 2) + ")");
+            JCheckBox cb = new JCheckBox(prop.getName() + " (ราคาขาย: " + (prop.getPurchasePrice() / 2) + ")");
             cb.setFont(new Font("SansSerif", Font.PLAIN, 14));
             cb.setForeground(TEXT_COLOR);
             cb.setBackground(BG_COLOR);
@@ -231,47 +231,7 @@ public class GameDialogManager {
         return btn;
     }
 
-    // =========================================================================
-    // การทดสอบ (Run Test) ลบส่วนนี้ทิ้งได้เมื่อนำไปต่อกับระบบจริง
-    // =========================================================================
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Test Dialogs");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
-        frame.setLayout(new FlowLayout());
-
-        JButton btn1 = new JButton("Test 1: Buy Property");
-        btn1.addActionListener(e -> {
-            PropertyTile tile = new PropertyTile("กรุงเทพมหานคร", 1); // สมมติว่ามีที่ดินแล้ว (Level 1)
-            int result = showBuyPropertyDialog(frame, tile);
-            System.out.println("คุณเลือกอัปเกรดเลเวล: " + result);
-        });
-
-        JButton btn2 = new JButton("Test 2: Defense Card");
-        btn2.addActionListener(e -> {
-            boolean result = showDefenseCardDialog(frame, new Card("โล่ห์ศักดิ์สิทธิ์"));
-            System.out.println("ป้องกันหรือไม่: " + result);
-        });
-
-        JButton btn3 = new JButton("Test 3: Attack Card");
-        btn3.addActionListener(e -> {
-            List<Player> opps = List.of(new Player("Bot 1"), new Player("Bot 2"), new Player("Player 2"));
-            Player target = showAttackCardDialog(frame, new Card("ขีปนาวุธ"), opps);
-            System.out.println("เป้าหมายคือ: " + (target != null ? target.getName() : "ยกเลิก"));
-        });
-
-        JButton btn4 = new JButton("Test 4: Sell Property");
-        btn4.addActionListener(e -> {
-            List<PropertyTile> props = List.of(new PropertyTile("เชียงใหม่", 2), new PropertyTile("ภูเก็ต", 1));
-            List<PropertyTile> sold = showSellPropertyDialog(frame, props);
-            System.out.println("ขายทรัพย์สิน: " + sold.size() + " แห่ง");
-        });
-
-        frame.add(btn1); frame.add(btn2); frame.add(btn3); frame.add(btn4);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
-}
+    
 
 // =========================================================================
     // 5. Dialog ยืนยันการยอมแพ้ (ถามแค่ YES/NO)
@@ -297,3 +257,4 @@ public class GameDialogManager {
 
         return result[0];
     }
+}

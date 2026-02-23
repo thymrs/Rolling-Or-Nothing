@@ -48,8 +48,8 @@ public class GameWindow extends JFrame {
         JOptionPane.showMessageDialog(this, message, "แจ้งเตือน", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    public String showSelectTargetDialog(List<String> opponentNames) {
+    public Player showSelectTargetDialog(List<Player> opponents) {
         // เรียกใช้ Dialog Manager ให้ผู้เล่นเลือกเป้าหมาย โดยส่งไปแค่รายชื่อ
-        return GameDialogManager.showTargetSelection(this, opponentNames);
+        return GameDialogManager.showAttackCardDialog(this, null, opponents);
     }
 }
