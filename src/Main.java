@@ -9,6 +9,7 @@ public class Main {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        
         GameConfig config = new GameConfig.Builder()
                 .initialMoney(1500)
                 .maxTurns(100)
@@ -33,6 +34,7 @@ public class Main {
         controller.startGame(config);
 
         System.out.println("Monopoly Game Started!");
+        
     }
 }
 

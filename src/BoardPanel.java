@@ -62,13 +62,13 @@ public class BoardPanel extends JPanel {
                 fontSize = 22;
                 switch (i) {
                     case 0:
-                        label = "FESTIVAL";
+                        label = "START";
                         break;
                     case 8:
                         label = "JAIL";
                         break;
                     case 16:
-                        label = "START";
+                        label = "FESTIVAL";
                         break;
                     case 24:
                         label = "TRAVEL";
