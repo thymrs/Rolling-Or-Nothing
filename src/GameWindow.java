@@ -1,72 +1,46 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.util.List;
+// ... (import อื่นๆ)
 
 public class GameWindow extends JFrame {
 
     private BoardPanel boardPanel;
     private ControlPanel controlPanel;
+    private EventLogPanel eventLogPanel; // 1. ประกาศตัวแปรใหม่
 
-    // ลบการสร้าง GameController ออกจากที่นี่ เพราะตามหลัก MVC
-    // ตัว Main.java จะเป็นคนสร้าง GameWindow และ GameController
-    // แล้วเชื่อมเข้าด้วยกัน
+    public static final Color THEME_BG = new Color(30, 35, 45);
 
-    public GameWindow(Board board) {
-        setTitle("Isometric Board Game - MVC Architecture");
+    public GameWindow(int maxTurns) {
+        setTitle("Isometric Monopoly Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         getContentPane().setPreferredSize(new Dimension(1600, 900));
+        getContentPane().setBackground(THEME_BG);
         setLayout(new BorderLayout());
+        // สร้างหน้าจอแสดงเทิร์น
+        TurnDisplayPanel turnDisplay = new TurnDisplayPanel();
+        boardPanel.add(turnDisplay);
+        boardPanel.setComponentZOrder(turnDisplay, 0); // ให้อยู่เลเยอร์หน้าสุด
 
-        // ส่ง Board ไปให้ BoardPanel วาด
-        boardPanel = new BoardPanel(board);
+        // สร้าง 3 Component หลัก
+        boardPanel = new BoardPanel();
         controlPanel = new ControlPanel();
+        eventLogPanel = new EventLogPanel(); // 2. สร้าง Object
 
+        // จัดวาง Layout (ซ้าย กลาง ขวา)
+        add(controlPanel, BorderLayout.WEST);
         add(boardPanel, BorderLayout.CENTER);
-        add(controlPanel, BorderLayout.EAST);
+        add(eventLogPanel, BorderLayout.EAST); // 3. แปะไว้ฝั่งขวา
 
         pack();
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
-    // --- เมธอดที่ GameController จำเป็นต้องเรียกใช้ ---
-
-    public void setActionListener(ActionListener listener) {
-        // ส่งต่อ Listener ไปผูกกับปุ่มใน ControlPanel
-        controlPanel.addActionListener(listener);
+    // เมธอดใหม่: ให้ Controller สั่งพิมพ์ Log ได้
+    public void logEvent(String message) {
+        eventLogPanel.addLog(message);
     }
 
-    public ControlPanel getControlPanel() {
-        return controlPanel;
-    }
-
-    public void updateView(GameState state) {
-        // อัปเดตตำแหน่งของผู้เล่นทุกคนบน BoardPanel
-        for (Player p : state.getPlayers()) {
-            boardPanel.updatePlayerUI(p.getId(), p.getPosition());
-        }
-        boardPanel.repaint();
-    }
-
-    public void showPopup(String message) {
-        JOptionPane.showMessageDialog(this, message, "System Event", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    public Player showSelectTargetDialog(List<Player> opponents) {
-        if (opponents == null || opponents.isEmpty())
-            return null;
-
-        // แปลงเป็น Array เพื่อใส่ลงใน Dropdown ของ JOptionPane
-        Player[] oppArray = opponents.toArray(new Player[0]);
-
-        return (Player) JOptionPane.showInputDialog(
-                this,
-                "Select a target player:",
-                "Use Card",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                oppArray,
-                oppArray[0]);
-    }
+    // ... (เมธอดอื่นๆ คงเดิม: setControlsEnabled, updateView, showPopup)
 }

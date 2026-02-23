@@ -1,0 +1,298 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+public class GameDialogManager {
+
+    // สีหลักสำหรับ Theme
+    private static final Color BG_COLOR = new Color(40, 45, 55);
+    private static final Color PANEL_COLOR = new Color(30, 35, 45);
+    private static final Color TEXT_COLOR = Color.WHITE;
+    private static final Color YES_COLOR = new Color(80, 200, 120);
+    private static final Color NO_COLOR = new Color(255, 100, 100);
+    private static final Color DISABLED_COLOR = new Color(100, 100, 100);
+
+    // =========================================================================
+    // โครงสร้างหลักของ Dialog (Base Dialog)
+    // =========================================================================
+    private static JDialog createBaseDialog(JFrame parent, String title, JPanel contentPanel, ActionListener onYes, ActionListener onNo) {
+        JDialog dialog = new JDialog(parent, title, true); // true = Modal (บล็อกหน้าต่างอื่นจนกว่าจะปิด)
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(BG_COLOR);
+
+        // ใส่ Content (ส่วนเนื้อหาที่ต่างกันไปในแต่ละประเภท)
+        contentPanel.setBackground(BG_COLOR);
+        contentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        dialog.add(contentPanel, BorderLayout.CENTER);
+
+        // สร้างแผงปุ่ม YES / NO ด้านล่าง
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel.setBackground(BG_COLOR);
+        buttonPanel.setBorder(new EmptyBorder(10, 20, 20, 20));
+
+        JButton btnYes = styleButton(new JButton("YES"), YES_COLOR);
+        JButton btnNo = styleButton(new JButton("NO"), NO_COLOR);
+
+        btnYes.addActionListener(e -> {
+            if (onYes != null) onYes.actionPerformed(e);
+            dialog.dispose();
+        });
+
+        btnNo.addActionListener(e -> {
+            if (onNo != null) onNo.actionPerformed(e);
+            dialog.dispose();
+        });
+
+        buttonPanel.add(btnYes);
+        buttonPanel.add(btnNo);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        return dialog;
+    }
+
+    // =========================================================================
+    // 1. Dialog ซื้อ/อัปเกรดบ้าน (เลือกได้ 1 อย่าง)
+    // =========================================================================
+    public static int showBuyPropertyDialog(JFrame parent, PropertyTile tile) {
+        final int[] selectedLevel = {-1}; // -1 คือยกเลิก/ไม่ซื้อ
+
+        JPanel panel = new JPanel(new GridLayout(1, 4, 10, 0));
+        ButtonGroup group = new ButtonGroup();
+
+        String[] labels = {"ที่ดิน", "บ้าน 1", "บ้าน 2", "บ้าน 3"};
+        int currentLevel = tile.getUpgradeLevel(); // สมมติ 0=ว่าง, 1=ที่ดิน, 2=บ้าน1 ...
+
+        for (int i = 0; i < 4; i++) {
+            JToggleButton btn = new JToggleButton(labels[i]);
+            btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+            btn.setFocusPainted(false);
+            btn.setBackground(PANEL_COLOR);
+            btn.setForeground(TEXT_COLOR);
+
+            // เงื่อนไข: ถ้าระดับปัจจุบันมากกว่าหรือเท่ากับปุ่มนี้ แปลว่าซื้อไปแล้ว ให้เป็นสีเทาและกดไม่ได้
+            if (currentLevel > i) {
+                btn.setEnabled(false);
+                btn.setBackground(DISABLED_COLOR);
+                btn.setText(labels[i] + " (Owned)");
+            } else {
+                final int levelValue = i + 1;
+                btn.addActionListener(e -> selectedLevel[0] = levelValue);
+                group.add(btn);
+            }
+            panel.add(btn);
+        }
+
+        JDialog dialog = createBaseDialog(parent, "ซื้อ / อัปเกรดอสังหาฯ: " + tile.getName(), panel, 
+            e -> {}, // Yes = ปล่อยให้คืนค่า selectedLevel
+            e -> selectedLevel[0] = -1 // No = ยกเลิก
+        );
+
+        dialog.setSize(500, 200);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+
+        return selectedLevel[0];
+    }
+
+    // =========================================================================
+    // 2. Dialog การ์ดป้องกัน (ถามแค่ YES/NO)
+    // =========================================================================
+    public static boolean showDefenseCardDialog(JFrame parent, Card card) {
+        final boolean[] result = {false};
+
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel label = new JLabel("คุณต้องการใช้งานการ์ดป้องกัน [" + card.getName() + "] หรือไม่?", SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        label.setForeground(TEXT_COLOR);
+        panel.add(label, BorderLayout.CENTER);
+
+        JDialog dialog = createBaseDialog(parent, "ใช้งานการ์ดป้องกัน", panel,
+            e -> result[0] = true,
+            e -> result[0] = false
+        );
+
+        dialog.setSize(400, 180);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+
+        return result[0];
+    }
+
+    // =========================================================================
+    // 3. Dialog การ์ดโจมตี (เลือกเป้าหมาย)
+    // =========================================================================
+    public static Player showAttackCardDialog(JFrame parent, Card card, List<Player> opponents) {
+        final Player[] target = {null};
+
+        JPanel panel = new JPanel(new BorderLayout(0, 15));
+        
+        JLabel label = new JLabel("เลือกเป้าหมายเพื่อใช้การ์ด [" + card.getName() + "]:", SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 14));
+        label.setForeground(TEXT_COLOR);
+        panel.add(label, BorderLayout.NORTH);
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        btnPanel.setBackground(BG_COLOR);
+        ButtonGroup group = new ButtonGroup();
+
+        for (Player opp : opponents) {
+            JToggleButton btn = new JToggleButton(opp.getName());
+            btn.setPreferredSize(new Dimension(100, 40));
+            btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+            btn.setBackground(PANEL_COLOR);
+            btn.setForeground(TEXT_COLOR);
+            btn.setFocusPainted(false);
+            
+            btn.addActionListener(e -> target[0] = opp);
+            group.add(btn);
+            btnPanel.add(btn);
+        }
+        panel.add(btnPanel, BorderLayout.CENTER);
+
+        JDialog dialog = createBaseDialog(parent, "โจมตีผู้เล่นอื่น", panel,
+            e -> {
+                if (target[0] == null) {
+                    JOptionPane.showMessageDialog(parent, "กรุณาเลือกเป้าหมาย!", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+            },
+            e -> target[0] = null // Cancel
+        );
+
+        dialog.setSize(450, 220);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+
+        return target[0];
+    }
+
+    // =========================================================================
+    // 4. Dialog ขายบ้าน (เลือกหลายรายการ Checkbox)
+    // =========================================================================
+    public static List<PropertyTile> showSellPropertyDialog(JFrame parent, List<PropertyTile> ownedProperties) {
+        List<PropertyTile> selectedToSell = new ArrayList<>();
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        
+        JLabel label = new JLabel("เลือกทรัพย์สินที่ต้องการขาย (ล้มละลาย):");
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        label.setForeground(NO_COLOR);
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(10));
+
+        List<JCheckBox> checkBoxes = new ArrayList<>();
+        
+        for (PropertyTile prop : ownedProperties) {
+            JCheckBox cb = new JCheckBox(prop.getName() + " (ราคาขาย: " + (prop.getPrice() / 2) + ")");
+            cb.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            cb.setForeground(TEXT_COLOR);
+            cb.setBackground(BG_COLOR);
+            cb.setFocusPainted(false);
+            checkBoxes.add(cb);
+            panel.add(cb);
+        }
+
+        // ใส่ ScrollPane เผื่อมีบ้านเยอะ
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(BG_COLOR);
+
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.add(scrollPane, BorderLayout.CENTER);
+
+        JDialog dialog = createBaseDialog(parent, "ขายทรัพย์สิน", wrapperPanel,
+            e -> {
+                for (int i = 0; i < checkBoxes.size(); i++) {
+                    if (checkBoxes.get(i).isSelected()) {
+                        selectedToSell.add(ownedProperties.get(i));
+                    }
+                }
+            },
+            e -> selectedToSell.clear() // Cancel
+        );
+
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+
+        return selectedToSell;
+    }
+
+    // Helper Method สำหรับตกแต่งปุ่ม YES/NO
+    private static JButton styleButton(JButton btn, Color bgColor) {
+        btn.setBackground(bgColor);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        btn.setFocusPainted(false);
+        btn.setBorder(new EmptyBorder(10, 10, 10, 10));
+        return btn;
+    }
+
+    // =========================================================================
+    // การทดสอบ (Run Test) ลบส่วนนี้ทิ้งได้เมื่อนำไปต่อกับระบบจริง
+    // =========================================================================
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Test Dialogs");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLayout(new FlowLayout());
+
+        JButton btn1 = new JButton("Test 1: Buy Property");
+        btn1.addActionListener(e -> {
+            PropertyTile tile = new PropertyTile("กรุงเทพมหานคร", 1); // สมมติว่ามีที่ดินแล้ว (Level 1)
+            int result = showBuyPropertyDialog(frame, tile);
+            System.out.println("คุณเลือกอัปเกรดเลเวล: " + result);
+        });
+
+        JButton btn2 = new JButton("Test 2: Defense Card");
+        btn2.addActionListener(e -> {
+            boolean result = showDefenseCardDialog(frame, new Card("โล่ห์ศักดิ์สิทธิ์"));
+            System.out.println("ป้องกันหรือไม่: " + result);
+        });
+
+        JButton btn3 = new JButton("Test 3: Attack Card");
+        btn3.addActionListener(e -> {
+            List<Player> opps = List.of(new Player("Bot 1"), new Player("Bot 2"), new Player("Player 2"));
+            Player target = showAttackCardDialog(frame, new Card("ขีปนาวุธ"), opps);
+            System.out.println("เป้าหมายคือ: " + (target != null ? target.getName() : "ยกเลิก"));
+        });
+
+        JButton btn4 = new JButton("Test 4: Sell Property");
+        btn4.addActionListener(e -> {
+            List<PropertyTile> props = List.of(new PropertyTile("เชียงใหม่", 2), new PropertyTile("ภูเก็ต", 1));
+            List<PropertyTile> sold = showSellPropertyDialog(frame, props);
+            System.out.println("ขายทรัพย์สิน: " + sold.size() + " แห่ง");
+        });
+
+        frame.add(btn1); frame.add(btn2); frame.add(btn3); frame.add(btn4);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
+
+// =============================================================================
+// Mock Classes (จำลองคลาส Backend เพื่อให้โค้ดด้านบน Compile ผ่าน)
+// =============================================================================
+class PropertyTile {
+    private String name;
+    private int upgradeLevel; // 0=Empty, 1=Land, 2=House1, 3=House2, 4=House3
+    public PropertyTile(String name, int level) { this.name = name; this.upgradeLevel = level; }
+    public String getName() { return name; }
+    public int getUpgradeLevel() { return upgradeLevel; }
+    public int getPrice() { return 1000000; }
+}
+
+class Card {
+    private String name;
+    public Card(String name) { this.name = name; }
+    public String getName() { return name; }
+}
+
+class Player {
+    private String name;
+    public Player(String name) { this.name = name; }
+    public String getName() { return name; }
+}
