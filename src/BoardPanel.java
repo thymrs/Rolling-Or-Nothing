@@ -82,8 +82,21 @@ public class BoardPanel extends JPanel {
                 
                 boolean isJailed = p.getIsJailed();
 
-                // สั่งอัปเดตไปที่ UI มุมนั้นๆ
-                playerStatusPanels[i].updateData(money, totalAssets, isJailed);
+                // -------------------------------------------------------------
+                // ดึงสถานะอื่นๆ จาก Backend (เช็คกับเพื่อนว่าทำเมธอดเหล่านี้ใน Player หรือยัง)
+                // ถ้ายังไม่มีชั่วคราวให้ false ไปก่อน แต่เวลาเล่นจริงต้องดึงจากคลาส Player
+                // -------------------------------------------------------------
+                boolean isBankrupt = false; // เช่น: p.isBankrupt()
+                boolean hasShield = false;  // เช่น: p.hasShield()
+                boolean isTollFree = false; // เช่น: p.isTollFree()
+
+                // ประมวลผลข้อความ Status ก่อนส่งให้ UI
+                String statusStr = "ปกติ";
+                if (isBankrupt) statusStr = "ล้มละลาย";
+                else if (isJailed) statusStr = "ติดคุก";
+
+                // สั่งอัปเดตไปที่ UI มุมนั้นๆ ด้วยพารามิเตอร์ที่ตรงกันและครบถ้วน
+                playerStatusPanels[i].updateData(money, totalAssets, statusStr, isJailed, isBankrupt, hasShield, isTollFree);
                 
                 // ทำไฮไลต์ให้คนที่กำลังเป็น Turn ปัจจุบัน (เพื่อให้รู้ว่าตาใครเล่น)
                 if (state.getCurrentPlayer() == p) {

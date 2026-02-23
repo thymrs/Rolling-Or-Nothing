@@ -11,6 +11,9 @@ public class PlayerStatusPanel extends JPanel {
     private JLabel cashLabel;
     private JLabel assetsLabel;
     private JLabel statusLabel;
+    private JLabel buffLabel; // เพิ่ม: ป้ายแสดงบัฟพิเศษ
+
+    private boolean isBankrupt = false; // เพิ่ม: เก็บสถานะล้มละลายเพื่อเปลี่ยนสีพื้นหลัง
 
     public PlayerStatusPanel(String playerName, Color playerColor) {
         this.playerName = playerName;
@@ -22,7 +25,7 @@ public class PlayerStatusPanel extends JPanel {
 
         // แผงข้อมูล (เว้นขอบซ้ายเยอะหน่อยเพื่อเว้นที่ให้แถบสีประจำตัว)
         JPanel dataPanel = new JPanel();
-        dataPanel.setLayout(new GridLayout(4, 1, 0, 2));
+        dataPanel.setLayout(new GridLayout(5, 1, 0, 2)); // เปลี่ยนจาก 4 เป็น 5 แถว
         dataPanel.setOpaque(false);
         dataPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10));
 
@@ -46,25 +49,46 @@ public class PlayerStatusPanel extends JPanel {
         statusLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         statusLabel.setForeground(new Color(200, 200, 200));
 
+        // 5. บัฟพิเศษ (เช่น มีการ์ดนางฟ้า, โล่)
+        buffLabel = new JLabel(""); 
+        buffLabel.setFont(new Font("SansSerif", Font.ITALIC, 12));
+        buffLabel.setForeground(new Color(100, 255, 100)); // สีเขียวสว่าง
+
         dataPanel.add(nameLabel);
         dataPanel.add(cashLabel);
         dataPanel.add(assetsLabel);
         dataPanel.add(statusLabel);
+        dataPanel.add(buffLabel);
 
         add(dataPanel, BorderLayout.CENTER);
     }
 
-    // เมธอดสำหรับรับข้อมูลอัปเดตจาก GameWindow / BoardPanel
-    public void updateData(int cash, int assets, String status, boolean isJailed) {
-        cashLabel.setText("เงินสด: " + cash);
-        assetsLabel.setText("ทรัพย์สินรวม: " + assets);
-        statusLabel.setText("สถานะ: " + status);
-        
-        // เปลี่ยนสีถ้าติดคุกหรือล้มละลาย
-        if (isJailed || status.equals("ล้มละลาย")) {
+    public void updateData(int cash, int assets, String status, boolean isJailed, boolean isBankrupt, boolean hasShield, boolean isTollFree) {
+        this.isBankrupt = isBankrupt;
+
+        if (isBankrupt) {
+            cashLabel.setText("เงินสด: ล้มละลาย");
+            assetsLabel.setText("ทรัพย์สินรวม: 0");
+            statusLabel.setText("สถานะ: " + status);
             statusLabel.setForeground(new Color(255, 100, 100)); // สีแดงเตือน
+            buffLabel.setText(""); // ล้มละลายแล้วไม่มีบัฟ
         } else {
-            statusLabel.setForeground(new Color(200, 200, 200)); // กลับเป็นสีปกติ
+            cashLabel.setText("เงินสด: " + cash);
+            assetsLabel.setText("ทรัพย์สินรวม: " + assets);
+            statusLabel.setText("สถานะ: " + status);
+            
+            // เปลี่ยนสีถ้าติดคุก
+            if (isJailed) {
+                statusLabel.setForeground(new Color(255, 100, 100)); // สีแดงเตือน
+            } else {
+                statusLabel.setForeground(new Color(200, 200, 200)); // กลับเป็นสีปกติ
+            }
+
+            // อัปเดตข้อความ Buff
+            String buffText = "";
+            if (hasShield) buffText += "[มีโล่ป้องกัน] ";
+            if (isTollFree) buffText += "[นางฟ้าคุ้มครอง] ";
+            buffLabel.setText(buffText);
         }
         
         repaint();
@@ -80,18 +104,21 @@ public class PlayerStatusPanel extends JPanel {
         int h = getHeight();
 
         // 1. วาดพื้นหลังกล่อง (สีเทาเข้มกึ่งโปร่งใส)
-        g2.setColor(new Color(40, 45, 55, 230));
+        if (isBankrupt) {
+            g2.setColor(new Color(30, 30, 30, 200)); // ถ้าล้มละลายให้กล่องมืดลง
+        } else {
+            g2.setColor(new Color(40, 45, 55, 230)); // สีปกติ
+        }
         g2.fill(new RoundRectangle2D.Double(0, 0, w, h, 15, 15));
 
         // 2. วาดแถบสีประจำตัวที่ขอบซ้าย (Color Bar)
-        g2.setColor(playerColor);
-        g2.fill(new RoundRectangle2D.Double(0, 0, 8, h, 15, 15)); // วาดขอบมน
-        g2.fillRect(4, 0, 4, h); // วาดสี่เหลี่ยมทับครึ่งขวาของแถบ เพื่อให้มนแค่ฝั่งซ้าย
-
-        // 3. วาดเส้นขอบรวมๆ
-        g2.setColor(new Color(100, 100, 100, 100));
-        g2.setStroke(new BasicStroke(1.5f));
-        g2.draw(new RoundRectangle2D.Double(1, 1, w - 2, h - 2, 15, 15));
+        if (isBankrupt) {
+            g2.setColor(Color.DARK_GRAY); // ล้มละลาย สีประจำตัวกลายเป็นสีเทา
+        } else {
+            g2.setColor(playerColor);
+        }
+        g2.fill(new RoundRectangle2D.Double(0, 0, 10, h, 15, 15));
+        g2.fillRect(5, 0, 5, h); // ทำให้ฝั่งขวาของแถบสีไม่โค้งเหลี่ยมตรง
 
         g2.dispose();
     }
