@@ -30,10 +30,9 @@ public class Main {
         state.setBoard(board);
         state.addGameEventListener(GameWindow.getEventLogPanel());
 
-        GameController controller = new GameController(view);
-
+        GameController controller = new GameController(view, state); 
+        
         view.setVisible(true);
-
         controller.startGame(config);
 
         System.out.println("Monopoly Game Started!");

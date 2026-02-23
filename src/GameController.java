@@ -15,13 +15,11 @@ public class GameController implements ActionListener {
     /**
      * Constructor for GameController
      */
-    public GameController(GameWindow view) {
+    public GameController(GameWindow view, GameState state) { 
         this.view = view;
-        this.state = new GameState();
-
+        this.state = state; // <--- ใช้ State ตัวที่ส่งเข้ามาแทน
         this.mapLoader = new MapLoader();
         this.victoryChecker = state.getVictoryChecker();
-
         this.view.setActionListener(this);
     }
 
@@ -92,9 +90,9 @@ public class GameController implements ActionListener {
 
         if (currentPhase == TurnPhase.READY_TO_ROLL) {
             if (currentPlayer.isFrozen()) {
-                view.showPopup("❄️ " + currentPlayer.getName() + " ถูกแช่แข็ง! ต้องข้ามเทิร์นนี้");
+                view.showPopup("❄️ " + currentPlayer.getName() + " Freeze! skip the turns...");
                 // แจ้งเตือนสถานะผิดปกติ
-                state.notifyMessage("❄️ " + currentPlayer.getName() + " ไม่สามารถทอยเต๋าได้เพราะถูกแช่แข็ง!");
+                state.notifyMessage("❄️ " + currentPlayer.getName() + " Unable to roll the dice because you're freeze!");
                 currentPlayer.decrementFrozenTurns(); 
                 state.setCurrentPhase(TurnPhase.END_TURN);
                 view.updateView(state);
@@ -110,7 +108,7 @@ public class GameController implements ActionListener {
         switch (currentPhase) {
             case READY_TO_ROLL -> {
                 view.getControlPanel().setButtonsEnabled(true);
-                view.showPopup("ตาของคุณแล้ว " + currentPlayer.getName());
+                view.showPopup("It's now your turn " + currentPlayer.getName());
             }
             case MOVING -> {
             }
@@ -120,8 +118,8 @@ public class GameController implements ActionListener {
                 state.incrementTurn();
                 processPhase();
             }
-            case GAME_OVER -> view.showPopup("จบเกม! ผู้ชนะคือ " + victoryChecker.getWinner(state));
-            case SELECTING_DESTINATION -> view.showPopup("✈️ คุณได้สิทธิ์ท่องเที่ยวรอบโลก! โปรดเลือกช่องที่จะไป");
+            case GAME_OVER -> view.showPopup("End Game! Winner " + victoryChecker.getWinner(state));
+            case SELECTING_DESTINATION -> view.showPopup("You're on a Wolrd Tour! Please select your destination");
         }
 
         view.updateView(state);
@@ -135,19 +133,19 @@ public class GameController implements ActionListener {
 
         new Thread(() -> {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(2500);
 
                 if (bot.getHeldCard() != null) {
                     boolean wantToUseCard = bot.makeDecision(DecisionType.USE_CARD, null, state);
 
                     if (wantToUseCard) {
                         handleCardAction();
-                        Thread.sleep(1000);
+                        Thread.sleep(2500);
                     }
                 }
 
                 handleRollDice(); //
-                Thread.sleep(1000);
+                Thread.sleep(2500);
 
                 Tile tile = state.getBoard().getTile(bot.getPosition());
                 if (tile instanceof PropertyTile property && property.getOwner() == null) {
@@ -156,7 +154,7 @@ public class GameController implements ActionListener {
                     }
                 }
 
-                Thread.sleep(1000);
+                Thread.sleep(2500);
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     handleEndTurn(); //
                 });
@@ -183,7 +181,7 @@ public class GameController implements ActionListener {
 
                 if (player instanceof BotPlayer bot) {
                     target = bot.chooseTarget(opponents, state);
-                    view.showPopup("🤖 บอท " + bot.getName() + " เล็งเป้าไปที่ " + target.getName() + "!");
+                    view.showPopup("Bot " + bot.getName() + " select " + target.getName() + "!");
                 } else {
                     target = view.showSelectTargetDialog(opponents);
                 }
@@ -200,12 +198,12 @@ public class GameController implements ActionListener {
 
             if (target != null) {
                 state.notifyMessage(
-                        "🃏 " + player.getName() + " ใช้การ์ด " + card.getType() + " ใส่ " + target.getName() + "!");
+                        "🃏 " + player.getName() + " use card " + card.getType() + " on " + target.getName() + "!");
             } else {
-                state.notifyMessage("🃏 " + player.getName() + " ใช้การ์ด " + card.getType() + "!");
+                state.notifyMessage("🃏 " + player.getName() + " use card " + card.getType() + "!");
             }
 
-            view.showPopup("ใช้การ์ด " + card.getType() + " แล้ว!");
+            view.showPopup("use card " + card.getType() + " !");
             view.updateView(state);
         }
 
@@ -218,19 +216,19 @@ public class GameController implements ActionListener {
         int steps = state.getDice().getTotal();
 
         // แจ้งเตือนการทอยเต๋า
-        state.notifyMessage("🎲 " + player.getName() + " ทอยลูกเต๋าได้ " + steps);
+        state.notifyMessage("🎲 " + player.getName() + " roll for " + steps);
 
         int oldPos = player.getPosition();
         int newPos = state.getBoard().getNextIndex(oldPos, steps);
         player.setPosition(newPos);
 
         // แจ้งเตือนการเดินของผู้เล่น
-        state.notifyMessage("🏃 " + player.getName() + " เดินไปที่ช่อง " + newPos);
+        state.notifyMessage("🏃 " + player.getName() + " move to " + newPos);
 
         if (newPos < oldPos) {
             state.getBank().paySalary(player, 2000);
-            view.showPopup(player.getName() + " เดินครบรอบ รับเงินเดือน 2000!");
-            state.notifyMessage("💰 " + player.getName() + " เดินผ่านจุดเริ่มต้น รับเงิน 2000");
+            view.showPopup(player.getName() + " reach the start get salary for 2000!");
+            state.notifyMessage("💰 " + player.getName() + " reach the start receive money 2000");
         }
 
         Tile currentTile = state.getBoard().getTile(newPos);
@@ -246,23 +244,23 @@ public class GameController implements ActionListener {
 
                     if (player instanceof BotPlayer) {
                         player.receiveCard(c); //
-                        view.showPopup("🤖 " + player.getName() + " ได้รับไอเทม: " + type);
+                        view.showPopup("🤖 " + player.getName() + " got item: " + type);
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     } else {
                         int choice = javax.swing.JOptionPane.showConfirmDialog(null,
-                                "คุณจั่วได้ไอเทม: " + type + "\nต้องการเก็บไว้ในกระเป๋าหรือไม่?",
-                                "เสี่ยงดวงได้การ์ด!", javax.swing.JOptionPane.YES_NO_OPTION);
+                                "you got a: " + type + "\ndo you want to keep it?",
+                                "you got a card!", javax.swing.JOptionPane.YES_NO_OPTION);
 
                         if (choice == javax.swing.JOptionPane.YES_OPTION) {
                             if (player.receiveCard(c)) { //
-                                view.showPopup("เก็บการ์ด " + type + " เรียบร้อย!");
+                                view.showPopup("keep the card" + type + " successfully!");
                             } else {
-                                view.showPopup("กระเป๋าเต็ม! การ์ดถูกทิ้งลงกอง");
+                                view.showPopup("inventory full! discard the card!");
                                 state.getDeck().discard(c);
                             }
                         } else {
                             state.getDeck().discard(c);
-                            view.showPopup("คุณเลือกที่จะทิ้งการ์ด " + type);
+                            view.showPopup("you select to discard " + type);
                         }
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     }
@@ -270,11 +268,11 @@ public class GameController implements ActionListener {
                     if (c.requiresTarget()) {
                         player.setHeldCard(c); //
                         state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
-                        view.showPopup("คุณได้การ์ดโจมตี! โปรดกดใช้งานและเลือกเป้าหมาย");
+                        view.showPopup("you got an attack card! Please use and select target.");
                     } else {
                         c.applyEffect(player, null, state); //
                         state.getDeck().discard(c);
-                        view.showPopup("บังคับใช้งานการ์ด " + type + " อัตโนมัติ!");
+                        view.showPopup("force to use " + type + " automatically!");
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     }
                 }
@@ -301,14 +299,14 @@ public class GameController implements ActionListener {
             boolean success = state.getBank().processPurchase(player, property);
 
             if (success) {
-                view.showPopup("ซื้อที่ดิน" + property.getName() + " เรียบร้อย!");
+                view.showPopup("Buy land " + property.getName() + " successfully!");
                 // แจ้งเตือนการซื้อสำเร็จ
-                state.notifyMessage("🏠 " + player.getName() + " ซื้อที่ดิน " + property.getName());
+                state.notifyMessage(player.getName() + " buy land " + property.getName());
                 state.setCurrentPhase(TurnPhase.END_TURN);
             } else {
-                view.showPopup("เงินไม่พอ");
+                view.showPopup("not enough money.");
                 // แจ้งเตือนการซื้อล้มเหลว
-                state.notifyMessage("❌ " + player.getName() + " มีเงินไม่พอซื้อ " + property.getName());
+                state.notifyMessage("❌ " + player.getName() + " not enough money to buy " + property.getName());
             }
         }
         view.updateView(state);
