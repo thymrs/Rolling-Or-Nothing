@@ -38,10 +38,11 @@ public class EventLogPanel extends JPanel implements GameEventListener {
     }
 
     public void addLog(String message) {
-        String time = LocalTime.now().format(timeFormatter);
-        logArea.append("[" + time + "] " + message + "\n");
+    SwingUtilities.invokeLater(() -> {
+        logArea.append(message + "\n");
         logArea.setCaretPosition(logArea.getDocument().getLength());
-    }
+    });
+}
 
     // ----- Implement Methods จาก GameEventListener -----
     

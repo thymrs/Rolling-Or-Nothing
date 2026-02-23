@@ -3,27 +3,26 @@ import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
 public class TurnDisplayPanel extends JPanel {
-    private int currentTurn = 1;
-    private int maxTurns = 50; // ค่าเริ่มต้น (จะอัปเดตจาก GameConfig)
-    private JLabel turnLabel;
+    private static int currentTurn = 1;
+    private static int maxTurns = 50; // ค่าเริ่มต้น (จะอัปเดตจาก GameConfig)
+    private static JLabel turnLabel;
 
     public TurnDisplayPanel() {
         setOpaque(false);
         setPreferredSize(new Dimension(100, 60));
         setLayout(new BorderLayout());
 
-        turnLabel = new JLabel("TURN: 1 / 50", SwingConstants.CENTER);
+        turnLabel = new JLabel("TURN: " + currentTurn , SwingConstants.CENTER);
         turnLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
         turnLabel.setForeground(new Color(255, 215, 0)); // สีทอง
         add(turnLabel, BorderLayout.CENTER);
     }
 
     // เมธอดสำหรับอัปเดตค่าจาก GameState และ GameConfig 
-    public void updateTurn(int current, int max) {
-        this.currentTurn = current;
-        this.maxTurns = max;
-        turnLabel.setText("TURN: " + currentTurn + " / " + maxTurns);
-        repaint();
+    public static void updateTurn(int current) {
+        currentTurn = current;
+        
+        turnLabel.setText("TURN: " + currentTurn );
     }
 
     @Override
