@@ -4,69 +4,71 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 public class GameWindow extends JFrame {
-
-    private BoardPanel boardPanel;
+    
     private ControlPanel controlPanel;
+    private BoardPanel boardPanel; 
+    private static EventLogPanel eventLogPanel;
 
-    // ลบการสร้าง GameController ออกจากที่นี่ เพราะตามหลัก MVC
-    // ตัว Main.java จะเป็นคนสร้าง GameWindow และ GameController
-    // แล้วเชื่อมเข้าด้วยกัน
-
-    public GameWindow(Board board) {
-        setTitle("Isometric Board Game - MVC Architecture");
+    public GameWindow() {
+        setTitle("Rolling Or Nothing");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        getContentPane().setPreferredSize(new Dimension(1600, 900));
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // เปิดมาเต็มจอ
         setLayout(new BorderLayout());
 
-        // ส่ง Board ไปให้ BoardPanel วาด
-        boardPanel = new BoardPanel(board);
+        // สร้างและจัดวาง Panel
         controlPanel = new ControlPanel();
-
+        add(controlPanel, BorderLayout.WEST);
+        
+        // เพิ่ม Board (กระดานเกม) ไว้ตรงกลาง
+        boardPanel = new BoardPanel();
         add(boardPanel, BorderLayout.CENTER);
-        add(controlPanel, BorderLayout.EAST);
 
-        pack();
-        setLocationRelativeTo(null);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        // เพิ่ม Event Log (ประวัติเหตุการณ์) ไว้ด้านขวา
+        eventLogPanel = new EventLogPanel();
+        add(eventLogPanel, BorderLayout.EAST);
     }
 
-    // --- เมธอดที่ GameController จำเป็นต้องเรียกใช้ ---
+    // --- เมธอดที่ GameController เรียกใช้งาน ---
 
     public void setActionListener(ActionListener listener) {
-        // ส่งต่อ Listener ไปผูกกับปุ่มใน ControlPanel
-        controlPanel.addActionListener(listener);
+        controlPanel.setActionListener(listener);
     }
 
     public ControlPanel getControlPanel() {
         return controlPanel;
     }
 
-    public void updateView(GameState state) {
-        // อัปเดตตำแหน่งของผู้เล่นทุกคนบน BoardPanel
-        for (Player p : state.getPlayers()) {
-            boardPanel.updatePlayerUI(p.getId(), p.getPosition());
+    public static EventLogPanel getEventLogPanel() {
+        return eventLogPanel;
+    }
+
+    // เมธอดสำหรับเพิ่มข้อความลงใน Event Log 
+    public void addLog(String message) {
+        if (eventLogPanel != null) {
+            eventLogPanel.addLog(message);
         }
-        boardPanel.repaint();
+    }
+
+    public void updateView(GameState state) {
+        // อัปเดตข้อมูลบนกระดาน เช่น ตำแหน่งตัวละคร, เงิน
+        if (boardPanel != null) {
+            // ถ้าใน BoardPanel ของคุณใช้ชื่อเมธอดอื่นในการอัปเดต ให้เปลี่ยนชื่อตรงนี้นะครับ
+            // boardPanel.updateBoard(state); 
+        }
+        repaint();
     }
 
     public void showPopup(String message) {
-        JOptionPane.showMessageDialog(this, message, "System Event", JOptionPane.INFORMATION_MESSAGE);
+        // ป้องกัน UI ค้างหากถูกเรียกจาก Thread ของ Bot
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(() -> showPopup(message));
+            return;
+        }
+        JOptionPane.showMessageDialog(this, message, "Alert", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public Player showSelectTargetDialog(List<Player> opponents) {
-        if (opponents == null || opponents.isEmpty())
-            return null;
-
-        // แปลงเป็น Array เพื่อใส่ลงใน Dropdown ของ JOptionPane
-        Player[] oppArray = opponents.toArray(new Player[0]);
-
-        return (Player) JOptionPane.showInputDialog(
-                this,
-                "Select a target player:",
-                "Use Card",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                oppArray,
-                oppArray[0]);
+        // คืนค่า null ไว้ก่อนชั่วคราว หรือใส่ Logic เลือกเป้าหมายของคุณ
+        return null; 
     }
 }

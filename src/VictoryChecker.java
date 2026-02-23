@@ -21,9 +21,7 @@ public class VictoryChecker {
     }
 
     public boolean isPlayerCloseToVictory(Board board, Player player) {
-        return isCloseToLineVictory(board, player) || 
-               isCloseToTripleVictory(board, player) || 
-               isCloseToTourismVictory(board, player);
+        return isCloseToLineVictory(board, player) || isCloseToTripleVictory(board, player) || isCloseToTourismVictory(board, player);
     }
 
     private boolean checkLineVictory(Board board, Player player) {

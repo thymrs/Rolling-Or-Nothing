@@ -11,7 +11,7 @@ public class GameController implements ActionListener {
     private final GameState state;
     private VictoryChecker victoryChecker;
     private MapLoader mapLoader;
-    
+
     /**
      * Constructor for GameController
      */
@@ -24,9 +24,10 @@ public class GameController implements ActionListener {
 
         this.view.setActionListener(this);
     }
-    
+
     /**
      * Starts a new game with given configuration
+     * 
      * @param config Game configuration settings
      */
     public void startGame(GameConfig config) {
@@ -38,9 +39,10 @@ public class GameController implements ActionListener {
 
         processPhase();
     }
-    
+
     /**
      * Handles action events from UI
+     * 
      * @param event The action event
      */
     @Override
@@ -48,7 +50,7 @@ public class GameController implements ActionListener {
         String command = event.getActionCommand();
 
         System.out.println("User pressed: " + command);
-    
+
         switch (command) {
             case "ROLL" -> handleRollDice();
             case "BUY" -> handleBuyProperty();
@@ -58,7 +60,7 @@ public class GameController implements ActionListener {
 
         processPhase();
     }
-    
+
     /**
      * Initializes the game state
      */
@@ -71,14 +73,15 @@ public class GameController implements ActionListener {
         }
 
         for (int i = 0; i < config.getBotCount(); i++) {
-            players.add(new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
+            players.add(
+                    new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
         }
 
-        this.victoryChecker = new VictoryChecker(); 
+        this.victoryChecker = new VictoryChecker();
 
         view.updateView(state);
     }
-    
+
     /**
      * Processes the current turn phase
      */
@@ -89,15 +92,15 @@ public class GameController implements ActionListener {
         if (currentPhase == TurnPhase.READY_TO_ROLL) {
             if (currentPlayer.isFrozen()) {
                 view.showPopup("❄️ " + currentPlayer.getName() + " ถูกแช่แข็ง! ต้องข้ามเทิร์นนี้");
-                
+                // แจ้งเตือนสถานะผิดปกติ
+                state.notifyMessage("❄️ " + currentPlayer.getName() + " ไม่สามารถทอยเต๋าได้เพราะถูกแช่แข็ง!");
                 currentPlayer.decrementFrozenTurns(); 
-                
                 state.setCurrentPhase(TurnPhase.END_TURN);
                 view.updateView(state);
                 return;
             }
         }
-        
+
         if (currentPlayer instanceof BotPlayer) {
             handleBotTurn();
             return;
@@ -105,12 +108,13 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
-                view.getControlPanel().setButtonsEnabled(true, false, false, true);
+                view.getControlPanel().setButtonsEnabled(true);
                 view.showPopup("ตาของคุณแล้ว " + currentPlayer.getName());
             }
             case MOVING -> {
             }
-            //case ACTION_REQUIRED -> view.getControlPanel().setButtonEnabled(false, true, true, true);
+            // case ACTION_REQUIRED -> view.getControlPanel().setButtonEnabled(false, true,
+            // true, true);
             case END_TURN -> {
                 state.incrementTurn();
                 processPhase();
@@ -121,7 +125,7 @@ public class GameController implements ActionListener {
 
         view.updateView(state);
     }
-    
+
     /**
      * Handles bot player's turn
      */
@@ -134,7 +138,7 @@ public class GameController implements ActionListener {
 
                 if (bot.getHeldCard() != null) {
                     boolean wantToUseCard = bot.makeDecision(DecisionType.USE_CARD, null, state);
-                    
+
                     if (wantToUseCard) {
                         handleCardAction();
                         Thread.sleep(1000);
@@ -150,7 +154,7 @@ public class GameController implements ActionListener {
                         handleBuyProperty();
                     }
                 }
-                
+
                 Thread.sleep(1000);
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     handleEndTurn(); //
@@ -161,20 +165,21 @@ public class GameController implements ActionListener {
             }
         }).start(); //
     }
-    
+
     /**
      * Handles card-related actions
      */
     private void handleCardAction() {
         Player player = state.getCurrentPlayer();
         Card card = player.getHeldCard(); //
+        state.getDeck().discard(card);
 
         if (card != null) {
             Player target = null;
 
             if (card.requiresTarget()) {
                 List<Player> opponents = getOpponents(player); //
-                
+
                 if (player instanceof BotPlayer bot) {
                     target = bot.chooseTarget(opponents, state);
                     view.showPopup("🤖 บอท " + bot.getName() + " เล็งเป้าไปที่ " + target.getName() + "!");
@@ -186,53 +191,67 @@ public class GameController implements ActionListener {
                     return;
                 }
             }
-                
+
             player.useCard();
             card.applyEffect(player, target, state);
 
             state.getDeck().discard(card);
+
+            if (target != null) {
+                state.notifyMessage(
+                        "🃏 " + player.getName() + " ใช้การ์ด " + card.getType() + " ใส่ " + target.getName() + "!");
+            } else {
+                state.notifyMessage("🃏 " + player.getName() + " ใช้การ์ด " + card.getType() + "!");
+            }
 
             view.showPopup("ใช้การ์ด " + card.getType() + " แล้ว!");
             view.updateView(state);
         }
 
     }
-    
+
     private void handleRollDice() {
         Player player = state.getCurrentPlayer();
 
         state.getDice().roll();
         int steps = state.getDice().getTotal();
 
+        // แจ้งเตือนการทอยเต๋า
+        state.notifyMessage("🎲 " + player.getName() + " ทอยลูกเต๋าได้ " + steps);
+
         int oldPos = player.getPosition();
         int newPos = state.getBoard().getNextIndex(oldPos, steps);
-        player.setPosition(newPos); //
+        player.setPosition(newPos);
+
+        // แจ้งเตือนการเดินของผู้เล่น
+        state.notifyMessage("🏃 " + player.getName() + " เดินไปที่ช่อง " + newPos);
 
         if (newPos < oldPos) {
             state.getBank().paySalary(player, 2000);
             view.showPopup(player.getName() + " เดินครบรอบ รับเงินเดือน 2000!");
+            state.notifyMessage("💰 " + player.getName() + " เดินผ่านจุดเริ่มต้น รับเงิน 2000");
         }
 
         Tile currentTile = state.getBoard().getTile(newPos);
-        
+
         if (currentTile instanceof ChanceTile chanceTile) {
             Card c = chanceTile.drawCard(state);
-            
+
             if (c != null) {
                 CardType type = c.getType(); //
 
-                if (type == CardType.ANGEL || type == CardType.SHIELD || 
-                    type == CardType.DISCOUNT || type == CardType.ESCAPE) {
-                    
+                if (type == CardType.ANGEL || type == CardType.SHIELD ||
+                        type == CardType.DISCOUNT || type == CardType.ESCAPE) {
+
                     if (player instanceof BotPlayer) {
                         player.receiveCard(c); //
                         view.showPopup("🤖 " + player.getName() + " ได้รับไอเทม: " + type);
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     } else {
-                        int choice = javax.swing.JOptionPane.showConfirmDialog(null, 
-                            "คุณจั่วได้ไอเทม: " + type + "\nต้องการเก็บไว้ในกระเป๋าหรือไม่?", 
-                            "เสี่ยงดวงได้การ์ด!", javax.swing.JOptionPane.YES_NO_OPTION);
-                        
+                        int choice = javax.swing.JOptionPane.showConfirmDialog(null,
+                                "คุณจั่วได้ไอเทม: " + type + "\nต้องการเก็บไว้ในกระเป๋าหรือไม่?",
+                                "เสี่ยงดวงได้การ์ด!", javax.swing.JOptionPane.YES_NO_OPTION);
+
                         if (choice == javax.swing.JOptionPane.YES_OPTION) {
                             if (player.receiveCard(c)) { //
                                 view.showPopup("เก็บการ์ด " + type + " เรียบร้อย!");
@@ -246,8 +265,7 @@ public class GameController implements ActionListener {
                         }
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     }
-                } 
-                else {
+                } else {
                     if (c.requiresTarget()) {
                         player.setHeldCard(c); //
                         state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
@@ -262,8 +280,7 @@ public class GameController implements ActionListener {
             } else {
                 state.setCurrentPhase(TurnPhase.END_TURN); // กองการ์ดหมด
             }
-        } 
-        else {
+        } else {
             currentTile.onPlayerEnter(player, state);
 
             if (currentTile instanceof PropertyTile property && property.getOwner() == null) {
@@ -279,14 +296,18 @@ public class GameController implements ActionListener {
         Player player = state.getCurrentPlayer();
         Tile tile = state.getBoard().getTile(player.getPosition());
 
-        if  (tile instanceof PropertyTile property) {
+        if (tile instanceof PropertyTile property) {
             boolean success = state.getBank().processPurchase(player, property);
 
             if (success) {
-            view.showPopup("ซื้อที่ดิน" + property.getName() + " เรียบร้อย!");
-            state.setCurrentPhase(TurnPhase.END_TURN);
+                view.showPopup("ซื้อที่ดิน" + property.getName() + " เรียบร้อย!");
+                // แจ้งเตือนการซื้อสำเร็จ
+                state.notifyMessage("🏠 " + player.getName() + " ซื้อที่ดิน " + property.getName());
+                state.setCurrentPhase(TurnPhase.END_TURN);
             } else {
                 view.showPopup("เงินไม่พอ");
+                // แจ้งเตือนการซื้อล้มเหลว
+                state.notifyMessage("❌ " + player.getName() + " มีเงินไม่พอซื้อ " + property.getName());
             }
         }
         view.updateView(state);
@@ -294,18 +315,22 @@ public class GameController implements ActionListener {
 
     private void handleEndTurn() {
         VictoryType vType = victoryChecker.checkWinCondition(state);
-        
+
         if (null == vType) {
             state.incrementTurn();
-        } else switch (vType) {
-            case LINE_VICTORY -> //view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + " ชนะแบบ LINE VICTORY!");
-                state.setCurrentPhase(TurnPhase.GAME_OVER);
-            case TRIPLE_VICTORY -> //view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + " ชนะแบบ TRIPLE VICTORY!");
-                state.setCurrentPhase(TurnPhase.GAME_OVER);
-            case TOURISM_VICTORY -> //view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + " ชนะแบบ TOURISM VICTORY!");
-                state.setCurrentPhase(TurnPhase.GAME_OVER);
-            default -> state.incrementTurn();
-        }
+        } else
+            switch (vType) {
+                case LINE_VICTORY -> // view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + "
+                                     // ชนะแบบ LINE VICTORY!");
+                    state.setCurrentPhase(TurnPhase.GAME_OVER);
+                case TRIPLE_VICTORY -> // view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + "
+                                       // ชนะแบบ TRIPLE VICTORY!");
+                    state.setCurrentPhase(TurnPhase.GAME_OVER);
+                case TOURISM_VICTORY -> // view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + "
+                                        // ชนะแบบ TOURISM VICTORY!");
+                    state.setCurrentPhase(TurnPhase.GAME_OVER);
+                default -> state.incrementTurn();
+            }
         processPhase();
     }
 
