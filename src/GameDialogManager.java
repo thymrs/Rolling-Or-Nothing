@@ -296,3 +296,28 @@ class Player {
     public Player(String name) { this.name = name; }
     public String getName() { return name; }
 }
+
+// =========================================================================
+    // 5. Dialog ยืนยันการยอมแพ้ (ถามแค่ YES/NO)
+    // =========================================================================
+    public static boolean showSurrenderDialog(JFrame parent) {
+        final boolean[] result = {false};
+
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel label = new JLabel("คุณแน่ใจหรือไม่ที่จะ 'ยอมแพ้' และออกจากเกม?", SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        label.setForeground(new Color(255, 100, 100)); // ใช้สีแดงเตือน
+        panel.add(label, BorderLayout.CENTER);
+
+        // ใช้ createBaseDialog (เมธอดหลักของคลาสที่เราทำไว้) 
+        JDialog dialog = createBaseDialog(parent, "ยืนยันการยอมแพ้", panel,
+            e -> result[0] = true,  // กด YES คืนค่า true
+            e -> result[0] = false  // กด NO คืนค่า false
+        );
+
+        dialog.setSize(400, 150);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+
+        return result[0];
+    }
