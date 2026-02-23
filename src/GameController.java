@@ -105,7 +105,7 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
-                view.getControlPanel().setButtonsEnabled(true, false, false, true);
+                view.getControlPanel().setButtonsEnabled(true);
                 view.showPopup("ตาของคุณแล้ว " + currentPlayer.getName());
             }
             case MOVING -> {

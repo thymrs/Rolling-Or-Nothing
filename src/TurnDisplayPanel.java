@@ -9,7 +9,7 @@ public class TurnDisplayPanel extends JPanel {
 
     public TurnDisplayPanel() {
         setOpaque(false);
-        setPreferredSize(new Dimension(200, 60));
+        setPreferredSize(new Dimension(100, 60));
         setLayout(new BorderLayout());
 
         turnLabel = new JLabel("TURN: 1 / 50", SwingConstants.CENTER);

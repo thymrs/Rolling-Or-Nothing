@@ -21,10 +21,10 @@ public class ControlPanel extends JPanel {
         // "ROLL", "BUY", "USE_CARD", "END_TURN"
         // ==============================================================
         
-        btnRoll = createButton("🎲 ทอยลูกเต๋า", "ROLL", new Color(80, 200, 120));
-        btnBuy = createButton("🏠 ซื้อ / อัปเกรด", "BUY", new Color(50, 150, 255));
-        btnUseCard = createButton("🃏 ใช้การ์ด", "USE_CARD", new Color(255, 150, 50));
-        btnEndTurn = createButton("⏳ จบเทิร์น", "END_TURN", new Color(255, 100, 100));
+        btnRoll = createButton("🎲 Roll Dice", "ROLL", new Color(80, 200, 120));
+        btnBuy = createButton("🏠 Buy / Upgrade", "BUY", new Color(50, 150, 255));
+        btnUseCard = createButton("🃏 Use Card", "USE_CARD", new Color(255, 150, 50));
+        btnEndTurn = createButton("⏳ End Turn", "END_TURN", new Color(255, 100, 100));
 
         add(btnRoll);
         add(btnBuy);
@@ -52,11 +52,10 @@ public class ControlPanel extends JPanel {
     }
 
     // Method นี้สร้างมาเพื่อให้ GameController ของเพื่อนเรียกใช้ได้ตรงๆ 
-    // ตัวอย่างของเพื่อน: view.getControlPanel().setButtonsEnabled(true, false, false, true);
-    public void setButtonsEnabled(boolean roll, boolean buy, boolean useCard, boolean endTurn) {
-        btnRoll.setEnabled(roll);
-        btnBuy.setEnabled(buy);
-        btnUseCard.setEnabled(useCard);
-        btnEndTurn.setEnabled(endTurn);
+    public void setButtonsEnabled(boolean isMyTurn) {
+        btnRoll.setEnabled(isMyTurn);
+        btnBuy.setEnabled(isMyTurn);
+        btnUseCard.setEnabled(isMyTurn);
+        btnEndTurn.setEnabled(isMyTurn);
     }
 }

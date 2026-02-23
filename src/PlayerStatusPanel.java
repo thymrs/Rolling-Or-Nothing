@@ -35,17 +35,17 @@ public class PlayerStatusPanel extends JPanel {
         nameLabel.setForeground(playerColor); // ให้ชื่อเป็นสีเดียวกับสีประจำตัว
 
         // 2. เงินสด
-        cashLabel = new JLabel("เงินสด: 0");
+        cashLabel = new JLabel("Cash: 0");
         cashLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         cashLabel.setForeground(new Color(80, 200, 120)); // สีเขียวสว่าง
 
         // 3. ทรัพย์สินรวม
-        assetsLabel = new JLabel("ทรัพย์สินรวม: 0");
+        assetsLabel = new JLabel("Assets: 0");
         assetsLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         assetsLabel.setForeground(new Color(200, 200, 200)); // สีเทาอ่อน
 
         // 4. สถานะ (เช่น ปกติ, ติดคุก, ล้มละลาย)
-        statusLabel = new JLabel("สถานะ: ปกติ");
+        statusLabel = new JLabel("Status: Normal");
         statusLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         statusLabel.setForeground(new Color(200, 200, 200));
 
@@ -67,15 +67,15 @@ public class PlayerStatusPanel extends JPanel {
         this.isBankrupt = isBankrupt;
 
         if (isBankrupt) {
-            cashLabel.setText("เงินสด: ล้มละลาย");
-            assetsLabel.setText("ทรัพย์สินรวม: 0");
-            statusLabel.setText("สถานะ: " + status);
+            cashLabel.setText("Cash: Bankrupt");
+            assetsLabel.setText("Assets: 0");
+            statusLabel.setText("Status: " + status);
             statusLabel.setForeground(new Color(255, 100, 100)); // สีแดงเตือน
             buffLabel.setText(""); // ล้มละลายแล้วไม่มีบัฟ
         } else {
-            cashLabel.setText("เงินสด: " + cash);
-            assetsLabel.setText("ทรัพย์สินรวม: " + assets);
-            statusLabel.setText("สถานะ: " + status);
+            cashLabel.setText("Cash: " + cash);
+            assetsLabel.setText("Assets: " + assets);
+            statusLabel.setText("Status: " + status);
             
             // เปลี่ยนสีถ้าติดคุก
             if (isJailed) {
@@ -86,8 +86,8 @@ public class PlayerStatusPanel extends JPanel {
 
             // อัปเดตข้อความ Buff
             String buffText = "";
-            if (hasShield) buffText += "[มีโล่ป้องกัน] ";
-            if (isTollFree) buffText += "[นางฟ้าคุ้มครอง] ";
+            if (hasShield) buffText += "[Shield] ";
+            if (isTollFree) buffText += "[Toll Free] ";
             buffLabel.setText(buffText);
         }
         

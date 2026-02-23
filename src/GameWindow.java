@@ -6,7 +6,8 @@ import java.util.List;
 public class GameWindow extends JFrame {
     
     private ControlPanel controlPanel;
-    // private BoardPanel boardPanel; 
+    private BoardPanel boardPanel; 
+    private EventLogPanel eventLogPanel;
 
     public GameWindow() {
         setTitle("Rolling Or Nothing");
@@ -18,9 +19,13 @@ public class GameWindow extends JFrame {
         controlPanel = new ControlPanel();
         add(controlPanel, BorderLayout.WEST);
         
-        // ถ้าคุณมี BoardPanel แล้ว ให้ Uncomment ด้านล่างนี้
-        // boardPanel = new BoardPanel();
-        // add(boardPanel, BorderLayout.CENTER);
+        // เพิ่ม Board (กระดานเกม) ไว้ตรงกลาง
+        boardPanel = new BoardPanel();
+        add(boardPanel, BorderLayout.CENTER);
+
+        // เพิ่ม Event Log (ประวัติเหตุการณ์) ไว้ด้านขวา
+        eventLogPanel = new EventLogPanel();
+        add(eventLogPanel, BorderLayout.EAST);
     }
 
     // --- เมธอดที่ GameController เรียกใช้งาน ---
@@ -33,9 +38,23 @@ public class GameWindow extends JFrame {
         return controlPanel;
     }
 
+    public EventLogPanel getEventLogPanel() {
+        return eventLogPanel;
+    }
+
+    // เมธอดสำหรับเพิ่มข้อความลงใน Event Log 
+    public void addLog(String message) {
+        if (eventLogPanel != null) {
+            eventLogPanel.addLog(message);
+        }
+    }
+
     public void updateView(GameState state) {
         // อัปเดตข้อมูลบนกระดาน เช่น ตำแหน่งตัวละคร, เงิน
-        // if (boardPanel != null) boardPanel.updateBoard(state);
+        if (boardPanel != null) {
+            // ถ้าใน BoardPanel ของคุณใช้ชื่อเมธอดอื่นในการอัปเดต ให้เปลี่ยนชื่อตรงนี้นะครับ
+            // boardPanel.updateBoard(state); 
+        }
         repaint();
     }
 
@@ -45,11 +64,11 @@ public class GameWindow extends JFrame {
             SwingUtilities.invokeLater(() -> showPopup(message));
             return;
         }
-        JOptionPane.showMessageDialog(this, message, "แจ้งเตือน", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Alert", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public Player showSelectTargetDialog(List<Player> opponents) {
-        // เรียกใช้ Dialog Manager ให้ผู้เล่นเลือกเป้าหมาย โดยส่งไปแค่รายชื่อ
-        return GameDialogManager.showAttackCardDialog(this, null, opponents);
+        // คืนค่า null ไว้ก่อนชั่วคราว หรือใส่ Logic เลือกเป้าหมายของคุณ
+        return null; 
     }
 }

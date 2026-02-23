@@ -52,7 +52,7 @@ public class EventLogPanel extends JPanel {
         add(wrapperPanel, BorderLayout.CENTER);
 
         // ข้อความต้อนรับ
-        addLog("เริ่มเกมใหม่! โชคดีนะทุกคน");
+        addLog("GAME START! GGHF");
     }
 
     // เมธอดหลักที่ Controller/GameWindow จะเรียกใช้เพื่อเพิ่มข้อความใหม่
