@@ -273,30 +273,6 @@ public class GameDialogManager {
     }
 }
 
-// =============================================================================
-// Mock Classes (จำลองคลาส Backend เพื่อให้โค้ดด้านบน Compile ผ่าน)
-// =============================================================================
-class PropertyTile {
-    private String name;
-    private int upgradeLevel; // 0=Empty, 1=Land, 2=House1, 3=House2, 4=House3
-    public PropertyTile(String name, int level) { this.name = name; this.upgradeLevel = level; }
-    public String getName() { return name; }
-    public int getUpgradeLevel() { return upgradeLevel; }
-    public int getPrice() { return 1000000; }
-}
-
-class Card {
-    private String name;
-    public Card(String name) { this.name = name; }
-    public String getName() { return name; }
-}
-
-class Player {
-    private String name;
-    public Player(String name) { this.name = name; }
-    public String getName() { return name; }
-}
-
 // =========================================================================
     // 5. Dialog ยืนยันการยอมแพ้ (ถามแค่ YES/NO)
     // =========================================================================

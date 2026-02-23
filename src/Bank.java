@@ -96,8 +96,8 @@ public class Bank {
                 tile.setOwner(null);         
                 tile.upgradeLevel();    
                 tile.setMortgaged(false);  
-            bankruptPlayer.getOwnedLands().clear();
             }
+            bankruptPlayer.getOwnedLands().clear();
         }
     }
 
