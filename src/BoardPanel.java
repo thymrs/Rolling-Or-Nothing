@@ -50,16 +50,6 @@ public class BoardPanel extends JPanel {
             add(playerMarkers[i]);
             setComponentZOrder(playerMarkers[i], 0);
         }
-        //สร้าง ข้ข้าวหลางตัดอันใหญ่ตรงกลางของบอร์ดเพื่อใส่รรูปภาพพื้นหลังและเป็นปุ่มเหมือน 32 ช่องอื่นๆ
-            CustomShapeButton centerTile = new CustomShapeButton("", 0);
-            centerTile.setBackground(new Color(100, 100, 150)); // สีพื้นหลังสำหรับช่องกลาง
-            add(centerTile);
-            setComponentZOrder(centerTile, 1); // ให้อยู่ใต้ตัวผู้เล่นแต่เหนือช่องอื่นๆ
-    
-            // สร้างรูปทรงข้าวหลามตัดสำหรับช่องกลาง
-            Path2D centerShape = createIsometricPath(300, 200); // ขนาดใหญ่กว่าช่องปกติ
-            centerTile.setShape(centerShape);
-            centerTile.setBounds(0, 0, 300, 200); // กำหนดขนาดและตำแหน่ง (จะถูกปรับใน relayoutBoard)
 
         // สร้าง Tiles 32 ช่อง
         for (int i = 0; i < 32; i++) {
