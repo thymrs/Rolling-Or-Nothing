@@ -12,6 +12,7 @@ public class PlayerStatusPanel extends JPanel {
     private JLabel assetsLabel;
     private JLabel statusLabel;
     private JLabel buffLabel; // เพิ่ม: ป้ายแสดงบัฟพิเศษ
+    private JLabel positionLabel; // เพิ่ม: ป้ายแสดงตำแหน่งปัจจุบันของผู้เล่น
 
     private boolean isBankrupt = false; // เพิ่ม: เก็บสถานะล้มละลายเพื่อเปลี่ยนสีพื้นหลัง
 
@@ -25,7 +26,7 @@ public class PlayerStatusPanel extends JPanel {
 
         // แผงข้อมูล (เว้นขอบซ้ายเยอะหน่อยเพื่อเว้นที่ให้แถบสีประจำตัว)
         JPanel dataPanel = new JPanel();
-        dataPanel.setLayout(new GridLayout(5, 1, 0, 2)); // เปลี่ยนจาก 4 เป็น 5 แถว
+        dataPanel.setLayout(new GridLayout(6, 1, 0, 2)); // เปลี่ยนจาก 5 เป็น 6 แถว
         dataPanel.setOpaque(false);
         dataPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10));
 
@@ -50,21 +51,28 @@ public class PlayerStatusPanel extends JPanel {
         statusLabel.setForeground(new Color(200, 200, 200));
 
         // 5. บัฟพิเศษ (เช่น มีการ์ดนางฟ้า, โล่)
+        positionLabel = new JLabel("Position: Start");
+        positionLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        positionLabel.setForeground(new Color(255, 204, 102)); // สีส้มทอง (หรือเปลี่ยนสีตามใจชอบ)
+        
+        // 6. ตำแหน่งช่องที่อยู่
         buffLabel = new JLabel(""); 
         buffLabel.setFont(new Font("SansSerif", Font.ITALIC, 12));
         buffLabel.setForeground(new Color(100, 255, 100)); // สีเขียวสว่าง
-
+        
         dataPanel.add(nameLabel);
         dataPanel.add(cashLabel);
         dataPanel.add(assetsLabel);
         dataPanel.add(statusLabel);
+        dataPanel.add(positionLabel);
         dataPanel.add(buffLabel);
 
         add(dataPanel, BorderLayout.CENTER);
     }
 
-    public void updateData(int cash, int assets, String status, boolean isJailed, boolean isBankrupt, boolean hasShield, boolean isTollFree) {
+    public void updateData(int cash, int assets, String status, boolean isJailed, boolean isBankrupt, boolean hasShield, boolean isTollFree , String position) {
         this.isBankrupt = isBankrupt;
+        positionLabel.setText("Position: " + position);
 
         if (isBankrupt) {
             cashLabel.setText("Cash: Bankrupt");
