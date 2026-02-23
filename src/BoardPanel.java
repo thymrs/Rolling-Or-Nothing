@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.util.List;
 
 public class BoardPanel extends JPanel {
@@ -49,6 +50,16 @@ public class BoardPanel extends JPanel {
             add(playerMarkers[i]);
             setComponentZOrder(playerMarkers[i], 0);
         }
+        //สร้าง ข้ข้าวหลางตัดอันใหญ่ตรงกลางของบอร์ดเพื่อใส่รรูปภาพพื้นหลังและเป็นปุ่มเหมือน 32 ช่องอื่นๆ
+            CustomShapeButton centerTile = new CustomShapeButton("", 0);
+            centerTile.setBackground(new Color(100, 100, 150)); // สีพื้นหลังสำหรับช่องกลาง
+            add(centerTile);
+            setComponentZOrder(centerTile, 1); // ให้อยู่ใต้ตัวผู้เล่นแต่เหนือช่องอื่นๆ
+    
+            // สร้างรูปทรงข้าวหลามตัดสำหรับช่องกลาง
+            Path2D centerShape = createIsometricPath(300, 200); // ขนาดใหญ่กว่าช่องปกติ
+            centerTile.setShape(centerShape);
+            centerTile.setBounds(0, 0, 300, 200); // กำหนดขนาดและตำแหน่ง (จะถูกปรับใน relayoutBoard)
 
         // สร้าง Tiles 32 ช่อง
         for (int i = 0; i < 32; i++) {
@@ -58,7 +69,7 @@ public class BoardPanel extends JPanel {
 
             // ตรวจสอบว่าเป็นมุมไหน และกำหนดข้อความ/ขนาดฟอนต์
             if (isCorner) {
-                fontSize = 14;
+                fontSize = 22;
                 switch (i) {
                     case 0:
                         label = "FESTIVAL";
@@ -164,86 +175,125 @@ public class BoardPanel extends JPanel {
 
     // เมธอดจัด Layout วางพิกัดกระดานและผู้เล่น
     private void relayoutBoard() {
-        int w = getWidth();
-        int h = getHeight();
-        if (w == 0 || h == 0)
+        int panelW = getWidth();
+        int panelH = getHeight();
+        if (panelW == 0 || panelH == 0)
             return;
 
-        // ---------------------------------------------------------
-        // 1. คำนวณพิกัดกระดาน Isometric
-        // ---------------------------------------------------------
-        int tileWidth = 150; // ขนาดกว้างของช่อง
-        int tileHeight = 75; // ขนาดสูงของช่อง (ครึ่งนึงของกว้าง)
-        int startX = w / 2 - tileWidth / 2;
-        int startY = 250; // จุดเริ่มต้นแกน Y (เลื่อนลงมานิดหน่อยไม่ให้ชนขอบบน)
+        // 1. จัดตำแหน่ง Turn Display ไว้ตรงกลางบน
+        if (turnDisplay != null) {
+            turnDisplay.setBounds((panelW - 200) / 2, 20, 200, 50);
+        }
+
+        // 2. ตั้งค่าขนาดสำหรับคำนวณบอร์ด (ปรับ scale และค่า Y
+        // เพื่อให้บอร์ดใหญ่และไม่แบน)
+        double scale = 0.72; // ปรับขนาดบอร์ดโดยรวม (1.0 - 1.5)
+        double D = 130.0 * scale; // ขนาดช่องมุม
+        double W = 100.0 * scale; // ขนาดช่องปกติ (ปรับเพิ่มจาก 75 เป็น 100 เพื่อให้ดูไม่ผอม)
+        double G = (2 * D) + (7 * W); // ขนาดรวมในแกน 2D
+
+        // คำนวณจุดเริ่มต้น (กึ่งกลางจอ)
+        double boardScreenW = 2 * G;
+        double boardScreenH = G;
+        double startX = (panelW - boardScreenW) / 2.0 + G;
+        double startY = (panelH - boardScreenH) / 2.0 - 20; // +50 เพื่อขยับบอร์ดลงมาจาก UI ด้านบน
 
         for (int i = 0; i < 32; i++) {
-            int row = 0, col = 0;
+            double gx = 0, gy = 0, gw = 0, gh = 0;
 
-            // แบ่งตำแหน่งกระดาน (8 ช่อง x 4 ด้าน = 32)
-            if (i < 9) {
-                row = i;
-                col = 0;
-            } else if (i < 17) {
-                row = 8;
-                col = i - 8;
-            } else if (i < 25) {
-                row = 24 - i;
-                col = 8;
-            } else {
-                row = 0;
-                col = 32 - i;
+            // กำหนดพิกัด 2D (Logic เดียวกับที่คุณส่งมา)
+            if (i == 0) {
+                gx = D + 7 * W;
+                gy = D + 7 * W;
+                gw = D;
+                gh = D;
+            } else if (i >= 1 && i <= 7) {
+                gx = D + (7 - i) * W;
+                gy = D + 7 * W;
+                gw = W;
+                gh = D;
+            } else if (i == 8) {
+                gx = 0;
+                gy = D + 7 * W;
+                gw = D;
+                gh = D;
+            } else if (i >= 9 && i <= 15) {
+                gx = 0;
+                gy = D + (15 - i) * W;
+                gw = D;
+                gh = W;
+            } else if (i == 16) {
+                gx = 0;
+                gy = 0;
+                gw = D;
+                gh = D;
+            } else if (i >= 17 && i <= 23) {
+                gx = D + (i - 17) * W;
+                gy = 0;
+                gw = W;
+                gh = D;
+            } else if (i == 24) {
+                gx = D + 7 * W;
+                gy = 0;
+                gw = D;
+                gh = D;
+            } else if (i >= 25 && i <= 31) {
+                gx = D + 7 * W;
+                gy = D + (i - 25) * W;
+                gw = D;
+                gh = W;
             }
 
-            // สมการแปลงแกน 2D เป็น Isometric
-            int x = startX + (col - row) * (tileWidth / 2);
-            int y = startY + (col + row) * (tileHeight / 2);
+            // แปลงเป็นพิกัด Isometric (ใช้ค่า 0.6 เพื่อให้อวบขึ้น ไม่แบนแบบ 0.5)
+            Point2D.Double p1 = iso(startX, startY, gx, gy);
+            Point2D.Double p2 = iso(startX, startY, gx + gw, gy);
+            Point2D.Double p3 = iso(startX, startY, gx + gw, gy + gh);
+            Point2D.Double p4 = iso(startX, startY, gx, gy + gh);
 
-            tiles[i].setShape(createIsometricPath(tileWidth, tileHeight));
-            tiles[i].setBounds(x, y, tileWidth, tileHeight);
+            // คำนวณ Bounding Box
+            int minX = (int) Math.min(Math.min(p1.x, p2.x), Math.min(p3.x, p4.x));
+            int minY = (int) Math.min(Math.min(p1.y, p2.y), Math.min(p3.y, p4.y));
+            int maxX = (int) Math.max(Math.max(p1.x, p2.x), Math.max(p3.x, p4.x));
+            int maxY = (int) Math.max(Math.max(p1.y, p2.y), Math.max(p3.y, p4.y));
+
+            tiles[i].setBounds(minX, minY, maxX - minX, maxY - minY);
+
+            // สร้าง Polygon สำหรับปุ่ม
+            Polygon poly = new Polygon();
+            poly.addPoint((int) (p1.x - minX), (int) (p1.y - minY));
+            poly.addPoint((int) (p2.x - minX), (int) (p2.y - minY));
+            poly.addPoint((int) (p3.x - minX), (int) (p3.y - minY));
+            poly.addPoint((int) (p4.x - minX), (int) (p4.y - minY));
+            tiles[i].setShape(poly);
         }
 
-        // ---------------------------------------------------------
-        // 2. จัดวางหมากผู้เล่น (ให้อยู่กลางช่องข้าวหลามตัด)
-        // ---------------------------------------------------------
+        // 3. จัดตำแหน่งหมากผู้เล่นให้สัมพันธ์กับช่องใหม่
         for (int i = 0; i < 4; i++) {
-            if (playerMarkers[i].isVisible()) {
+            if (playerMarkers[i] != null && playerMarkers[i].isVisible()) {
                 int pos = playerPositions[i];
-                if (pos >= 0 && pos < 32) {
-                    Rectangle tb = tiles[pos].getBounds();
-                    int mw = 20; // ขนาดหมากกว้าง
-                    int mh = 20; // ขนาดหมากสูง
-
-                    // กระจายตัวผู้เล่นไม่ให้ทับกันตรงๆ (อิงตาม index ผู้เล่น)
-                    int ox = (i % 2 == 0) ? -15 : 5;
-                    int oy = (i < 2) ? -15 : 5;
-
-                    int px = tb.x + (tb.width / 2) - (mw / 2) + ox;
-                    int py = tb.y + (tb.height / 2) - (mh / 2) + oy;
-
-                    playerMarkers[i].setBounds(px, py, mw, mh);
-                }
+                Rectangle tb = tiles[pos].getBounds();
+                int mw = 25, mh = 25;
+                int ox = (i % 2 == 0) ? -20 : 10;
+                int oy = (i < 2) ? -20 : 10;
+                playerMarkers[i].setBounds(tb.x + tb.width / 2 - mw / 2 + ox, tb.y + tb.height / 2 - mh / 2 + oy, mw,
+                        mh);
             }
         }
 
-        // ---------------------------------------------------------
-        // 3. จัดวาง UI (Turn Display & Status Panel)
-        // ---------------------------------------------------------
-        if (turnDisplay != null) {
-            turnDisplay.setBounds((w - 200) / 2, 20, 200, 50); // วางไว้ตรงกลางขอบบนสุด
-        }
-
-        // วางกล่องผู้เล่นไว้ตามมุม 4 มุม หลบกระดานตรงกลาง
-        int spW = 220, spH = 130;
-        int margin = 30;
-
+        // 4. จัดวาง Player Status Panels ไว้ตามมุมจอ
+        int spW = 220, spH = 130, margin = 30;
         if (playerStatusPanels[0] != null)
-            playerStatusPanels[0].setBounds(margin, margin, spW, spH); // ซ้ายบน
+            playerStatusPanels[0].setBounds(margin, margin, spW, spH);
         if (playerStatusPanels[1] != null)
-            playerStatusPanels[1].setBounds(w - spW - margin, margin, spW, spH); // ขวาบน
+            playerStatusPanels[1].setBounds(panelW - spW - margin, margin, spW, spH);
         if (playerStatusPanels[2] != null)
-            playerStatusPanels[2].setBounds(margin, h - spH - margin, spW, spH); // ซ้ายล่าง
+            playerStatusPanels[2].setBounds(margin, panelH - spH - margin, spW, spH);
         if (playerStatusPanels[3] != null)
-            playerStatusPanels[3].setBounds(w - spW - margin, h - spH - margin, spW, spH); // ขวาล่าง
+            playerStatusPanels[3].setBounds(panelW - spW - margin, panelH - spH - margin, spW, spH);
+    }
+
+    // เพิ่มฟังก์ชัน iso ไว้ท้ายไฟล์ BoardPanel.java (ถ้ายังไม่มี)
+    private Point2D.Double iso(double startX, double startY, double x, double y) {
+        return new Point2D.Double(startX + (x - y), startY + (x + y) * 0.6); // ใช้ 0.6 เพื่อความ "อวบ"
     }
 }
