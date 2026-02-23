@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.geom.Path2D;
 import java.util.List;
 
 public class BoardPanel extends JPanel {
@@ -12,24 +13,24 @@ public class BoardPanel extends JPanel {
 
     // 2. Isometric Board (ช่องกระดาน)
     private CustomShapeButton[] tiles = new CustomShapeButton[32];
-    
+
     // 3. Player Markers (ตัวละครผู้เล่นบนกระดาน)
     private JPanel[] playerMarkers = new JPanel[4];
     private int[] playerPositions = new int[4]; // เก็บตำแหน่งปัจจุบันของผู้เล่น
 
     // สีประจำตัวผู้เล่น
     private final Color[] defaultColors = {
-        new Color(255, 50, 50),   // Player 1 (Red)
-        new Color(50, 255, 50),   // Player 2 (Green)
-        new Color(255, 215, 0),   // Player 3 (Gold)
-        new Color(50, 200, 255)   // Player 4 (Blue)
+            new Color(255, 50, 50), // Player 1 (Red)
+            new Color(50, 255, 50), // Player 2 (Green)
+            new Color(255, 215, 0), // Player 3 (Gold)
+            new Color(50, 200, 255) // Player 4 (Blue)
     };
 
     public BoardPanel() {
         setBackground(new Color(40, 45, 55)); // สีพื้นหลังบอร์ด
-        setLayout(null); // ใช้ Absolute Layout เพื่ออิสระในการวางพิกัด
+        setLayout(null); // ใช้ Absolute Layout
 
-        // สร้าง UI แถบแสดง Turn ตรงกลาง
+        // สร้าง UI แถบแสดง Turn
         turnDisplay = new TurnDisplayPanel();
         add(turnDisplay);
 
@@ -39,24 +40,61 @@ public class BoardPanel extends JPanel {
             add(playerStatusPanels[i]);
         }
 
-        // สำคัญมาก: ต้องสร้างและ Add ตัวผู้เล่นก่อน Tile เพื่อให้ Z-Order อยู่บนสุด (ดัชนี 0)
+        // สำคัญมาก: ต้องสร้างและ Add ตัวผู้เล่นก่อน Tile เพื่อให้ Z-Order อยู่บนสุด
         for (int i = 0; i < 4; i++) {
             playerMarkers[i] = new JPanel();
             playerMarkers[i].setBackground(defaultColors[i]);
             playerMarkers[i].setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
-            playerMarkers[i].setVisible(false); // ซ่อนไว้ก่อนจนกว่าจะเริ่มเกม
+            playerMarkers[i].setVisible(false); // ซ่อนไว้ก่อน
             add(playerMarkers[i]);
-            setComponentZOrder(playerMarkers[i], 0); // บังคับให้อยู่บนสุด
+            setComponentZOrder(playerMarkers[i], 0);
         }
 
         // สร้าง Tiles 32 ช่อง
         for (int i = 0; i < 32; i++) {
-            tiles[i] = new CustomShapeButton("T" + i, 12);
+            boolean isCorner = (i % 8 == 0);
+            String label;
+            int fontSize = 18;
+
+            // ตรวจสอบว่าเป็นมุมไหน และกำหนดข้อความ/ขนาดฟอนต์
+            if (isCorner) {
+                fontSize = 14;
+                switch (i) {
+                    case 0:
+                        label = "FESTIVAL";
+                        break;
+                    case 8:
+                        label = "JAIL";
+                        break;
+                    case 16:
+                        label = "START";
+                        break;
+                    case 24:
+                        label = "TRAVEL";
+                        break;
+                    default:
+                        label = "" + i; // กันเหนียวไว้
+                }
+            } else {
+                label = "T" + i; // ช่องปกติใช้ T ตามด้วยหมายเลข
+            }
+
+            // สร้างปุ่มเพียงครั้งเดียว
+            tiles[i] = new CustomShapeButton(label, fontSize);
+
+            // ตั้งค่าสีพื้นหลังปกติ
             tiles[i].setBackground(new Color(220, 220, 220));
+
+            // ถ้าเป็นมุม ให้เปลี่ยนสีพื้นหลังและสีตัวอักษร
+            if (isCorner) {
+                tiles[i].setBackground(new Color(255, 120, 120)); // สีแดงช่องมุม
+                tiles[i].setForeground(Color.WHITE);
+            }
+
             add(tiles[i]);
         }
 
-        // รับ Event เวลาหน้าต่างถูก Resize จะได้ขยายกระดานตาม
+        // Event เมื่อหน้าต่างถูก Resize
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -66,7 +104,8 @@ public class BoardPanel extends JPanel {
     }
 
     public void updateBoard(GameState state) {
-        if (state == null) return;
+        if (state == null)
+            return;
 
         List<Player> players = state.getPlayers();
         Board board = state.getBoard();
@@ -76,8 +115,6 @@ public class BoardPanel extends JPanel {
             if (i < players.size()) {
                 Player p = players.get(i);
                 playerStatusPanels[i].setVisible(true);
-                
-                // อัปเดตตำแหน่ง
                 playerMarkers[i].setVisible(true);
                 playerPositions[i] = p.getPosition();
             } else {
@@ -86,7 +123,7 @@ public class BoardPanel extends JPanel {
             }
         }
 
-        // 2. อัปเดตสีของช่องที่ดินเวลามีคนซื้อไปแล้ว
+        // 2. อัปเดตสีช่องกระดาน
         if (board != null) {
             for (int i = 0; i < 32; i++) {
                 Tile t = board.getTile(i);
@@ -97,99 +134,116 @@ public class BoardPanel extends JPanel {
                     if (owner != null) {
                         int ownerIndex = players.indexOf(owner);
                         if (ownerIndex != -1) {
-                            tiles[i].setBackground(defaultColors[ownerIndex]); // เปลี่ยนเป็นสีเจ้าของ
+                            tiles[i].setBackground(defaultColors[ownerIndex]);
                         }
                     } else {
-                        tiles[i].setBackground(new Color(220, 220, 220)); // สีช่องว่างปกติ
+                        tiles[i].setBackground(new Color(220, 220, 220));
                     }
                 } else if (t instanceof ActionTile) {
-                    tiles[i].setBackground(new Color(255, 200, 100)); // สีช่อง Action
+                    tiles[i].setBackground(new Color(255, 200, 100));
                 } else {
-                    tiles[i].setBackground(new Color(150, 200, 255)); // สีช่องพิเศษอื่นๆ
+                    tiles[i].setBackground(new Color(150, 200, 255));
                 }
             }
         }
 
-        // คำนวณพิกัดใหม่ทุกครั้งที่อัปเดตกระดาน
         relayoutBoard();
         repaint();
     }
 
-    // เมธอดคำนวณพิกัดช่องตารางและหมากผู้เล่นให้อยู่ถูกที่
+    // เมธอดสำหรับสร้างรูปทรงข้าวหลามตัด (ดึงมาจาก IsometricBoardGame)
+    private Path2D createIsometricPath(int width, int height) {
+        Path2D path = new Path2D.Double();
+        path.moveTo(width / 2.0, 0);
+        path.lineTo(width, height / 2.0);
+        path.lineTo(width / 2.0, height);
+        path.lineTo(0, height / 2.0);
+        path.closePath();
+        return path;
+    }
+
+    // เมธอดจัด Layout วางพิกัดกระดานและผู้เล่น
     private void relayoutBoard() {
         int w = getWidth();
         int h = getHeight();
-        if (w == 0 || h == 0) return;
+        if (w == 0 || h == 0)
+            return;
 
-        int margin = 30;
-        int boardW = w - (2 * margin);
-        int boardH = h - (2 * margin);
-        
-        // แบ่งกระดานเป็น 9x9 Grid (ด้านละ 9 ช่อง)
-        int cellW = boardW / 9;
-        int cellH = boardH / 9;
+        // ---------------------------------------------------------
+        // 1. คำนวณพิกัดกระดาน Isometric
+        // ---------------------------------------------------------
+        int tileWidth = 150; // ขนาดกว้างของช่อง
+        int tileHeight = 75; // ขนาดสูงของช่อง (ครึ่งนึงของกว้าง)
+        int startX = w / 2 - tileWidth / 2;
+        int startY = 250; // จุดเริ่มต้นแกน Y (เลื่อนลงมานิดหน่อยไม่ให้ชนขอบบน)
 
-        // วางช่องที่ดินทั้ง 32 ช่อง
         for (int i = 0; i < 32; i++) {
-            int gx = getGridX(i);
-            int gy = getGridY(i);
-            tiles[i].setBounds(margin + (gx * cellW), margin + (gy * cellH), cellW, cellH);
+            int row = 0, col = 0;
+
+            // แบ่งตำแหน่งกระดาน (8 ช่อง x 4 ด้าน = 32)
+            if (i < 9) {
+                row = i;
+                col = 0;
+            } else if (i < 17) {
+                row = 8;
+                col = i - 8;
+            } else if (i < 25) {
+                row = 24 - i;
+                col = 8;
+            } else {
+                row = 0;
+                col = 32 - i;
+            }
+
+            // สมการแปลงแกน 2D เป็น Isometric
+            int x = startX + (col - row) * (tileWidth / 2);
+            int y = startY + (col + row) * (tileHeight / 2);
+
+            tiles[i].setShape(createIsometricPath(tileWidth, tileHeight));
+            tiles[i].setBounds(x, y, tileWidth, tileHeight);
         }
 
-        // วางหมากผู้เล่นให้อยู่ในช่องตาม Position ปัจจุบัน
+        // ---------------------------------------------------------
+        // 2. จัดวางหมากผู้เล่น (ให้อยู่กลางช่องข้าวหลามตัด)
+        // ---------------------------------------------------------
         for (int i = 0; i < 4; i++) {
             if (playerMarkers[i].isVisible()) {
                 int pos = playerPositions[i];
                 if (pos >= 0 && pos < 32) {
                     Rectangle tb = tiles[pos].getBounds();
-                    
-                    // ขนาดตัวผู้เล่น (ประมาณ 1 ใน 3 ของช่อง)
-                    int mw = cellW / 3;
-                    int mh = cellH / 3;
-                    
-                    // หากมีผู้เล่นตกช่องเดียวกัน ให้วางเฉียงๆ ไม่บังกัน
-                    int ox = (i % 2 == 0) ? 5 : tb.width - mw - 5;
-                    int oy = (i < 2) ? 5 : tb.height - mh - 5;
-                    
-                    playerMarkers[i].setBounds(tb.x + ox, tb.y + oy, mw, mh);
+                    int mw = 20; // ขนาดหมากกว้าง
+                    int mh = 20; // ขนาดหมากสูง
+
+                    // กระจายตัวผู้เล่นไม่ให้ทับกันตรงๆ (อิงตาม index ผู้เล่น)
+                    int ox = (i % 2 == 0) ? -15 : 5;
+                    int oy = (i < 2) ? -15 : 5;
+
+                    int px = tb.x + (tb.width / 2) - (mw / 2) + ox;
+                    int py = tb.y + (tb.height / 2) - (mh / 2) + oy;
+
+                    playerMarkers[i].setBounds(px, py, mw, mh);
                 }
             }
         }
 
-        // จัดวาง Status Panels และ Turn Display ไว้ตรงกลาง
-        int centerX = margin + (2 * cellW);
-        int centerY = 20;
-        int centerW = 5 * cellW;
-        int centerH = 5 * cellH;
-
+        // ---------------------------------------------------------
+        // 3. จัดวาง UI (Turn Display & Status Panel)
+        // ---------------------------------------------------------
         if (turnDisplay != null) {
-            turnDisplay.setBounds(centerX + 250, centerY, centerW - 550, 50);
+            turnDisplay.setBounds((w - 200) / 2, 20, 200, 50); // วางไว้ตรงกลางขอบบนสุด
         }
 
-        int spW = centerW / 2 - 10;
-        int spH = (centerH - 70) / 2 - 10;
-        
-        if (playerStatusPanels[0] != null) playerStatusPanels[0].setBounds(centerX/4 - 70, centerY + 15, spW, spH);
-        if (playerStatusPanels[1] != null) playerStatusPanels[1].setBounds(centerX*2 + centerW/2 + 50, centerY + 15, spW, spH);
-        if (playerStatusPanels[2] != null) playerStatusPanels[2].setBounds(centerX/4 - 70, centerY + 550 + spH , spW, spH);
-        if (playerStatusPanels[3] != null) playerStatusPanels[3].setBounds(centerX*2 + centerW/2 + 50, centerY + 550 + spH , spW, spH);
-    }
+        // วางกล่องผู้เล่นไว้ตามมุม 4 มุม หลบกระดานตรงกลาง
+        int spW = 220, spH = 130;
+        int margin = 30;
 
-    // Helper: แปลง Index (0-31) เป็นพิกัดแกน X บนตาราง 9x9 (เดินทวนเข็มนาฬิกา)
-    private int getGridX(int i) {
-        if (i >= 0 && i <= 8) return 8 - i;         // แถวล่าง (ขวาไปซ้าย)
-        if (i >= 9 && i <= 16) return 0;            // แถวซ้าย (ล่างขึ้นบน)
-        if (i >= 17 && i <= 24) return i - 16;      // แถวบน (ซ้ายไปขวา)
-        if (i >= 25 && i <= 31) return 8;           // แถวขวา (บนลงล่าง)
-        return 0;
-    }
-
-    // Helper: แปลง Index (0-31) เป็นพิกัดแกน Y บนตาราง 9x9
-    private int getGridY(int i) {
-        if (i >= 0 && i <= 8) return 8;
-        if (i >= 9 && i <= 16) return 8 - (i - 8);
-        if (i >= 17 && i <= 24) return 0;
-        if (i >= 25 && i <= 31) return i - 24;
-        return 0;
+        if (playerStatusPanels[0] != null)
+            playerStatusPanels[0].setBounds(margin, margin, spW, spH); // ซ้ายบน
+        if (playerStatusPanels[1] != null)
+            playerStatusPanels[1].setBounds(w - spW - margin, margin, spW, spH); // ขวาบน
+        if (playerStatusPanels[2] != null)
+            playerStatusPanels[2].setBounds(margin, h - spH - margin, spW, spH); // ซ้ายล่าง
+        if (playerStatusPanels[3] != null)
+            playerStatusPanels[3].setBounds(w - spW - margin, h - spH - margin, spW, spH); // ขวาล่าง
     }
 }
