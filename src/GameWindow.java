@@ -1,7 +1,7 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.List;
+import javax.swing.*;
 
 public class GameWindow extends JFrame {
     
@@ -53,7 +53,7 @@ public class GameWindow extends JFrame {
         // อัปเดตข้อมูลบนกระดาน เช่น ตำแหน่งตัวละคร, เงิน
         if (boardPanel != null) {
             // ถ้าใน BoardPanel ของคุณใช้ชื่อเมธอดอื่นในการอัปเดต ให้เปลี่ยนชื่อตรงนี้นะครับ
-            // boardPanel.updateBoard(state); 
+            boardPanel.updateBoard(state); 
         }
         repaint();
     }

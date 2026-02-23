@@ -73,15 +73,16 @@ public class GameController implements ActionListener {
         }
 
         for (int i = 0; i < config.getBotCount(); i++) {
-            players.add(
-                    new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
+            players.add(new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
         }
 
         this.victoryChecker = new VictoryChecker();
+        
+        state.setPlayers(players);
+        state.setBoard(mapLoader.loadMap(config.getMapName()));
 
         view.updateView(state);
     }
-
     /**
      * Processes the current turn phase
      */
