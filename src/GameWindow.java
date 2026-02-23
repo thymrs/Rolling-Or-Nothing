@@ -7,7 +7,7 @@ public class GameWindow extends JFrame {
     
     private ControlPanel controlPanel;
     private BoardPanel boardPanel; 
-    private EventLogPanel eventLogPanel;
+    private static EventLogPanel eventLogPanel;
 
     public GameWindow() {
         setTitle("Rolling Or Nothing");
@@ -38,7 +38,7 @@ public class GameWindow extends JFrame {
         return controlPanel;
     }
 
-    public EventLogPanel getEventLogPanel() {
+    public static EventLogPanel getEventLogPanel() {
         return eventLogPanel;
     }
 

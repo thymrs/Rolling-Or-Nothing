@@ -9,7 +9,7 @@ public class Main {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        
+
         GameConfig config = new GameConfig.Builder()
                 .initialMoney(1500)
                 .maxTurns(100)
@@ -26,6 +26,9 @@ public class Main {
         Board board = loader.loadMap(config.getMapName());
 
         GameWindow view = new GameWindow();
+        GameState state = new GameState();
+        state.setBoard(board);
+        state.addGameEventListener(GameWindow.getEventLogPanel());
 
         GameController controller = new GameController(view);
 
@@ -34,7 +37,7 @@ public class Main {
         controller.startGame(config);
 
         System.out.println("Monopoly Game Started!");
-        
+
     }
 }
 
