@@ -80,7 +80,11 @@ public class PropertyTile extends Tile {
     }
 
     public int getTotalValue() {
-        return this.purchasePrice + (this.purchasePrice * this.buildingLevel);
+        return this.purchasePrice + (this.purchasePrice * this.buildingLevel); 
+    }
+
+    public int getUpgradeCost(int levelsToUpgrade) {
+        return this.getPurchasePrice() * levelsToUpgrade;
     }
 
     @Override

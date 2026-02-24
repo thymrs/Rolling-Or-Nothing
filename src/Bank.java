@@ -104,7 +104,7 @@ public class Bank {
     public void receiveTax(int amount) {
         if (amount > 0) {
             this.totalTaxCollected += amount;
-            System.out.println("🏦 ธนาคารริบเงินภาษี " + amount + " บาทเข้าคลัง! (ยอดรวมทั้งหมด: " + totalTaxCollected + ")");
+            System.out.println("🏦 Bank taxed " + amount + " bath! (total tax collected: " + totalTaxCollected + ")");
         }
     }
 }

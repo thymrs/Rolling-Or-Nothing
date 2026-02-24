@@ -1,7 +1,7 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
+import javax.swing.*;
 
 public class CircleButton extends JButton {
     public CircleButton(String label) {

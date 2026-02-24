@@ -112,8 +112,14 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
-                view.getControlPanel().setButtonsEnabled(true);
-                view.showPopup("It's now your turn " + currentPlayer.getName());
+                if (currentPlayer instanceof BotPlayer) {
+                    view.getControlPanel().setButtonsEnabled(false); // ปิดปุ่มทั้งหมด ไม่ให้คนกดแทรก
+                    state.notifyMessage("🤖 ถึงตาของบอท " + currentPlayer.getName() + " กำลังตัดสินใจ..."); // แจ้งเตือนใน Log แทน Popup
+                    handleBotTurn();
+                } else {
+                    view.setRollEnabled(true);
+                    view.showPopup("It's now your turn " + currentPlayer.getName()); // โชว์ Popup ให้คนเตรียมตัว
+                }
             }
             case MOVING -> {
             }
@@ -219,6 +225,7 @@ public class GameController implements ActionListener {
     }
 
     private void handleRollDice() {
+        view.setRollEnabled(false);
         Player player = state.getCurrentPlayer();
         state.getDice().roll();
         int steps = state.getDice().getTotal();
@@ -298,7 +305,7 @@ public class GameController implements ActionListener {
                         }
                     } else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                         boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
-                        int upgradeCost = property.getPurchasePrice();
+                        int upgradeCost = property.getUpgradeCost(1);
                         if (wantToUpgrade && bot.getMoney() >= upgradeCost) {
                             bot.pay(upgradeCost);
                             property.upgradeLevel();
@@ -369,35 +376,38 @@ public class GameController implements ActionListener {
         Tile currentTile = state.getBoard().getTile(player.getPosition());
 
         if (currentTile instanceof PropertyTile property) {
-            // ใช้หน้าต่างจากทีม UI
+
             int selectedLevel = GameDialogManager.showBuyPropertyDialog(view, property);
 
             if (selectedLevel != -1) {
                 int currentLevel = property.getBuildingLevel();
                 int levelsToUpgrade = selectedLevel - currentLevel;
-                int totalCost = property.getPurchasePrice() * levelsToUpgrade;
+                int totalCost = property.getUpgradeCost(levelsToUpgrade);
 
                 if (player.getMoney() >= totalCost) {
-                    player.pay(totalCost);
-                    
-                    if (property.getOwner() == null) {
-                        property.setOwner(player);
-                        player.addAsset(property);
+
+                    if (player.getMoney() >= totalCost) {
+                        player.pay(totalCost);
+                        
+                        if (property.getOwner() == null) {
+                            property.setOwner(player);
+                            player.addAsset(property);
+                        }
+                        
+                        for (int i = 0; i < levelsToUpgrade; i++) {
+                            property.upgradeLevel();
+                        }
+                        
+                        state.notifyMessage(player.getName() + " buile/upgrade " + property.getName() + " to level " + selectedLevel);
+                        view.showPopup("transection complete for price " + totalCost + "!");
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                    } else {
+                        view.showPopup("Not enough money! should have " + totalCost + " more!");
                     }
-                    
-                    for (int i = 0; i < levelsToUpgrade; i++) {
-                        property.upgradeLevel();
-                    }
-                    
-                    state.notifyMessage(player.getName() + " buile/upgrade " + property.getName() + " to level " + selectedLevel);
-                    view.showPopup("transection complete for price " + totalCost + "!");
-                    state.setCurrentPhase(TurnPhase.END_TURN);
-                } else {
-                    view.showPopup("Not enough money! should have " + totalCost + " more!");
                 }
             }
-        }
         view.updateView(state);
+        }
     }
 
     private void handleEndTurn() {
