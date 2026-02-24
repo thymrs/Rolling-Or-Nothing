@@ -33,7 +33,7 @@ public class GameController implements ActionListener {
         initGame(config);
 
         view.updateView(state);
-        view.showPopup("Welcome");
+        //view.showPopup("Welcome");
 
         processPhase();
     }
@@ -51,11 +51,11 @@ public class GameController implements ActionListener {
             case "ROLL" -> handleRollDice();
             case "BUY" -> handleBuyProperty();
             case "USE_CARD" -> handleCardAction();
-            case "SURRENDER" -> {   // 🏳️ ปุ่มยอมแพ้
+            case "SURRENDER" -> { 
                 boolean confirm = GameDialogManager.showSurrenderDialog(view);
                 if (confirm) {
                     state.getCurrentPlayer().declareBankruptcy();
-                    state.notifyMessage("🏳️ " + state.getCurrentPlayer().getName() + " ขอยอมแพ้ออกจากเกม!");
+                    state.notifyMessage("🏳️ " + state.getCurrentPlayer().getName() + " Surrender and leave the game!");
                     state.setCurrentPhase(TurnPhase.END_TURN);
                     processPhase();
                 }
@@ -183,13 +183,13 @@ public class GameController implements ActionListener {
             if (card.requiresTarget()) {
                 List<Player> opponents = getOpponents(player); 
                 if (opponents.isEmpty()) {
-                    view.showPopup("ไม่มีเป้าหมายให้ใช้การ์ด!");
+                    view.showPopup("No target to use card!");
                     return;
                 }
 
                 if (player instanceof BotPlayer bot) {
                     target = opponents.get(0); // ให้บอทสุ่มเป้าหมายคนแรกไปก่อน
-                    view.showPopup("Bot " + bot.getName() + " เล็งเป้าไปที่ " + target.getName() + "!");
+                    view.showPopup("Bot " + bot.getName() + " target to " + target.getName() + "!");
                 } else {
                     // ใช้หน้าต่างจากทีม UI
                     target = GameDialogManager.showAttackCardDialog(view, card, opponents);
