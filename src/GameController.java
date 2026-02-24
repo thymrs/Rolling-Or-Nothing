@@ -219,6 +219,7 @@ public class GameController implements ActionListener {
     }
 
     private void handleRollDice() {
+        view.setRollEnabled(false);
         Player player = state.getCurrentPlayer();
         state.getDice().roll();
         int steps = state.getDice().getTotal();
