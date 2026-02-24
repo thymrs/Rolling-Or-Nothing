@@ -122,46 +122,33 @@ public class GameMenuWindow extends JFrame {
                 int selectedBotCount = (Integer) botCountCombo.getSelectedItem();
                 String selectedDiffStr = (String) diffCombo.getSelectedItem();
 
-                /*
-                 * ==========================================================
-                 * หมายเหตุ: โค้ดส่วนนี้จะทำงานได้เมื่อมีไฟล์ GameConfig, DifficultyLevel,
-                 * MapLoader, Board, GameWindow, GameState, GameController
-                 * ==========================================================
-                 */
-                /*
-                 * DifficultyLevel selectedDifficulty =
-                 * DifficultyLevel.valueOf(selectedDiffStr);
-                 * 
-                 * GameConfig config = new GameConfig.Builder()
-                 * .initialMoney(200000)
-                 * .maxTurns(50)
-                 * .mapName("default")
-                 * .humanCount(1)
-                 * .botCount(selectedBotCount)
-                 * .botDifficulty(selectedDifficulty)
-                 * .passGoSalary(15000)
-                 * .taxPercentage(10)
-                 * .build();
-                 * 
-                 * MapLoader loader = new MapLoader();
-                 * Board board = loader.loadMap(config.getMapName());
-                 * 
-                 * GameWindow view = new GameWindow();
-                 * GameState state = new GameState();
-                 * state.setBoard(board);
-                 * state.addGameEventListener(GameWindow.getEventLogPanel());
-                 * 
-                 * GameController controller = new GameController(view, state);
-                 * 
-                 * view.setVisible(true);
-                 * controller.startGame(config);
-                 * 
-                 * System.out.println("Monopoly Game Started with User Configuration!");
-                 */
-
-                // แจ้งเตือนจำลองการกด
-                JOptionPane.showMessageDialog(this,
-                        "Game Starts with " + selectedBotCount + " bots on " + selectedDiffStr + " mode!");
+                DifficultyLevel selectedDifficulty = DifficultyLevel.valueOf(selectedDiffStr);
+                
+                GameConfig config = new GameConfig.Builder()
+                    .initialMoney(200000)
+                    .maxTurns(50)
+                    .mapName("default")
+                    .humanCount(1)
+                    .botCount(selectedBotCount)
+                    .botDifficulty(selectedDifficulty)
+                    .passGoSalary(15000)
+                    .taxPercentage(10)
+                    .build();
+                
+                MapLoader loader = new MapLoader();
+                Board board = loader.loadMap(config.getMapName());
+                
+                GameWindow view = new GameWindow();
+                GameState state = new GameState();
+                state.setBoard(board);
+                state.addGameEventListener(GameWindow.getEventLogPanel());
+                
+                GameController controller = new GameController(view, state);
+                
+                view.setVisible(true);
+                controller.startGame(config);
+                
+                System.out.println("Monopoly Game Started with User Configuration!");
                 this.dispose();
 
             } catch (Exception ex) {

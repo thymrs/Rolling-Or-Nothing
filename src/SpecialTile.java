@@ -11,7 +11,7 @@ public class SpecialTile extends Tile {
     public void triggerEffect(Player player, GameState state) {
         if (player == null || state == null) return;
         switch (effect) {
-            case FESTIVAL -> player.receiveMoney(100);
+            case FESTIVAL -> state.setSelectingTile(true, "FESTIVAL");
             case BLACKOUT -> player.pay(50);
             case FREEZE -> player.setFrozenTurns(1);
             case OLYMPIC -> player.receiveMoney(200);

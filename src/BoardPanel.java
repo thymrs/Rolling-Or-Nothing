@@ -20,6 +20,10 @@ public class BoardPanel extends JPanel {
     // 3. Player Markers (ตัวละครผู้เล่นบนกระดาน)
     private JPanel[] playerMarkers = new JPanel[4];
     private int[] playerPositions = new int[4]; // เก็บตำแหน่งปัจจุบันของผู้เล่น
+    
+    // Tile selection mode
+    private boolean selectingTile = false;
+    private java.awt.event.ActionListener tileSelectionListener;
 
     // สีประจำตัวผู้เล่น
     private final Color[] defaultColors = {
@@ -102,6 +106,14 @@ public class BoardPanel extends JPanel {
                 tiles[i].setBackground(new Color(255, 120, 120)); // สีแดงช่องมุม
                 tiles[i].setForeground(Color.WHITE);
             }
+            
+            // Add listener for tile selection
+            final int tileIndex = i;
+            tiles[i].addActionListener(e -> {
+                if (selectingTile && tileSelectionListener != null) {
+                    tileSelectionListener.actionPerformed(new java.awt.event.ActionEvent(tiles[tileIndex], 0, "TILE_" + tileIndex));
+                }
+            });
 
             add(tiles[i]);
         }
@@ -136,6 +148,28 @@ public class BoardPanel extends JPanel {
 
     public void setRollActionListener(java.awt.event.ActionListener listener) {
         btnRoll.addActionListener(listener);
+    }
+    
+    public void setTileSelectionListener(java.awt.event.ActionListener listener) {
+        this.tileSelectionListener = listener;
+    }
+    
+    public void enableTileSelection(boolean enabled) {
+        this.selectingTile = enabled;
+        for (int i = 0; i < 32; i++) {
+            tiles[i].setEnabled(enabled);
+            if (enabled) {
+                tiles[i].setBackground(new Color(150, 200, 255)); // Light blue for selection
+            } else {
+                // Restore original color
+                boolean isCorner = (i % 8 == 0);
+                if (isCorner) {
+                    tiles[i].setBackground(new Color(255, 120, 120));
+                } else {
+                    tiles[i].setBackground(new Color(220, 220, 220));
+                }
+            }
+        }
     }
 
     public void setRollEnabled(boolean enabled) {

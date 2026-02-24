@@ -15,6 +15,9 @@ public class GameState {
     private TurnPhase currentPhase;
     private int currentPlayerIndex;
     private int turnCount;
+    private boolean isSelectingTile = false;
+    private int selectedTileIndex = -1;
+    private String selectionMode = ""; // "FESTIVAL" or "TRAVEL"
     
 
     /**
@@ -103,6 +106,28 @@ public class GameState {
 
     public VictoryChecker getVictoryChecker() {
         return victoryChecker;
+    }
+    
+    public boolean isSelectingTile() {
+        return isSelectingTile;
+    }
+    
+    public void setSelectingTile(boolean selecting, String mode) {
+        this.isSelectingTile = selecting;
+        this.selectionMode = mode;
+        this.selectedTileIndex = -1;
+    }
+    
+    public int getSelectedTileIndex() {
+        return selectedTileIndex;
+    }
+    
+    public void setSelectedTileIndex(int index) {
+        this.selectedTileIndex = index;
+    }
+    
+    public String getSelectionMode() {
+        return selectionMode;
     }
     private List<GameEventListener> listeners = new ArrayList<>();
 

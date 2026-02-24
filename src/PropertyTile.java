@@ -5,6 +5,7 @@ public class PropertyTile extends Tile {
     private Player owner;
     private boolean isMortgaged;
     private final String colorGroup;
+    private boolean hasDoubleRent = false; // Festival effect: double rent
 
     public PropertyTile(int index, String name, int purchasePrice, int baseRent, String colorGroup) {
         super(index, name);
@@ -38,6 +39,9 @@ public class PropertyTile extends Tile {
 
     public int calculateRent() {
         int rent = baseRent * (1 + Math.max(0, buildingLevel));
+        if (hasDoubleRent) {
+            rent *= 2;
+        }
         return Math.max(rent, 0);
     }
 
@@ -85,6 +89,18 @@ public class PropertyTile extends Tile {
 
     public int getUpgradeCost(int levelsToUpgrade) {
         return this.getPurchasePrice() * levelsToUpgrade;
+    }
+    
+    public boolean hasDoubleRent() {
+        return hasDoubleRent;
+    }
+    
+    public void setDoubleRent(boolean doubleRent) {
+        this.hasDoubleRent = doubleRent;
+    }
+    
+    public void resetDoubleRent() {
+        this.hasDoubleRent = false;
     }
 
     @Override

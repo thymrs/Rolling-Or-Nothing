@@ -124,6 +124,11 @@ public class BotPlayer extends Player {
 
         if (this.getMoney() < price) return false;
 
+        // HIGH PRIORITY: Tourism acquisition
+        if (tile.isTourism()) {
+            return evaluateTourismBuy(tile, state);
+        }
+
         if (!isTakeover) {
             if (willCompleteSet(tile)) return true;
             return (this.getMoney() - price) >= 500;
@@ -274,5 +279,173 @@ public class BotPlayer extends Player {
 
     public void setRandom(Random random) {
         this.random = random;
+    }
+
+    // ===== TOURISM ACQUISITION LOGIC =====
+    /**
+     * Aggressively evaluate tourism property purchases
+     * Tourism monopoly is a win condition - high priority
+     */
+    public boolean evaluateTourismBuy(PropertyTile touristProperty, GameState state) {
+        int requiredCash = touristProperty.getPurchasePrice();
+        
+        // Must have 20% buffer for strategy flexibility
+        if (this.getMoney() < requiredCash * 1.2) {
+            return false;
+        }
+        
+        // Count owned tourism tiles
+        int ownedTouristCount = (int) this.getOwnedLands().stream()
+            .filter(t -> t.isTourism())
+            .count();
+        
+        // Check opponent's tourism progress (threat assessment)
+        int maxOpponentTourist = state.getPlayers().stream()
+            .filter(p -> p != this && !p.isBankrupt())
+            .mapToInt(p -> (int) p.getOwnedLands().stream()
+                .filter(t -> t.isTourism())
+                .count())
+            .max()
+            .orElse(0);
+        
+        // PRIORITY SCORING (0-100)
+        int priority = 0;
+        
+        // +40 if we're close to monopoly (2+ tiles)
+        if (ownedTouristCount >= 2) {
+            priority += 40;
+        }
+        // +35 if opponent threatens monopoly - MUST BLOCK
+        else if (maxOpponentTourist >= 2) {
+            priority += 35;
+        }
+        // +20 for normal acquisition
+        else {
+            priority += 20;
+        }
+        
+        // +25 if property is uncontested (few options left)
+        long unownedTourist = state.getBoard().getTilesReadOnly().stream()
+            .filter(t -> t instanceof PropertyTile)
+            .map(t -> (PropertyTile) t)
+            .filter(t -> t.isTourism() && t.getOwner() == null)
+            .count();
+        if (unownedTourist <= 2) {
+            priority += 25;
+        }
+        
+        return priority >= 60; // Threshold for purchase
+    }
+
+    // ===== FESTIVAL PLACEMENT LOGIC =====
+    /**
+     * Selects best owned property to place festival double-rent effect
+     * Maximizes ROI based on rent + traffic probability + building level
+     */
+    public PropertyTile chooseFestivalLocation(GameState state) {
+        List<PropertyTile> ownedProperties = this.getOwnedLands();
+        
+        if (ownedProperties.isEmpty()) {
+            return null;
+        }
+        
+        PropertyTile bestProperty = null;
+        double highestScore = -1;
+        
+        for (PropertyTile property : ownedProperties) {
+            double score = calculateFestivalROI(property, state);
+            
+            if (score > highestScore) {
+                highestScore = score;
+                bestProperty = property;
+            }
+        }
+        
+        return bestProperty;
+    }
+
+    /**
+     * Calculates ROI score for placing festival on a property
+     * Factors: Rent value, building level, board position traffic, color group
+     */
+    private double calculateFestivalROI(PropertyTile property, GameState state) {
+        double score = 0;
+        
+        // FACTOR 1: Rent multiplier (doubled rent value)
+        int baseRent = property.calculateRent();
+        score += baseRent * 2.0; // Double rent potential
+        
+        // FACTOR 2: Building level bonus (built properties attract more visits)
+        // Landmarks (Level 3) have highest ROI
+        int buildingLevel = property.getBuildingLevel();
+        score += buildingLevel * 150.0; // Each level adds 150 base score
+        
+        // FACTOR 3: Board position traffic probability
+        int tileIndex = property.getIndex();
+        double trafficMultiplier = calculateTrafficWeight(tileIndex);
+        score *= trafficMultiplier;
+        
+        // FACTOR 4: Color group premium (high-value groups get boost)
+        String colorGroup = property.getColorGroup();
+        if ("RED".equalsIgnoreCase(colorGroup) || 
+            "DARK_BLUE".equalsIgnoreCase(colorGroup) ||
+            "MAGENTA".equalsIgnoreCase(colorGroup)) {
+            score *= 1.3;
+        }
+        
+        // FACTOR 5: Penalty if already has double rent active
+        if (property.hasDoubleRent()) {
+            score *= 0.5; // No benefit if already active
+        }
+        
+        // FACTOR 6: Monopoly bonus (if owns full color group)
+        if (isMonopolyOwned(property, state)) {
+            score *= 1.8; // Huge boost for monopolies
+        }
+        
+        return score;
+    }
+
+    /**
+     * Traffic weight by board position (accounts for dice probability)
+     * Corners and popular tiles get higher multipliers
+     */
+    private double calculateTrafficWeight(int tileIndex) {
+        // Corners get highest traffic (position 0, 8, 16, 24)
+        if (tileIndex % 8 == 0) return 3.0;
+        
+        // Adjacent to corners (common landing spots after corner rolls)
+        if ((tileIndex - 1) % 8 == 0 || (tileIndex + 1) % 8 == 0) return 1.8;
+        
+        // Chance tiles attract indirect traffic
+        if (tileIndex == 3 || tileIndex == 13 || tileIndex == 21 || tileIndex == 29) {
+            return 1.5;
+        }
+        
+        // Default traffic weight for mid-board positions
+        return 1.0;
+    }
+
+    /**
+     * Checks if bot owns full color group (monopoly condition)
+     */
+    private boolean isMonopolyOwned(PropertyTile property, GameState state) {
+        String colorGroup = property.getColorGroup();
+        Board board = state.getBoard();
+        
+        // Count total properties in color group on board
+        long totalInGroup = board.getTilesReadOnly().stream()
+            .filter(t -> t instanceof PropertyTile)
+            .map(t -> (PropertyTile) t)
+            .filter(t -> colorGroup.equalsIgnoreCase(t.getColorGroup()))
+            .count();
+        
+        // Count how many we own
+        long ownedInGroup = this.getOwnedLands().stream()
+            .filter(t -> colorGroup.equalsIgnoreCase(t.getColorGroup()))
+            .count();
+        
+        // Monopoly if we own all properties in the group
+        return ownedInGroup >= totalInGroup && totalInGroup > 0;
     }
 }

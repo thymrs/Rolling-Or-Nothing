@@ -16,7 +16,7 @@ public class ActionTile extends Tile {
                 player.setIsJailed(true);
                 player.addJailTurnCount(3);
             }
-            case WORLD_TRAVEL -> state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
+            case WORLD_TRAVEL -> state.setSelectingTile(true, "TRAVEL");
             case TAX_OFFICE -> {
                 int tax = (int) Math.round(player.getMoney() * (state.getConfig().getTaxPercentage() / 100.0));
                 player.pay(tax);
