@@ -185,6 +185,12 @@ public abstract class Player {
     }
     return this.money + propertyValue;
 }
+
+    public void decreaseJailTurn() {
+        if (this.jailTurnCount > 0) {
+            this.jailTurnCount--;
+        }
+    }
     
 
 }

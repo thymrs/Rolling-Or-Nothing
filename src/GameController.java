@@ -112,6 +112,14 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
+                if (currentPlayer.getJailTurnCount() > 0) {
+                    currentPlayer.decreaseJailTurn();
+                    view.showPopup("👮 " + currentPlayer.getName() + " ติดคุกอยู่! (เหลืออีก " + currentPlayer.getJailTurnCount() + " ตา)");
+                    
+                    state.setCurrentPhase(TurnPhase.END_TURN); // สั่งข้ามเทิร์นไปเลย!
+                    processPhase();
+                    return;
+                }
                 if (currentPlayer instanceof BotPlayer) {
                     view.getControlPanel().setButtonsEnabled(false); // ปิดปุ่มทั้งหมด ไม่ให้คนกดแทรก
                     state.notifyMessage("🤖 ถึงตาของบอท " + currentPlayer.getName() + " กำลังตัดสินใจ..."); // แจ้งเตือนใน Log แทน Popup
