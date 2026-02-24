@@ -1,9 +1,9 @@
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 class GameDialogManager {
 
@@ -251,7 +251,7 @@ class GameDialogManager {
             e -> result[0] = false  // กด NO คืนค่า false
         );
 
-        dialog.setSize(400, 150);
+        dialog.setSize(400, 200);
         dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
 

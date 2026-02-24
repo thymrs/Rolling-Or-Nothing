@@ -406,9 +406,11 @@ public class GameController implements ActionListener {
             } else if (currentTile instanceof ActionTile actionTile) {
                 if (actionTile.getType() == ActionType.WORLD_TRAVEL) {
                     if (player instanceof BotPlayer bot) {
-                        System.out.println("▶ [DEBUG] bot is on world travel! choosing target...");
-                        int randomTarget = new java.util.Random().nextInt(state.getBoard().size()); 
-                        handleWorldTourFlight(randomTarget);
+                        System.out.println("▶ [DEBUG] Bot is on World Tour! Selecting target...");
+
+                        int targetTileIndex = bot.chooseWorldTourDestination(state); 
+                        
+                        handleWorldTourFlight(targetTileIndex);
                     } else {
                         actionTile.onPlayerEnter(player, state);
                     }
