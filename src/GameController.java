@@ -46,7 +46,7 @@ public class GameController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent event) {
         String command = event.getActionCommand();
-
+        TurnDisplayPanel.updateTurn(state.getTurnCount() );
         System.out.println("User pressed: " + command);
 
         switch (command) {
@@ -87,6 +87,8 @@ public class GameController implements ActionListener {
     private void processPhase() {
         Player currentPlayer = state.getCurrentPlayer();
         TurnPhase currentPhase = state.getCurrentPhase();
+
+        
 
         if (currentPhase == TurnPhase.READY_TO_ROLL) {
             if (currentPlayer.isFrozen()) {
@@ -378,6 +380,8 @@ public class GameController implements ActionListener {
     private void handleEndTurn() {
         VictoryType vType = victoryChecker.checkWinCondition(state);
 
+        
+        
         if (null == vType) {
             state.incrementTurn();
         } else
