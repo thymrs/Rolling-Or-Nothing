@@ -82,12 +82,15 @@ public class BotPlayer extends Player {
         }
     }
 
-    private boolean evaluateEasyBuyLand(PropertyTile tile){
-        boolean isBestCase = shouldPerformAction();
+    private boolean evaluateEasyBuyLand(PropertyTile tile) {
+        boolean isTakeover = (tile.getOwner() != null);
+        int price = isTakeover ? tile.getTotalValue() * 2 : tile.getPurchasePrice();
 
-        if(isBestCase) return this.getMoney() >= tile.getPurchasePrice();
-        else return true;
+        if (this.getMoney() < price) return false;
 
+        if (!isTakeover) return true;
+        
+        return shouldPerformAction(); 
     }
 
     private boolean evaluateEasyUseCard(){
@@ -96,12 +99,17 @@ public class BotPlayer extends Player {
         else return chance(50);
     }
 
-    private boolean evaluateNormalBuyLand(PropertyTile tile){
-        boolean isBestCase = chance(60);
-        int safetyMargin = 500;
+    private boolean evaluateNormalBuyLand(PropertyTile tile) {
+        boolean isTakeover = (tile.getOwner() != null);
+        int price = isTakeover ? tile.getTotalValue() * 2 : tile.getPurchasePrice();
 
-        if(isBestCase) return (this.getMoney() - tile.getPurchasePrice()) >= safetyMargin;
-        else return this.getMoney() >= tile.getPurchasePrice();
+        if (this.getMoney() < price) return false;
+
+        if (!isTakeover) {
+            return true; 
+        } else {
+            return chance(60) && (this.getMoney() - price) >= 500;
+        }
     }
 
     private boolean evaluateNormalUseCard(){
@@ -110,17 +118,21 @@ public class BotPlayer extends Player {
         else return this.hasCard();
     }
 
-    private boolean evaluateHardBuyLand(PropertyTile tile, GameState state){
-        boolean isBestCase = chance(90);
+    private boolean evaluateHardBuyLand(PropertyTile tile, GameState state) {
+        boolean isTakeover = (tile.getOwner() != null);
+        int price = isTakeover ? tile.getTotalValue() * 2 : tile.getPurchasePrice();
 
-        if(isBestCase){
-            if(willCompleteSet(tile) || willBlockOpponent(tile, state)) return true;
+        if (this.getMoney() < price) return false;
 
-            if(isRiskAhead(state)) return false;
-
-            return this.getMoney() >= tile.getPurchasePrice();
+        if (!isTakeover) {
+            if (willCompleteSet(tile)) return true;
+            return (this.getMoney() - price) >= 500;
+        } else {
+            // เทคโอเวอร์
+            if (willCompleteSet(tile) || willBlockOpponent(tile, state)) return true;
+            if (isRiskAhead(state)) return false;
+            return chance(90) && (this.getMoney() - price) >= 1000;
         }
-        else return false;
     }
 
     private boolean evaluateHardUseCard(GameState state){

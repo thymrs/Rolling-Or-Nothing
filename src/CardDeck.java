@@ -14,7 +14,7 @@ public class CardDeck {
         for (CardType type : CardType.values()) {
             for (int i = 0; i < 5; i++) {
                 int value = 0;
-                if (type == CardType.REWARD) value = 2000;
+                if (type == CardType.REWARD) value = 15000;
                 if (type == CardType.DISCOUNT) value = 50;
                 
                 drawPile.add(new Card(type, value));
@@ -36,10 +36,10 @@ public class CardDeck {
     
     private void recycleDiscards() {
         if (!discardPile.isEmpty()) {
-            drawPile.addAll(discardPile); // เอากองทิ้งมาใส่กองจั่ว
-            discardPile.clear(); // ล้างกองทิ้ง
-            shuffle(); // สับไพ่ใหม่
-            System.out.println("out of card! shuffling....");
+            drawPile.addAll(discardPile);
+            discardPile.clear();
+            shuffle();
+            System.out.println("Out of card! Shuffling...");
         }
     }
     

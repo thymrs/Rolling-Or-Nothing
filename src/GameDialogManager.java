@@ -62,7 +62,7 @@ class GameDialogManager {
         JPanel panel = new JPanel(new GridLayout(1, 4, 10, 0));
         ButtonGroup group = new ButtonGroup();
 
-        String[] labels = {"ที่ดิน", "บ้าน 1", "บ้าน 2", "บ้าน 3"};
+        String[] labels = {"Lands", "House", "Apartment", "Mansion"};
         int currentLevel = tile.getBuildingLevel(); // สมมติ 0=ว่าง, 1=ที่ดิน, 2=บ้าน1 ...
 
         for (int i = 0; i < 4; i++) {
@@ -85,7 +85,7 @@ class GameDialogManager {
             panel.add(btn);
         }
 
-        JDialog dialog = createBaseDialog(parent, "ซื้อ / อัปเกรดอสังหาฯ: " + tile.getName(), panel, 
+        JDialog dialog = createBaseDialog(parent, "Upgrade property: " + tile.getName(), panel, 
             e -> {}, // Yes = ปล่อยให้คืนค่า selectedLevel
             e -> selectedLevel[0] = -1 // No = ยกเลิก
         );
@@ -104,12 +104,12 @@ class GameDialogManager {
         final boolean[] result = {false};
 
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel("คุณต้องการใช้งานการ์ดป้องกัน [" + card.getTypeCard() + "] หรือไม่?", SwingConstants.CENTER);
+        JLabel label = new JLabel("Do you want to use Shield [" + card.getTypeCard() + "] or not?", SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 16));
         label.setForeground(TEXT_COLOR);
         panel.add(label, BorderLayout.CENTER);
 
-        JDialog dialog = createBaseDialog(parent, "ใช้งานการ์ดป้องกัน", panel,
+        JDialog dialog = createBaseDialog(parent, "Use Shield!", panel,
             e -> result[0] = true,
             e -> result[0] = false
         );
@@ -129,7 +129,7 @@ class GameDialogManager {
 
         JPanel panel = new JPanel(new BorderLayout(0, 15));
         
-        JLabel label = new JLabel("เลือกเป้าหมายเพื่อใช้การ์ด [" + card.getTypeCard() + "]:", SwingConstants.CENTER);
+        JLabel label = new JLabel("Select Target [" + card.getTypeCard() + "]:", SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 14));
         label.setForeground(TEXT_COLOR);
         panel.add(label, BorderLayout.NORTH);
@@ -152,10 +152,10 @@ class GameDialogManager {
         }
         panel.add(btnPanel, BorderLayout.CENTER);
 
-        JDialog dialog = createBaseDialog(parent, "โจมตีผู้เล่นอื่น", panel,
+        JDialog dialog = createBaseDialog(parent, "Attack others player", panel,
             e -> {
                 if (target[0] == null) {
-                    JOptionPane.showMessageDialog(parent, "กรุณาเลือกเป้าหมาย!", "Warning", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(parent, "Please select target!", "Warning", JOptionPane.WARNING_MESSAGE);
                 }
             },
             e -> target[0] = null // Cancel
@@ -177,7 +177,7 @@ class GameDialogManager {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         
-        JLabel label = new JLabel("เลือกทรัพย์สินที่ต้องการขาย (ล้มละลาย):");
+        JLabel label = new JLabel("Select your own property (Bankrupt):");
         label.setFont(new Font("SansSerif", Font.BOLD, 16));
         label.setForeground(NO_COLOR);
         panel.add(label);
@@ -186,7 +186,7 @@ class GameDialogManager {
         List<JCheckBox> checkBoxes = new ArrayList<>();
         
         for (PropertyTile prop : ownedProperties) {
-            JCheckBox cb = new JCheckBox(prop.getName() + " (ราคาขาย: " + (prop.getPurchasePrice() / 2) + ")");
+            JCheckBox cb = new JCheckBox(prop.getName() + " (Sell Price: " + (prop.getPurchasePrice() / 2) + ")");
             cb.setFont(new Font("SansSerif", Font.PLAIN, 14));
             cb.setForeground(TEXT_COLOR);
             cb.setBackground(BG_COLOR);
@@ -203,7 +203,7 @@ class GameDialogManager {
         JPanel wrapperPanel = new JPanel(new BorderLayout());
         wrapperPanel.add(scrollPane, BorderLayout.CENTER);
 
-        JDialog dialog = createBaseDialog(parent, "ขายทรัพย์สิน", wrapperPanel,
+        JDialog dialog = createBaseDialog(parent, "Sell Property", wrapperPanel,
             e -> {
                 for (int i = 0; i < checkBoxes.size(); i++) {
                     if (checkBoxes.get(i).isSelected()) {
@@ -240,13 +240,13 @@ class GameDialogManager {
         final boolean[] result = {false};
 
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel("คุณแน่ใจหรือไม่ที่จะ 'ยอมแพ้' และออกจากเกม?", SwingConstants.CENTER);
+        JLabel label = new JLabel("Are you sure you want to 'surrender' and leave the game?", SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 16));
         label.setForeground(new Color(255, 100, 100)); // ใช้สีแดงเตือน
         panel.add(label, BorderLayout.CENTER);
 
         // ใช้ createBaseDialog (เมธอดหลักของคลาสที่เราทำไว้) 
-        JDialog dialog = createBaseDialog(parent, "ยืนยันการยอมแพ้", panel,
+        JDialog dialog = createBaseDialog(parent, "Confirming on Surrender.", panel,
             e -> result[0] = true,  // กด YES คืนค่า true
             e -> result[0] = false  // กด NO คืนค่า false
         );
