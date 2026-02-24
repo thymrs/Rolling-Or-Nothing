@@ -112,8 +112,14 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
-                view.getControlPanel().setButtonsEnabled(true);
-                view.showPopup("It's now your turn " + currentPlayer.getName());
+                if (currentPlayer instanceof BotPlayer) {
+                    view.getControlPanel().setButtonsEnabled(false); // ปิดปุ่มทั้งหมด ไม่ให้คนกดแทรก
+                    state.notifyMessage("🤖 ถึงตาของบอท " + currentPlayer.getName() + " กำลังตัดสินใจ..."); // แจ้งเตือนใน Log แทน Popup
+                    handleBotTurn();
+                } else {
+                    view.getControlPanel().setButtonsEnabled(true); // เปิดปุ่มให้คนกดทอยเต๋า
+                    view.showPopup("It's now your turn " + currentPlayer.getName()); // โชว์ Popup ให้คนเตรียมตัว
+                }
             }
             case MOVING -> {
             }

@@ -54,8 +54,8 @@ public class PropertyTile extends Tile {
     }
 
     public int getTotalValue() {
-    return this.purchasePrice + (this.purchasePrice * this.buildingLevel); 
-}
+        return this.purchasePrice + (this.purchasePrice * this.buildingLevel); 
+    }
 
     @Override
     public void onPlayerEnter(Player player, GameState state) {
