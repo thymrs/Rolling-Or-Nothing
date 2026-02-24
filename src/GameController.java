@@ -138,19 +138,19 @@ public class GameController implements ActionListener {
 
         new Thread(() -> {
             try {
-                Thread.sleep(2500);
+                Thread.sleep(2000);
 
                 if (bot.getHeldCard() != null) {
                     boolean wantToUseCard = bot.makeDecision(DecisionType.USE_CARD, null, state);
 
                     if (wantToUseCard) {
                         handleCardAction();
-                        Thread.sleep(2500);
+                        Thread.sleep(2000);
                     }
                 }
 
                 handleRollDice(); //
-                Thread.sleep(2500);
+                Thread.sleep(2000);
 
                 Tile tile = state.getBoard().getTile(bot.getPosition());
                 if (tile instanceof PropertyTile property && property.getOwner() == null) {
@@ -159,7 +159,7 @@ public class GameController implements ActionListener {
                     }
                 }
 
-                Thread.sleep(2500);
+                Thread.sleep(1000);
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     handleEndTurn(); //
                 });
@@ -306,9 +306,12 @@ public class GameController implements ActionListener {
                         }
                     } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                         int takeoverPrice = property.getTotalValue() * 2;
+                        System.out.println("▶ [DEBUG] Bot " + bot.getName() + " is on " + property.getName());
+                        System.out.println("▶ [DEBUG] current Bot money: " + bot.getMoney() + " | takeover price: " + takeoverPrice);
                         
                         boolean wantToTakeover = bot.makeDecision(DecisionType.BUY_LAND, property, state);
 
+                        System.out.println("▶ [DEBUG] Does Bot want to buy? (Roll System/Calculate Money): " + wantToTakeover);
                         if (wantToTakeover && bot.getMoney() >= takeoverPrice) {
                             Player owner = property.getOwner();
                             bot.pay(takeoverPrice);
