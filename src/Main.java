@@ -2,43 +2,53 @@
  * Main entry point for the Monopoly game
  */
 public class Main {
-
-    /**
-     * Main method to start the game
-     * 
-     * @param args Command line arguments
-     */
     public static void main(String[] args) {
 
-        GameConfig config = new GameConfig.Builder()
-                .initialMoney(200000)
-                .maxTurns(50)
-                .mapName("default")
-                .humanCount(1)
-                .botCount(3)
-                .botDifficulty(DifficultyLevel.HARD)
-                .passGoSalary(15000)
-                .taxPercentage(10)
-                .build();
-
-        MapLoader loader = new MapLoader();
-
-        Board board = loader.loadMap(config.getMapName());
-
-        GameWindow view = new GameWindow();
-        GameState state = new GameState();
-        state.setBoard(board);
-        state.addGameEventListener(GameWindow.getEventLogPanel());
-
-        GameController controller = new GameController(view, state); 
-        
-        view.setVisible(true);
-        controller.startGame(config);
-
-        System.out.println("Monopoly Game Started!");
+        // ให้ Main ทำหน้าที่แค่เปิดหน้าเมนูเริ่มต้น
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            GameMenuWindow menu = new GameMenuWindow();
+            menu.setVisible(true);
+        });
 
     }
 }
+
+// /**
+// * Main method to start the game
+// *
+// * @param args Command line arguments
+// */
+// public static void main(String[] args) {
+
+// GameConfig config = new GameConfig.Builder()
+// .initialMoney(200000)
+// .maxTurns(50)
+// .mapName("default")
+// .humanCount(1)
+// .botCount(3)
+// .botDifficulty(DifficultyLevel.HARD)
+// .passGoSalary(15000)
+// .taxPercentage(10)
+// .build();
+
+// MapLoader loader = new MapLoader();
+
+// Board board = loader.loadMap(config.getMapName());
+
+// GameWindow view = new GameWindow();
+// GameState state = new GameState();
+// state.setBoard(board);
+// state.addGameEventListener(GameWindow.getEventLogPanel());
+
+// GameController controller = new GameController(view, state);
+
+// view.setVisible(true);
+// controller.startGame(config);
+
+// System.out.println("Monopoly Game Started!");
+
+// }
+// }
 
 // public class Main {
 // public static void main(String[] args) {
