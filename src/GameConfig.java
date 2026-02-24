@@ -48,13 +48,13 @@ public class GameConfig {
     public int getTaxPercentage() { return taxPercentage; }
 
     public static class Builder {
-        private int initialMoney = 1500;
+        private int initialMoney = 30000;
         private int maxTurns = 50;
         private String mapName = "default";
         private int humanCount = 1;
         private int botCount = 1;
-        private DifficultyLevel botDifficulty = DifficultyLevel.NORMAL;
-        private int passGoSalary = 200;
+        private DifficultyLevel botDifficulty = DifficultyLevel.HARD;
+        private int passGoSalary = 5000;
         private int taxPercentage = 10;
 
         public Builder initialMoney(int v) { this.initialMoney = v; return this; }
