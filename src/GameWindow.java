@@ -4,9 +4,9 @@ import java.util.List;
 import javax.swing.*;
 
 public class GameWindow extends JFrame {
-    
+
     private ControlPanel controlPanel;
-    private BoardPanel boardPanel; 
+    private BoardPanel boardPanel;
     private static EventLogPanel eventLogPanel;
 
     public GameWindow() {
@@ -18,7 +18,7 @@ public class GameWindow extends JFrame {
         // สร้างและจัดวาง Panel
         controlPanel = new ControlPanel();
         add(controlPanel, BorderLayout.WEST);
-        
+
         // เพิ่ม Board (กระดานเกม) ไว้ตรงกลาง
         boardPanel = new BoardPanel();
         add(boardPanel, BorderLayout.CENTER);
@@ -29,10 +29,14 @@ public class GameWindow extends JFrame {
     }
 
     // --- เมธอดที่ GameController เรียกใช้งาน ---
+    public void setRollEnabled(boolean enabled) {
+        boardPanel.setRollEnabled(enabled);
+    }
 
     public void setActionListener(ActionListener listener) {
-        controlPanel.setActionListener(listener);
-    }
+    controlPanel.setActionListener(listener);
+    boardPanel.setRollActionListener(listener); 
+}
 
     public ControlPanel getControlPanel() {
         return controlPanel;
@@ -42,7 +46,7 @@ public class GameWindow extends JFrame {
         return eventLogPanel;
     }
 
-    // เมธอดสำหรับเพิ่มข้อความลงใน Event Log 
+    // เมธอดสำหรับเพิ่มข้อความลงใน Event Log
     public void addLog(String message) {
         if (eventLogPanel != null) {
             eventLogPanel.addLog(message);
@@ -53,7 +57,7 @@ public class GameWindow extends JFrame {
         // อัปเดตข้อมูลบนกระดาน เช่น ตำแหน่งตัวละคร, เงิน
         if (boardPanel != null) {
             // ถ้าใน BoardPanel ของคุณใช้ชื่อเมธอดอื่นในการอัปเดต ให้เปลี่ยนชื่อตรงนี้นะครับ
-            boardPanel.updateBoard(state); 
+            boardPanel.updateBoard(state);
         }
         repaint();
     }
@@ -69,6 +73,6 @@ public class GameWindow extends JFrame {
 
     public Player showSelectTargetDialog(List<Player> opponents) {
         // คืนค่า null ไว้ก่อนชั่วคราว หรือใส่ Logic เลือกเป้าหมายของคุณ
-        return null; 
+        return null;
     }
 }

@@ -177,7 +177,14 @@ public abstract class Player {
     public List<PropertyTile> getOwnedLands(){
         return this.ownedLands;
     }
-
+    public int getTotalAssetsValue() {
+    int propertyValue = 0;
+    for (PropertyTile land : ownedLands) {
+        // คำนวณตามราคาซื้อ + ราคาอัปเกรด (ถ้ามี)
+        propertyValue += land.getPurchasePrice() * (land.getBuildingLevel() + 1);
+    }
+    return this.money + propertyValue;
+}
     
 
 }
