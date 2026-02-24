@@ -151,16 +151,45 @@ public class BoardPanel extends JPanel {
 
         // 1. อัปเดตข้อมูลและตำแหน่งผู้เล่น
         for (int i = 0; i < 4; i++) {
-            if (i < players.size()) {
-                Player p = players.get(i);
-                playerStatusPanels[i].setVisible(true);
-                playerMarkers[i].setVisible(true);
-                playerPositions[i] = p.getPosition();
-            } else {
-                playerStatusPanels[i].setVisible(false);
-                playerMarkers[i].setVisible(false);
+        if (i < players.size()) {
+            Player p = players.get(i);
+            playerStatusPanels[i].setVisible(true);
+            playerMarkers[i].setVisible(true);
+            playerPositions[i] = p.getPosition();
+
+            // --- ส่วนที่ต้องเพิ่ม: ส่งข้อมูลจริงจาก Player เข้าสู่ UI ---
+            String posName = board.getTile(p.getPosition()).getName();
+            
+            // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
+            int totalAssets = p.getMoney();
+            for (PropertyTile land : p.getOwnedLands()) {
+                totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
             }
+
+            // ตัดสินข้อความ Status
+            String status = "Normal";
+            if (p.isBankrupt()) status = "Bankrupt";
+            else if (p.getIsJailed()) status = "In Jail (" + p.getJailTurnCount() + ")";
+            else if (p.isFrozen()) status = "Frozen";
+
+            // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
+            playerStatusPanels[i].updateData(
+                p.getMoney(), 
+                totalAssets, 
+                status, 
+                p.getIsJailed(), 
+                p.isBankrupt(), 
+                p.getHasShield(), 
+                p.getIsTollFree(), 
+                posName
+            );
+            // --------------------------------------------------
+
+        } else {
+            playerStatusPanels[i].setVisible(false);
+            playerMarkers[i].setVisible(false);
         }
+    }
 
         // 2. อัปเดตสีช่องกระดาน
         if (board != null) {
