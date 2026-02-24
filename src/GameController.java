@@ -17,7 +17,7 @@ public class GameController implements ActionListener {
      */
     public GameController(GameWindow view, GameState state) { 
         this.view = view;
-        this.state = state; // <--- ใช้ State ตัวที่ส่งเข้ามาแทน
+        this.state = state;
         this.mapLoader = new MapLoader();
         this.victoryChecker = state.getVictoryChecker();
         this.view.setActionListener(this);
@@ -47,16 +47,21 @@ public class GameController implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         String command = event.getActionCommand();
 
-        System.out.println("User pressed: " + command);
-
         switch (command) {
             case "ROLL" -> handleRollDice();
             case "BUY" -> handleBuyProperty();
-            case "END_TURN" -> handleEndTurn();
             case "USE_CARD" -> handleCardAction();
+            case "SURRENDER" -> {   // 🏳️ ปุ่มยอมแพ้
+                boolean confirm = GameDialogManager.showSurrenderDialog(view);
+                if (confirm) {
+                    state.getCurrentPlayer().declareBankruptcy();
+                    state.notifyMessage("🏳️ " + state.getCurrentPlayer().getName() + " ขอยอมแพ้ออกจากเกม!");
+                    state.setCurrentPhase(TurnPhase.END_TURN);
+                    processPhase();
+                }
+            }
+            case "END_TURN" -> handleEndTurn();
         }
-
-        processPhase();
     }
 
     /**
@@ -170,122 +175,185 @@ public class GameController implements ActionListener {
      */
     private void handleCardAction() {
         Player player = state.getCurrentPlayer();
-        Card card = player.getHeldCard(); //
-        state.getDeck().discard(card);
+        Card card = player.getHeldCard(); 
 
         if (card != null) {
             Player target = null;
 
             if (card.requiresTarget()) {
-                List<Player> opponents = getOpponents(player); //
-
-                if (player instanceof BotPlayer bot) {
-                    target = bot.chooseTarget(opponents, state);
-                    view.showPopup("Bot " + bot.getName() + " select " + target.getName() + "!");
-                } else {
-                    target = view.showSelectTargetDialog(opponents);
-                }
-
-                if (target == null) {
+                List<Player> opponents = getOpponents(player); 
+                if (opponents.isEmpty()) {
+                    view.showPopup("ไม่มีเป้าหมายให้ใช้การ์ด!");
                     return;
                 }
+
+                if (player instanceof BotPlayer bot) {
+                    target = opponents.get(0); // ให้บอทสุ่มเป้าหมายคนแรกไปก่อน
+                    view.showPopup("Bot " + bot.getName() + " เล็งเป้าไปที่ " + target.getName() + "!");
+                } else {
+                    // ใช้หน้าต่างจากทีม UI
+                    target = GameDialogManager.showAttackCardDialog(view, card, opponents);
+                }
+
+                // ถ้ากดยกเลิกการเลือกเป้าหมาย ให้ Return ออกไปเลย การ์ดจะไม่หาย!
+                if (target == null) {
+                    return; 
+                }
             }
 
-            player.useCard();
+            player.useCard(); 
             card.applyEffect(player, target, state);
-
-            state.getDeck().discard(card);
+            state.getDeck().discard(card); // ทิ้งการ์ดลงกอง
 
             if (target != null) {
-                state.notifyMessage(
-                        "🃏 " + player.getName() + " use card " + card.getType() + " on " + target.getName() + "!");
+                state.notifyMessage(player.getName() + " use card on " + target.getName() + "!");
             } else {
-                state.notifyMessage("🃏 " + player.getName() + " use card " + card.getType() + "!");
+                state.notifyMessage(player.getName() + " use an item card!");
             }
 
-            view.showPopup("use card " + card.getType() + " !");
+            view.showPopup("successfully used card!");
             view.updateView(state);
+        } else {
+            view.showPopup("your hand is empty!");
         }
-
     }
 
     private void handleRollDice() {
         Player player = state.getCurrentPlayer();
-
         state.getDice().roll();
         int steps = state.getDice().getTotal();
 
-        // แจ้งเตือนการทอยเต๋า
-        state.notifyMessage("🎲 " + player.getName() + " roll for " + steps);
+        state.notifyMessage("🎲 " + player.getName() + " rolls for " + steps);
 
         int oldPos = player.getPosition();
         int newPos = state.getBoard().getNextIndex(oldPos, steps);
         player.setPosition(newPos);
 
-        // แจ้งเตือนการเดินของผู้เล่น
         state.notifyMessage("🏃 " + player.getName() + " move to " + newPos);
 
         if (newPos < oldPos) {
-            state.getBank().paySalary(player, 2000);
-            view.showPopup(player.getName() + " reach the start get salary for 2000!");
-            state.notifyMessage("💰 " + player.getName() + " reach the start receive money 2000");
+            state.getBank().paySalary(player, 15000);
+            view.showPopup(player.getName() + " Pass the Start! Receive 15000!");
+            state.notifyMessage("💰 " + player.getName() + " Receive salary for 15000");
         }
 
         Tile currentTile = state.getBoard().getTile(newPos);
 
         if (currentTile instanceof ChanceTile chanceTile) {
             Card c = chanceTile.drawCard(state);
-
             if (c != null) {
-                CardType type = c.getType(); //
-
+                CardType type = c.getType();
                 if (type == CardType.ANGEL || type == CardType.SHIELD ||
                         type == CardType.DISCOUNT || type == CardType.ESCAPE) {
-
                     if (player instanceof BotPlayer) {
-                        player.receiveCard(c); //
-                        view.showPopup("🤖 " + player.getName() + " got item: " + type);
+                        player.receiveCard(c);
+                        view.showPopup("🤖 " + player.getName() + " Got item: " + type);
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     } else {
                         int choice = javax.swing.JOptionPane.showConfirmDialog(null,
-                                "you got a: " + type + "\ndo you want to keep it?",
-                                "you got a card!", javax.swing.JOptionPane.YES_NO_OPTION);
-
+                                "You got card: " + type + "\nDo you want to keep it?",
+                                "You got card!", javax.swing.JOptionPane.YES_NO_OPTION);
                         if (choice == javax.swing.JOptionPane.YES_OPTION) {
-                            if (player.receiveCard(c)) { //
-                                view.showPopup("keep the card" + type + " successfully!");
+                            if (player.receiveCard(c)) {
+                                view.showPopup("Collect card " + type + " successfully!");
                             } else {
-                                view.showPopup("inventory full! discard the card!");
+                                view.showPopup("inventory full! discard the card...");
                                 state.getDeck().discard(c);
                             }
                         } else {
                             state.getDeck().discard(c);
-                            view.showPopup("you select to discard " + type);
+                            view.showPopup("You select to discard the card " + type);
                         }
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     }
                 } else {
                     if (c.requiresTarget()) {
-                        player.setHeldCard(c); //
+                        player.setHeldCard(c);
                         state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
-                        view.showPopup("you got an attack card! Please use and select target.");
+                        view.showPopup("You got an Attack card! Please use and select target.");
                     } else {
-                        c.applyEffect(player, null, state); //
+                        c.applyEffect(player, null, state);
                         state.getDeck().discard(c);
-                        view.showPopup("force to use " + type + " automatically!");
+                        view.showPopup("Force to use card " + type + " automatically!");
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     }
                 }
             } else {
-                state.setCurrentPhase(TurnPhase.END_TURN); // กองการ์ดหมด
+                state.setCurrentPhase(TurnPhase.END_TURN);
             }
         } else {
             currentTile.onPlayerEnter(player, state);
 
-            if (currentTile instanceof PropertyTile property && property.getOwner() == null) {
-                state.setCurrentPhase(TurnPhase.ACTION_REQUIRED); // รอให้ตัดสินใจซื้อที่ดิน
+            if (currentTile instanceof PropertyTile property) {
+                // 🤖 เคสของบอท
+                if (player instanceof BotPlayer bot) {
+                    if (property.getOwner() == null) {
+                        boolean wantToBuy = bot.makeDecision(DecisionType.BUY_LAND, property, state);
+                        if (wantToBuy && bot.getMoney() >= property.getPurchasePrice()) {
+                            bot.pay(property.getPurchasePrice());
+                            property.setOwner(bot);
+                            bot.addAsset(property);
+                            state.notifyMessage(bot.getName() + " buy " + property.getName());
+                            view.showPopup(bot.getName() + " buy " + property.getName() + "!");
+                        }
+                    } else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
+                        boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
+                        int upgradeCost = property.getPurchasePrice();
+                        if (wantToUpgrade && bot.getMoney() >= upgradeCost) {
+                            bot.pay(upgradeCost);
+                            property.upgradeLevel();
+                            state.notifyMessage(bot.getName() + " upgrade " + property.getName());
+                        }
+                    } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
+                        // บอทเทคโอเวอร์
+                        int takeoverPrice = property.getPurchasePrice() * 2;
+                        if (bot.getMoney() >= takeoverPrice && bot.makeDecision(DecisionType.BUY_LAND, property, state)) {
+                            Player owner = property.getOwner();
+                            bot.pay(takeoverPrice);
+                            owner.receiveMoney(takeoverPrice);
+                            owner.removeAsset(property);
+                            property.setOwner(bot);
+                            bot.addAsset(property);
+                            state.notifyMessage(bot.getName() + " takeover property of " + owner.getName() + "!");
+                        }
+                    }
+                    state.setCurrentPhase(TurnPhase.END_TURN);
+                
+                // 👤 เคสของคนเล่น
+                } else {
+                    if (property.getOwner() == null) {
+                        state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
+                    } else if (property.getOwner().equals(player)) {
+                        if (property.getBuildingLevel() < 3) {
+                            state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
+                        } else {
+                            state.setCurrentPhase(TurnPhase.END_TURN);
+                        }
+                    } else {
+                        // เทคโอเวอร์ของคน
+                        Player owner = property.getOwner();
+                        if (property.getBuildingLevel() < 3) {
+                            int takeoverPrice = property.getPurchasePrice() * 2;
+                            if (player.getMoney() >= takeoverPrice) {
+                                int choice = javax.swing.JOptionPane.showConfirmDialog(null,
+                                        "Do you want to takeover " + property.getName() + " of " + owner.getName() + "\nfor the price of " + takeoverPrice + " or not?",
+                                        "Takeover", javax.swing.JOptionPane.YES_NO_OPTION);
+                                if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                                    player.pay(takeoverPrice);
+                                    owner.receiveMoney(takeoverPrice);
+                                    owner.removeAsset(property);
+                                    property.setOwner(player);
+                                    player.addAsset(property);
+                                    state.notifyMessage(player.getName() + " takeover " + property.getName() + "!");
+                                    view.showPopup("Takeover Successfully!");
+                                }
+                            }
+                        }
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                    }
+                }
             } else {
-                state.setCurrentPhase(TurnPhase.END_TURN); // จ่ายค่าเช่าเสร็จ หรือยืนเฉยๆ รอจบเทิร์น
+                state.setCurrentPhase(TurnPhase.END_TURN);
             }
         }
         view.updateView(state);
@@ -293,20 +361,35 @@ public class GameController implements ActionListener {
 
     private void handleBuyProperty() {
         Player player = state.getCurrentPlayer();
-        Tile tile = state.getBoard().getTile(player.getPosition());
+        Tile currentTile = state.getBoard().getTile(player.getPosition());
 
-        if (tile instanceof PropertyTile property) {
-            boolean success = state.getBank().processPurchase(player, property);
+        if (currentTile instanceof PropertyTile property) {
+            // ใช้หน้าต่างจากทีม UI
+            int selectedLevel = GameDialogManager.showBuyPropertyDialog(view, property);
 
-            if (success) {
-                view.showPopup("Buy land " + property.getName() + " successfully!");
-                // แจ้งเตือนการซื้อสำเร็จ
-                state.notifyMessage(player.getName() + " buy land " + property.getName());
-                state.setCurrentPhase(TurnPhase.END_TURN);
-            } else {
-                view.showPopup("not enough money.");
-                // แจ้งเตือนการซื้อล้มเหลว
-                state.notifyMessage("❌ " + player.getName() + " not enough money to buy " + property.getName());
+            if (selectedLevel != -1) {
+                int currentLevel = property.getBuildingLevel();
+                int levelsToUpgrade = selectedLevel - currentLevel;
+                int totalCost = property.getPurchasePrice() * levelsToUpgrade;
+
+                if (player.getMoney() >= totalCost) {
+                    player.pay(totalCost);
+                    
+                    if (property.getOwner() == null) {
+                        property.setOwner(player);
+                        player.addAsset(property);
+                    }
+                    
+                    for (int i = 0; i < levelsToUpgrade; i++) {
+                        property.upgradeLevel();
+                    }
+                    
+                    state.notifyMessage(player.getName() + " buile/upgrade " + property.getName() + " to level " + selectedLevel);
+                    view.showPopup("transection complete for price " + totalCost + "!");
+                    state.setCurrentPhase(TurnPhase.END_TURN);
+                } else {
+                    view.showPopup("Not enough money! should have " + totalCost + " more!");
+                }
             }
         }
         view.updateView(state);
@@ -319,15 +402,12 @@ public class GameController implements ActionListener {
             state.incrementTurn();
         } else
             switch (vType) {
-                case LINE_VICTORY -> // view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + "
-                                     // ชนะแบบ LINE VICTORY!");
-                    state.setCurrentPhase(TurnPhase.GAME_OVER);
-                case TRIPLE_VICTORY -> // view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + "
-                                       // ชนะแบบ TRIPLE VICTORY!");
-                    state.setCurrentPhase(TurnPhase.GAME_OVER);
-                case TOURISM_VICTORY -> // view.showPopup("🎉 ยินดีด้วย! " + state.getCurrentPlayer().getName() + "
-                                        // ชนะแบบ TOURISM VICTORY!");
-                    state.setCurrentPhase(TurnPhase.GAME_OVER);
+                case LINE_VICTORY -> { view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win LINE VICTORY!"); 
+                    state.setCurrentPhase(TurnPhase.GAME_OVER);}
+                case TRIPLE_VICTORY -> { view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win TRIPLE VICTORY!"); 
+                    state.setCurrentPhase(TurnPhase.GAME_OVER); }
+                case TOURISM_VICTORY -> { view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win TOURISM VICTORY!"); 
+                    state.setCurrentPhase(TurnPhase.GAME_OVER); }
                 default -> state.incrementTurn();
             }
         processPhase();

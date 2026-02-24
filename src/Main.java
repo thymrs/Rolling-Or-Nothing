@@ -11,13 +11,13 @@ public class Main {
     public static void main(String[] args) {
 
         GameConfig config = new GameConfig.Builder()
-                .initialMoney(1500)
-                .maxTurns(100)
+                .initialMoney(200000)
+                .maxTurns(50)
                 .mapName("default")
                 .humanCount(1)
                 .botCount(3)
-                .botDifficulty(DifficultyLevel.NORMAL)
-                .passGoSalary(200)
+                .botDifficulty(DifficultyLevel.HARD)
+                .passGoSalary(15000)
                 .taxPercentage(10)
                 .build();
 

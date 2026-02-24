@@ -11,8 +11,15 @@ public class CardDeck {
     }
 
     private void initializeCards() {
-        // TODO: สร้างการ์ด 20-30 ใบ ใส่ drawPile
-        // drawPile.add(new Card(CardType.ANGEL));
+        for (CardType type : CardType.values()) {
+            for (int i = 0; i < 5; i++) {
+                int value = 0;
+                if (type == CardType.REWARD) value = 15000;
+                if (type == CardType.DISCOUNT) value = 50;
+                
+                drawPile.add(new Card(type, value));
+            }
+        }
         shuffle();
     }
 
@@ -28,7 +35,12 @@ public class CardDeck {
     }
     
     private void recycleDiscards() {
-        // TODO: เอา discardPile กลับไปใส่ drawPile แล้ว shuffle
+        if (!discardPile.isEmpty()) {
+            drawPile.addAll(discardPile);
+            discardPile.clear();
+            shuffle();
+            System.out.println("Out of card! Shuffling...");
+        }
     }
     
     public void shuffle() {
