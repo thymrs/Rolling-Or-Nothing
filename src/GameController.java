@@ -231,6 +231,7 @@ public class GameController implements ActionListener {
         int steps = state.getDice().getTotal();
 
         state.notifyMessage("🎲 " + player.getName() + " rolls for " + steps);
+        GameDialogManager.showDiceRollDialog(view, state.getDice().getDie1(), state.getDice().getDie2());
 
         int oldPos = player.getPosition();
         int newPos = state.getBoard().getNextIndex(oldPos, steps);
@@ -304,13 +305,40 @@ public class GameController implements ActionListener {
                             view.showPopup(bot.getName() + " buy " + property.getName() + "!");
                         }
                     } else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
+                        System.out.println("▶ [DEBUG] บอทตกที่ตัวเอง กำลังตัดสินใจอัปเกรด...");
                         boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
-                        int upgradeCost = property.getUpgradeCost(1);
-                        if (wantToUpgrade && bot.getMoney() >= upgradeCost) {
-                            bot.pay(upgradeCost);
-                            property.upgradeLevel();
-                            state.notifyMessage(bot.getName() + " upgrade " + property.getName());
+                        
+                        if (wantToUpgrade) {
+                            int currentLevel = property.getBuildingLevel();
+                            int maxPossibleUpgrades = 3 - currentLevel; // สร้างได้มากสุดอีกกี่ขั้น
+                            int targetUpgradeLevels = 0;
+                            int finalCost = 0;
+
+                            // บอทจะลองคำนวณจากจำนวนขั้นมากสุดก่อน ถ้าเงินไม่พอค่อยลดลงมาทีละขั้น
+                            for (int i = maxPossibleUpgrades; i >= 1; i--) {
+                                int cost = property.getUpgradeCost(i);
+                                if (bot.getMoney() - cost >= 500) { 
+                                    targetUpgradeLevels = i;
+                                    finalCost = cost;
+                                    break; // พอเจอเลเวลที่จ่ายไหวจะหยุด
+                                }
+                            }
+
+                            // ถ้ามีเงินพออัปเกรดอย่างน้อย 1 ขั้น
+                            if (targetUpgradeLevels > 0) {
+                                bot.pay(finalCost);
+                                
+                                // วนลูปอัปเกรดตามจำนวนขั้นที่บอทจ่ายเงินไป
+                                for (int i = 0; i < targetUpgradeLevels; i++) {
+                                    property.upgradeLevel();
+                                }
+                                
+                                state.notifyMessage("🏗️ 🤖 " + bot.getName() + " upgrade " + property.getName() + " to reach " + targetUpgradeLevels + " level!");
+                            } else {
+                                System.out.println("▶ [DEBUG] Bot want to upgrade but didn't have enough money (or scared of losing all money)");
+                            }
                         }
+                        
                     } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                         int takeoverPrice = property.getTotalValue() * 2;
                         System.out.println("▶ [DEBUG] Bot " + bot.getName() + " is on " + property.getName());
