@@ -285,7 +285,7 @@ public class GameController implements ActionListener {
             currentTile.onPlayerEnter(player, state);
 
             if (currentTile instanceof PropertyTile property) {
-                // 🤖 เคสของบอท
+                // เคสของบอท
                 if (player instanceof BotPlayer bot) {
                     if (property.getOwner() == null) {
                         boolean wantToBuy = bot.makeDecision(DecisionType.BUY_LAND, property, state);
@@ -305,21 +305,23 @@ public class GameController implements ActionListener {
                             state.notifyMessage(bot.getName() + " upgrade " + property.getName());
                         }
                     } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
-                        // บอทเทคโอเวอร์
                         int takeoverPrice = property.getPurchasePrice() * 2;
-                        if (bot.getMoney() >= takeoverPrice && bot.makeDecision(DecisionType.BUY_LAND, property, state)) {
+                        
+                        boolean wantToTakeover = bot.makeDecision(DecisionType.BUY_LAND, property, state);
+
+                        if (wantToTakeover && bot.getMoney() >= takeoverPrice) {
                             Player owner = property.getOwner();
                             bot.pay(takeoverPrice);
                             owner.receiveMoney(takeoverPrice);
                             owner.removeAsset(property);
                             property.setOwner(bot);
                             bot.addAsset(property);
-                            state.notifyMessage(bot.getName() + " takeover property of " + owner.getName() + "!");
+                            state.notifyMessage("😈 🤖 " + bot.getName() + " takeover the property of " + owner.getName() + "!");
                         }
                     }
                     state.setCurrentPhase(TurnPhase.END_TURN);
                 
-                // 👤 เคสของคนเล่น
+                // เคสของคนเล่น
                 } else {
                     if (property.getOwner() == null) {
                         state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);

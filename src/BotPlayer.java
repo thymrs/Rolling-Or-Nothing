@@ -83,11 +83,12 @@ public class BotPlayer extends Player {
     }
 
     private boolean evaluateEasyBuyLand(PropertyTile tile){
+        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getPurchasePrice() * 2;
+        
         boolean isBestCase = shouldPerformAction();
 
-        if(isBestCase) return this.getMoney() >= tile.getPurchasePrice();
-        else return true;
-
+        if(isBestCase) return this.getMoney() >= price;
+        else return this.getMoney() >= price; 
     }
 
     private boolean evaluateEasyUseCard(){
@@ -97,11 +98,12 @@ public class BotPlayer extends Player {
     }
 
     private boolean evaluateNormalBuyLand(PropertyTile tile){
+        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getPurchasePrice() * 2;
         boolean isBestCase = chance(60);
         int safetyMargin = 500;
 
-        if(isBestCase) return (this.getMoney() - tile.getPurchasePrice()) >= safetyMargin;
-        else return this.getMoney() >= tile.getPurchasePrice();
+        if(isBestCase) return (this.getMoney() - price) >= safetyMargin;
+        else return this.getMoney() >= price;
     }
 
     private boolean evaluateNormalUseCard(){
@@ -111,14 +113,15 @@ public class BotPlayer extends Player {
     }
 
     private boolean evaluateHardBuyLand(PropertyTile tile, GameState state){
+        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getPurchasePrice() * 2;
         boolean isBestCase = chance(90);
 
         if(isBestCase){
-            if(willCompleteSet(tile) || willBlockOpponent(tile, state)) return true;
-
+            if(willCompleteSet(tile) || willBlockOpponent(tile, state)) return this.getMoney() >= price;
+            
             if(isRiskAhead(state)) return false;
-
-            return this.getMoney() >= tile.getPurchasePrice();
+    
+            return (this.getMoney() - price) >= 1000;
         }
         else return false;
     }
