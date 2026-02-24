@@ -7,6 +7,8 @@ import java.util.List;
 import javax.swing.*;
 
 public class BoardPanel extends JPanel {
+    // ปุ่ม ROLL ใหญ่ๆ ตรงกลาง (แยกเป็น CircleButton เพื่อความสวยงาม)
+    private CircleButton btnRoll;
 
     // 1. UI Overlays (แผงควบคุมและข้อมูล)
     private TurnDisplayPanel turnDisplay;
@@ -30,6 +32,15 @@ public class BoardPanel extends JPanel {
     public BoardPanel() {
         setBackground(new Color(40, 45, 55)); // สีพื้นหลังบอร์ด
         setLayout(null); // ใช้ Absolute Layout
+
+        // สร้างปุ่ม ROLL ใหญ่ๆ ตรงกลาง
+        btnRoll = new CircleButton("ROLL");
+        btnRoll.setActionCommand("ROLL");
+        add(btnRoll);
+        setComponentZOrder(btnRoll, 0);
+
+        // ตั้งค่าให้กดปุ่ม ROLL ด้วย Spacebar ได้ (สำหรับผู้เล่นที่ใช้คีย์บอร์ด)
+        setupSpacebarRoll();
 
         // สร้าง UI แถบแสดง Turn
         turnDisplay = new TurnDisplayPanel();
@@ -102,6 +113,33 @@ public class BoardPanel extends JPanel {
                 relayoutBoard();
             }
         });
+
+    }
+
+    private void setupSpacebarRoll() {
+    InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+    ActionMap am = getActionMap();
+    
+    // ใช้คำสั่ง "released" เพื่อให้ทำงานครั้งเดียวตอนปล่อยปุ่ม ลดปัญหาการกดค้าง
+    im.put(KeyStroke.getKeyStroke("released SPACE"), "rollAction");
+    
+    am.put("rollAction", new AbstractAction() {
+        @Override
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            // เช็คทั้ง IsEnabled และ IsVisible เพื่อความชัวร์
+            if (btnRoll != null && btnRoll.isEnabled() && btnRoll.isVisible()) {
+                btnRoll.doClick(); // สั่งคลิกแค่ปุ่ม Roll เท่านั้น
+            }
+        }
+    });
+}
+
+    public void setRollActionListener(java.awt.event.ActionListener listener) {
+        btnRoll.addActionListener(listener);
+    }
+
+    public void setRollEnabled(boolean enabled) {
+        btnRoll.setEnabled(enabled);
     }
 
     public void updateBoard(GameState state) {
@@ -167,34 +205,35 @@ public class BoardPanel extends JPanel {
     private void relayoutBoard() {
         int panelW = getWidth();
         int panelH = getHeight();
-        if (panelW == 0 || panelH == 0) return;
+        if (panelW == 0 || panelH == 0)
+            return;
 
         // 1. จัดตำแหน่ง Turn Display (ปรับให้ยืดหยุ่นตามความกว้าง)
         if (turnDisplay != null) {
-            int tdW = Math.min(300, (int)(panelW * 0.3));
+            int tdW = Math.min(300, (int) (panelW * 0.3));
             turnDisplay.setBounds((panelW - tdW) / 2, 20, tdW, 50);
         }
 
         // --- 2. คำนวณ Dynamic Scale เพื่อให้ "ชิด" ขอบพื้นที่ที่สุด ---
-        
+
         // ขนาดตรรกะพื้นฐานของช่อง (D = มุม, W = ปกติ)
-        double baseD = 130.0; 
-        double baseW = 100.0; 
+        double baseD = 130.0;
+        double baseW = 100.0;
         double baseG = (2 * baseD) + (7 * baseW); // ความกว้างในแกน 2D = 960.0
-        
+
         // ความกว้าง/สูงจริงของบอร์ดในโหมด Isometric (0.6 ratio)
         // Width = 2 * G, Height = 1.2 * G
         double boardBaseWidth = 2 * baseG;
         double boardBaseHeight = 1.2 * baseG;
-        
+
         // เผื่อ Margin 10% เพื่อไม่ให้ทับกับแผง Status ที่มุมจอ
-        double margin = 0.9; 
+        double margin = 0.9;
         double scaleW = (panelW * margin) / boardBaseWidth;
         double scaleH = (panelH * margin) / boardBaseHeight;
-        
+
         // เลือก Scale ที่ดีที่สุด (ทำให้บอร์ดใหญ่ที่สุดเท่าที่จะทำได้)
         double dynamicScale = Math.min(scaleW, scaleH);
-        
+
         // ปรับค่าจริงตาม Scale
         double D = baseD * dynamicScale;
         double W = baseW * dynamicScale;
@@ -202,7 +241,10 @@ public class BoardPanel extends JPanel {
 
         // คำนวณจุดกึ่งกลางที่แม่นยำ (เพื่อให้มุมบน-ล่าง-ซ้าย-ขวา อยู่กึ่งกลางพื้นที่)
         double startX = panelW / 2.0;
-        double startY = (panelH - (1.2 * G)) / 2.0; 
+        double startY = (panelH - (1.2 * G)) / 2.0;
+
+        int rollSize = (int) (120 * dynamicScale); // ขนาดวงกลมปรับตามขนาดจอ
+        btnRoll.setBounds((panelW - rollSize) / 2, (panelH - rollSize) / 2, rollSize, rollSize);
 
         // --- 3. วางตำแหน่ง Tiles และปรับขนาด Font ให้ Responsive ---
         for (int i = 0; i < 32; i++) {
@@ -210,14 +252,47 @@ public class BoardPanel extends JPanel {
             boolean isCorner = (i % 8 == 0);
 
             // Logic กำหนดตำแหน่ง gx, gy (พิกัด 0 ถึง G)
-            if (i == 0) { gx = D + 7 * W; gy = D + 7 * W; gw = D; gh = D; }
-            else if (i >= 1 && i <= 7) { gx = D + (7 - i) * W; gy = D + 7 * W; gw = W; gh = D; }
-            else if (i == 8) { gx = 0; gy = D + 7 * W; gw = D; gh = D; }
-            else if (i >= 9 && i <= 15) { gx = 0; gy = D + (15 - i) * W; gw = D; gh = W; }
-            else if (i == 16) { gx = 0; gy = 0; gw = D; gh = D; }
-            else if (i >= 17 && i <= 23) { gx = D + (i - 17) * W; gy = 0; gw = W; gh = D; }
-            else if (i == 24) { gx = D + 7 * W; gy = 0; gw = D; gh = D; }
-            else if (i >= 25 && i <= 31) { gx = D + 7 * W; gy = D + (i - 25) * W; gw = D; gh = W; }
+            if (i == 0) {
+                gx = D + 7 * W;
+                gy = D + 7 * W;
+                gw = D;
+                gh = D;
+            } else if (i >= 1 && i <= 7) {
+                gx = D + (7 - i) * W;
+                gy = D + 7 * W;
+                gw = W;
+                gh = D;
+            } else if (i == 8) {
+                gx = 0;
+                gy = D + 7 * W;
+                gw = D;
+                gh = D;
+            } else if (i >= 9 && i <= 15) {
+                gx = 0;
+                gy = D + (15 - i) * W;
+                gw = D;
+                gh = W;
+            } else if (i == 16) {
+                gx = 0;
+                gy = 0;
+                gw = D;
+                gh = D;
+            } else if (i >= 17 && i <= 23) {
+                gx = D + (i - 17) * W;
+                gy = 0;
+                gw = W;
+                gh = D;
+            } else if (i == 24) {
+                gx = D + 7 * W;
+                gy = 0;
+                gw = D;
+                gh = D;
+            } else if (i >= 25 && i <= 31) {
+                gx = D + 7 * W;
+                gy = D + (i - 25) * W;
+                gw = D;
+                gh = W;
+            }
 
             // แปลงเป็นพิกัด Isometric
             Point2D.Double p1 = iso(startX, startY, gx, gy);
@@ -233,7 +308,7 @@ public class BoardPanel extends JPanel {
             tiles[i].setBounds(minX, minY, maxX - minX, maxY - minY);
 
             // ปรับ Font ให้ขยายตามขนาดช่อง
-            float fSize = (float)((isCorner ? 20 : 16) * dynamicScale);
+            float fSize = (float) ((isCorner ? 20 : 16) * dynamicScale);
             tiles[i].setFont(tiles[i].getFont().deriveFont(Math.max(9f, fSize)));
 
             Polygon poly = new Polygon();
@@ -245,29 +320,34 @@ public class BoardPanel extends JPanel {
         }
 
         // --- 4. จัดตำแหน่งหมากผู้เล่น (Scale ตามช่อง) ---
-        int mw = (int)(32 * dynamicScale); 
+        int mw = (int) (32 * dynamicScale);
         int mh = mw;
         for (int i = 0; i < 4; i++) {
             if (playerMarkers[i] != null && playerMarkers[i].isVisible()) {
                 int pos = playerPositions[i];
                 Rectangle tb = tiles[pos].getBounds();
                 // Offset ให้หมากกระจายตัวในช่อง
-                int ox = (int)(((i % 2 == 0) ? -15 : 10) * dynamicScale);
-                int oy = (int)(((i < 2) ? -15 : 10) * dynamicScale);
-                playerMarkers[i].setBounds(tb.x + tb.width / 2 - mw / 2 + ox, 
-                                        tb.y + tb.height / 2 - mh / 2 + oy, mw, mh);
+                int ox = (int) (((i % 2 == 0) ? -15 : 10) * dynamicScale);
+                int oy = (int) (((i < 2) ? -15 : 10) * dynamicScale);
+                playerMarkers[i].setBounds(tb.x + tb.width / 2 - mw / 2 + ox,
+                        tb.y + tb.height / 2 - mh / 2 + oy, mw, mh);
             }
         }
 
         // --- 5. จัด Player Status Panels ให้อยู่มุมจอเสมอ ---
-        int spW = (int)(panelW * 0.2); // กว้าง 20% ของจอ
-        int spH = (int)(panelH * 0.16); // สูง 16% ของจอ
-        int pad = 25; 
-        if (playerStatusPanels[0] != null) playerStatusPanels[0].setBounds(pad, pad, spW, spH);
-        if (playerStatusPanels[1] != null) playerStatusPanels[1].setBounds(panelW - spW - pad, pad, spW, spH);
-        if (playerStatusPanels[2] != null) playerStatusPanels[2].setBounds(pad, panelH - spH - pad, spW, spH);
-        if (playerStatusPanels[3] != null) playerStatusPanels[3].setBounds(panelW - spW - pad, panelH - spH - pad, spW, spH);
+        int spW = (int) (panelW * 0.2); // กว้าง 20% ของจอ
+        int spH = (int) (panelH * 0.16); // สูง 16% ของจอ
+        int pad = 25;
+        if (playerStatusPanels[0] != null)
+            playerStatusPanels[0].setBounds(pad, pad, spW, spH);
+        if (playerStatusPanels[1] != null)
+            playerStatusPanels[1].setBounds(panelW - spW - pad, pad, spW, spH);
+        if (playerStatusPanels[2] != null)
+            playerStatusPanels[2].setBounds(pad, panelH - spH - pad, spW, spH);
+        if (playerStatusPanels[3] != null)
+            playerStatusPanels[3].setBounds(panelW - spW - pad, panelH - spH - pad, spW, spH);
     }
+
     // เพิ่มฟังก์ชัน iso ไว้ท้ายไฟล์ BoardPanel.java (ถ้ายังไม่มี)
     private Point2D.Double iso(double startX, double startY, double x, double y) {
         return new Point2D.Double(startX + (x - y), startY + (x + y) * 0.6); // ใช้ 0.6 เพื่อความ "อวบ"
