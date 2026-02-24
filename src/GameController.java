@@ -117,7 +117,7 @@ public class GameController implements ActionListener {
                     state.notifyMessage("🤖 ถึงตาของบอท " + currentPlayer.getName() + " กำลังตัดสินใจ..."); // แจ้งเตือนใน Log แทน Popup
                     handleBotTurn();
                 } else {
-                    view.getControlPanel().setButtonsEnabled(true); // เปิดปุ่มให้คนกดทอยเต๋า
+                    view.setRollEnabled(true);
                     view.showPopup("It's now your turn " + currentPlayer.getName()); // โชว์ Popup ให้คนเตรียมตัว
                 }
             }
