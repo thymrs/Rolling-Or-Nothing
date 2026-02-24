@@ -464,6 +464,82 @@ public class GameController implements ActionListener {
         processPhase();
     }
 
+    public void handleExpoSelection(PropertyTile selectedProperty) {
+        Player currentPlayer = state.getCurrentPlayer();
+
+        if (selectedProperty != null) {
+            // 🌟 ทริค: ใน PropertyTile ของนายต้องมีตัวแปรเก็บ multiplier ไว้คูณค่าเช่านะ
+            // ถ้ายังไม่มี ต้องไปเพิ่มตัวแปรและเมธอด setTollMultiplier(int) ใน PropertyTile ก่อน
+            // selectedProperty.setTollMultiplier(2); 
+
+            state.notifyMessage("🎪 " + currentPlayer.getName() + " จัดงาน Expo ที่ " + selectedProperty.getName() + "! (ค่าเช่าแพงขึ้น!)");
+            view.showPopup("Expo successfully hosted at " + selectedProperty.getName() + "!");
+        } else {
+            // ดักไว้เผื่อคนเล่นกดยกเลิก
+            view.showPopup("No property selected for Expo.");
+        }
+
+        // จบเทิร์น
+        state.setCurrentPhase(TurnPhase.END_TURN);
+        processPhase(); // รันเทิร์นต่อไปทันที
+    }
+
+    public void handleWorldTourFlight(int targetTileId) {
+        Player player = state.getCurrentPlayer();
+        int oldPos = player.getPosition();
+        
+        player.setPosition(targetTileId);
+        state.notifyMessage("✈️ " + player.getName() + " fly to target " + targetTileId + "!");
+
+        if (targetTileId < oldPos) {
+            state.getBank().paySalary(player, 15000);
+            view.showPopup(player.getName() + " Pass the Start! Receive 15000!");
+            state.notifyMessage("💰 " + player.getName() + " Receive salary for 15000");
+        }
+
+        Tile currentTile = state.getBoard().getTile(targetTileId);
+        currentTile.onPlayerEnter(player, state);
+
+        if (currentTile instanceof PropertyTile property) {
+            if (property.getOwner() == null) {
+                state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
+            } else if (property.getOwner().equals(player)) {
+                if (property.getBuildingLevel() < 3) {
+                    state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
+                } else {
+                    state.setCurrentPhase(TurnPhase.END_TURN);
+                }
+            } else {
+                if (property.getBuildingLevel() < 3) {
+                    int takeoverPrice = property.getTotalValue() * 2;
+                    if (player.getMoney() >= takeoverPrice) {
+                        int choice = javax.swing.JOptionPane.showConfirmDialog(null,
+                                "Do you want to takeover " + property.getName() + " of " + property.getOwner().getName() + "\nfor the price of " + takeoverPrice + "?",
+                                "Takeover", javax.swing.JOptionPane.YES_NO_OPTION);
+                        if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                            Player owner = property.getOwner();
+                            player.pay(takeoverPrice);
+                            owner.receiveMoney(takeoverPrice);
+                            owner.removeAsset(property);
+                            property.setOwner(player);
+                            player.addAsset(property);
+                            state.notifyMessage(player.getName() + " takeover " + property.getName() + "!");
+                            view.showPopup("Takeover Successfully!");
+                        }
+                    }
+                }
+                state.setCurrentPhase(TurnPhase.END_TURN);
+            }
+        } else {
+            state.setCurrentPhase(TurnPhase.END_TURN);
+        }
+
+        view.updateView(state);
+        if (state.getCurrentPhase() == TurnPhase.END_TURN) {
+            processPhase(); 
+        }
+    }
+
     private List<Player> getOpponents(Player currentPlayer) {
         List<Player> opponents = new ArrayList<>();
         for (Player p : state.getPlayers()) {

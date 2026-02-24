@@ -5,6 +5,7 @@ public class PropertyTile extends Tile {
     private Player owner;
     private boolean isMortgaged;
     private final String colorGroup;
+    private int tollMultiplier = 1;
 
     public PropertyTile(int index, String name, int purchasePrice, int baseRent, String colorGroup) {
         super(index, name);
@@ -36,10 +37,11 @@ public class PropertyTile extends Tile {
         return isMortgaged;
     }
 
-    public int calculateRent() {
-        int rent = baseRent * (1 + Math.max(0, buildingLevel));
-        return Math.max(rent, 0);
-    }
+   public int calculateRent() {
+        int rent = 0;
+        rent = this.baseRent * (1 + Math.max(0, buildingLevel));
+        return rent * this.tollMultiplier;
+    } 
 
     public boolean upgradeLevel() {
         if (isMortgaged)
@@ -85,6 +87,14 @@ public class PropertyTile extends Tile {
 
     public int getUpgradeCost(int levelsToUpgrade) {
         return this.getPurchasePrice() * levelsToUpgrade;
+    }
+
+    public void setTollMultiplier(int multiplier) {
+        this.tollMultiplier = multiplier;
+    }
+
+    public int getTollMultiplier() {
+        return this.tollMultiplier;
     }
 
     @Override
