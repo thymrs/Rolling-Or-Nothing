@@ -99,6 +99,10 @@ public class BotPlayer extends Player {
         else return chance(50);
     }
 
+    private int getEasyWorldTourDestination(GameState state) {
+        return random.nextInt(state.getBoard().size());
+    }
+
     private boolean evaluateNormalBuyLand(PropertyTile tile) {
         boolean isTakeover = (tile.getOwner() != null);
         int price = isTakeover ? tile.getTotalValue() * 2 : tile.getPurchasePrice();
@@ -116,6 +120,24 @@ public class BotPlayer extends Player {
         boolean isBestCase = chance(60);
         if(isBestCase) return (this.getMoney() < 200 || this.isJailed);
         else return this.hasCard();
+    }
+
+    private int getNormalWorldTourDestination(GameState state) {
+        List<PropertyTile> unownedLands = new java.util.ArrayList<>();
+        
+        for (int i = 0; i < state.getBoard().size(); i++) {
+            Tile tile = state.getBoard().getTile(i);
+            if (tile instanceof PropertyTile prop && prop.getOwner() == null) {
+                unownedLands.add(prop);
+            }
+        }
+        
+        if (!unownedLands.isEmpty()) {
+            // สุ่มเลือกจากที่ดินว่างที่มี
+            PropertyTile chosen = unownedLands.get(random.nextInt(unownedLands.size()));
+            return chosen.getIndex();
+        }
+        return getEasyWorldTourDestination(state); // ถ้าที่ดินเต็มหมด สุ่มมั่ว
     }
 
     private boolean evaluateHardBuyLand(PropertyTile tile, GameState state) {
@@ -145,8 +167,58 @@ public class BotPlayer extends Player {
         else return this.hasCard();
     }
 
+    private int getHardWorldTourDestination(GameState state) {
+        PropertyTile bestUnowned = null;
+        PropertyTile bestOwnedToUpgrade = null;
+        int maxPrice = -1;
+        int maxUpgradePrice = -1;
+
+        for (int i = 0; i < state.getBoard().size(); i++) {
+            Tile tile = state.getBoard().getTile(i);
+            if (tile instanceof PropertyTile prop) {
+                // หาที่ดินเปล่าที่ "แพงที่สุด" และ "เงินเราพอซื้อ"
+                if (prop.getOwner() == null) {
+                    if (prop.getPurchasePrice() > maxPrice && this.getMoney() >= prop.getPurchasePrice()) {
+                        bestUnowned = prop;
+                        maxPrice = prop.getPurchasePrice();
+                    }
+                } 
+                // หรือหาที่ดินตัวเองที่ "ยังไม่เต็มเลเวล 3" เพื่อบินไปอัปเกรด
+                else if (prop.getOwner().equals(this) && prop.getBuildingLevel() < 3) {
+                    if (prop.getPurchasePrice() > maxUpgradePrice && this.getMoney() >= prop.getUpgradeCost(1)) {
+                        bestOwnedToUpgrade = prop;
+                        maxUpgradePrice = prop.getPurchasePrice();
+                    }
+                }
+            }
+        }
+
+        // ลำดับความสำคัญ: ซื้อที่ดินเปล่าแพงๆ ก่อน -> ถ้าไม่มี ให้อัปเกรดที่ตัวเอง -> ถ้าไม่มีอีก ไปหาที่จัดงาน EXPO!
+        if (bestUnowned != null) return bestUnowned.getIndex();
+        if (bestOwnedToUpgrade != null) return bestOwnedToUpgrade.getIndex();
+
+        // ท่าไม้ตาย: ถ้าไม่มีที่ให้ซื้อหรืออัปเกรดเลย บินไปจัดงาน EXPO (FESTIVAL) ซะเลย!
+        for (int i = 0; i < state.getBoard().size(); i++) {
+            Tile tile = state.getBoard().getTile(i);
+            if (tile instanceof SpecialTile special && special.getEffect() == EffectType.FESTIVAL) {
+                return tile.getIndex();
+            }
+        }
+
+        return getEasyWorldTourDestination(state); // ท้ายที่สุดถ้าทำอะไรไม่ได้เลย ก็สุ่ม
+    }
+
     public boolean evaluateSwapCard(){
         return shouldPerformAction();
+    }
+
+    public int chooseWorldTourDestination(GameState state) {
+        return switch (this.difficulty) {
+            case EASY -> getEasyWorldTourDestination(state);
+            case NORMAL -> getNormalWorldTourDestination(state);
+            case HARD -> getHardWorldTourDestination(state);
+            default -> getEasyWorldTourDestination(state);
+        };
     }
 
     public Player chooseTarget(List<Player> opponents, GameState state) {

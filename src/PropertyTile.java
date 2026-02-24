@@ -6,6 +6,7 @@ public class PropertyTile extends Tile {
     private boolean isMortgaged;
     private final String colorGroup;
     private int tollMultiplier = 1;
+    private int expoTurnLeft = 0;
 
     public PropertyTile(int index, String name, int purchasePrice, int baseRent, String colorGroup) {
         super(index, name);
@@ -89,8 +90,19 @@ public class PropertyTile extends Tile {
         return this.getPurchasePrice() * levelsToUpgrade;
     }
 
-    public void setTollMultiplier(int multiplier) {
+    public void setExpo(int multiplier, int durationTurns) {
         this.tollMultiplier = multiplier;
+        this.expoTurnLeft = durationTurns;
+    }
+
+    public void decreaseExpoTurn() {
+        if (this.expoTurnLeft > 0) {
+            this.expoTurnLeft--;
+            if (this.expoTurnLeft == 0) {
+                this.tollMultiplier = 1;
+                System.out.println("▶ [DEBUG] EXPO at " + this.getName() + " has finished!");
+            }
+        }
     }
 
     public int getTollMultiplier() {

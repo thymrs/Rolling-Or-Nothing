@@ -112,9 +112,12 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
+                for (PropertyTile land : currentPlayer.getOwnedLands()) {
+                    land.decreaseExpoTurn();
+                }
                 if (currentPlayer.getJailTurnCount() > 0) {
                     currentPlayer.decreaseJailTurn();
-                    view.showPopup("👮 " + currentPlayer.getName() + " ติดคุกอยู่! (เหลืออีก " + currentPlayer.getJailTurnCount() + " ตา)");
+                    view.showPopup("👮 " + currentPlayer.getName() + " You're in Jail! (Only " + currentPlayer.getJailTurnCount() + " lefts)");
                     
                     state.setCurrentPhase(TurnPhase.END_TURN); // สั่งข้ามเทิร์นไปเลย!
                     processPhase();
@@ -122,7 +125,7 @@ public class GameController implements ActionListener {
                 }
                 if (currentPlayer instanceof BotPlayer) {
                     view.getControlPanel().setButtonsEnabled(false); // ปิดปุ่มทั้งหมด ไม่ให้คนกดแทรก
-                    state.notifyMessage("🤖 ถึงตาของบอท " + currentPlayer.getName() + " กำลังตัดสินใจ..."); // แจ้งเตือนใน Log แทน Popup
+                    state.notifyMessage("🤖 it's bot " + currentPlayer.getName() + " turn! deciding..."); // แจ้งเตือนใน Log แทน Popup
                     handleBotTurn();
                 } else {
                     view.setRollEnabled(true);
@@ -400,6 +403,37 @@ public class GameController implements ActionListener {
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     }
                 }
+            } else if (currentTile instanceof ActionTile actionTile) {
+                if (actionTile.getType() == ActionType.WORLD_TRAVEL) {
+                    if (player instanceof BotPlayer bot) {
+                        System.out.println("▶ [DEBUG] bot is on world travel! choosing target...");
+                        int randomTarget = new java.util.Random().nextInt(state.getBoard().size()); 
+                        handleWorldTourFlight(randomTarget);
+                    } else {
+                        actionTile.onPlayerEnter(player, state);
+                    }
+                } else {
+                    // Action อื่นๆ (JAIL, TAX, START) ให้ทำงานตามปกติ
+                    actionTile.onPlayerEnter(player, state);
+                    state.setCurrentPhase(TurnPhase.END_TURN);
+                }
+            } else if (currentTile instanceof SpecialTile specialTile) {
+                if (specialTile.getEffect() == EffectType.FESTIVAL) {
+                    if (player instanceof BotPlayer bot) {
+                        System.out.println("▶ [DEBUG] Bot mobe to tile FESTIVAL (EXPO) selecting...");
+                        if (!bot.getOwnedLands().isEmpty()) {
+                            PropertyTile firstLand = bot.getOwnedLands().get(0); 
+                            handleExpoSelection(firstLand);
+                        } else {
+                            state.setCurrentPhase(TurnPhase.END_TURN);
+                        }
+                    } else {
+                        specialTile.onPlayerEnter(player, state);
+                    }
+                } else {
+                    specialTile.onPlayerEnter(player, state);
+                    state.setCurrentPhase(TurnPhase.END_TURN);
+                }
             } else {
                 state.setCurrentPhase(TurnPhase.END_TURN);
             }
@@ -468,11 +502,9 @@ public class GameController implements ActionListener {
         Player currentPlayer = state.getCurrentPlayer();
 
         if (selectedProperty != null) {
-            // 🌟 ทริค: ใน PropertyTile ของนายต้องมีตัวแปรเก็บ multiplier ไว้คูณค่าเช่านะ
-            // ถ้ายังไม่มี ต้องไปเพิ่มตัวแปรและเมธอด setTollMultiplier(int) ใน PropertyTile ก่อน
-            // selectedProperty.setTollMultiplier(2); 
+            selectedProperty.setExpo(2, 3);
 
-            state.notifyMessage("🎪 " + currentPlayer.getName() + " จัดงาน Expo ที่ " + selectedProperty.getName() + "! (ค่าเช่าแพงขึ้น!)");
+            state.notifyMessage("🎪 " + currentPlayer.getName() + " holds Expo at " + selectedProperty.getName() + "! (Rent increase!)");
             view.showPopup("Expo successfully hosted at " + selectedProperty.getName() + "!");
         } else {
             // ดักไว้เผื่อคนเล่นกดยกเลิก
