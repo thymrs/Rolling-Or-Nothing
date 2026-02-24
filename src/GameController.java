@@ -305,7 +305,7 @@ public class GameController implements ActionListener {
                             state.notifyMessage(bot.getName() + " upgrade " + property.getName());
                         }
                     } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
-                        int takeoverPrice = property.getPurchasePrice() * 2;
+                        int takeoverPrice = property.getTotalValue() * 2;
                         
                         boolean wantToTakeover = bot.makeDecision(DecisionType.BUY_LAND, property, state);
 
@@ -335,7 +335,7 @@ public class GameController implements ActionListener {
                         // เทคโอเวอร์ของคน
                         Player owner = property.getOwner();
                         if (property.getBuildingLevel() < 3) {
-                            int takeoverPrice = property.getPurchasePrice() * 2;
+                            int takeoverPrice = property.getTotalValue() * 2;
                             if (player.getMoney() >= takeoverPrice) {
                                 int choice = javax.swing.JOptionPane.showConfirmDialog(null,
                                         "Do you want to takeover " + property.getName() + " of " + owner.getName() + "\nfor the price of " + takeoverPrice + " or not?",

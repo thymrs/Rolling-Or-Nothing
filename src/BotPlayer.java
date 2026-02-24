@@ -83,7 +83,7 @@ public class BotPlayer extends Player {
     }
 
     private boolean evaluateEasyBuyLand(PropertyTile tile){
-        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getPurchasePrice() * 2;
+        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getTotalValue() * 2;
         
         boolean isBestCase = shouldPerformAction();
 
@@ -98,7 +98,7 @@ public class BotPlayer extends Player {
     }
 
     private boolean evaluateNormalBuyLand(PropertyTile tile){
-        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getPurchasePrice() * 2;
+        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getTotalValue() * 2;
         boolean isBestCase = chance(60);
         int safetyMargin = 500;
 
@@ -113,7 +113,7 @@ public class BotPlayer extends Player {
     }
 
     private boolean evaluateHardBuyLand(PropertyTile tile, GameState state){
-        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getPurchasePrice() * 2;
+        int price = (tile.getOwner() == null) ? tile.getPurchasePrice() : tile.getTotalValue() * 2;
         boolean isBestCase = chance(90);
 
         if(isBestCase){
