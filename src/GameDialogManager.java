@@ -259,18 +259,19 @@ class GameDialogManager {
     }
 
     // =========================================================================
-    // 6. Dialog แสดงขเลข เมื่อทอยลูกเต๋า (ไม่มีปุ่ม YES/NO)
+    // 6. Dialog แสดงขเลข เมื่อทอยลูกเต๋า (ไม่มีปุ่ม YES/NO) ปิดเองอัตโนมัติหลัง 2 วินาที
+    // ข้อความสีส้มทองเพื่อความโดดเด่น พื้นหลังสีเข้มเพื่อให้เห็นชัด
     // =========================================================================
     public static void showDiceRollDialog(JFrame parent, int dice1, int dice2) {
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel("You rolled: " + dice1 + " and " + dice2, SwingConstants.CENTER);
+        JLabel label = new JLabel(dice1 + " and " + dice2, SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 18));
-        label.setForeground(TEXT_COLOR);
+        label.setForeground(new Color(255, 165, 0)); // สีส้มทอง
         panel.add(label, BorderLayout.CENTER);
 
         JDialog dialog = new JDialog(parent, "Dice Roll", true);
         dialog.setLayout(new BorderLayout());
-        dialog.getContentPane().setBackground(BG_COLOR);
+        dialog.getContentPane().setBackground(new Color(70, 70, 70)); // สีเทาเข้มสำหรับพื้นหลัง
         dialog.add(panel, BorderLayout.CENTER);
 
         // ตั้งเวลาให้ปิดอัตโนมัติหลังจาก 2 วินาที

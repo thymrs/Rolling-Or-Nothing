@@ -59,6 +59,7 @@ public class GameWindow extends JFrame {
             // ถ้าใน BoardPanel ของคุณใช้ชื่อเมธอดอื่นในการอัปเดต ให้เปลี่ยนชื่อตรงนี้นะครับ
             boardPanel.updateBoard(state);
         }
+        TurnDisplayPanel.updateTurn(state.getTurnCount());
         repaint();
     }
 
