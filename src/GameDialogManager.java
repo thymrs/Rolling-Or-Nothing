@@ -257,4 +257,29 @@ class GameDialogManager {
 
         return result[0];
     }
+
+    // =========================================================================
+    // 6. Dialog แสดงขเลข เมื่อทอยลูกเต๋า (ไม่มีปุ่ม YES/NO)
+    // =========================================================================
+    public static void showDiceRollDialog(JFrame parent, int dice1, int dice2) {
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel label = new JLabel("You rolled: " + dice1 + " and " + dice2, SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 18));
+        label.setForeground(TEXT_COLOR);
+        panel.add(label, BorderLayout.CENTER);
+
+        JDialog dialog = new JDialog(parent, "Dice Roll", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(BG_COLOR);
+        dialog.add(panel, BorderLayout.CENTER);
+
+        // ตั้งเวลาให้ปิดอัตโนมัติหลังจาก 2 วินาที
+        Timer timer = new Timer(2000, e -> dialog.dispose());
+        timer.setRepeats(false);
+        timer.start();
+
+        dialog.setSize(300, 150);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+    }
 }
