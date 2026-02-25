@@ -159,9 +159,31 @@ public class GameController implements ActionListener {
             case ACTION_REQUIRED -> {
                 // เช็คว่าบอทไม่มีอะไรให้ทำแล้ว
                 if (currentPlayer instanceof BotPlayer) {
-                    handleEndTurn(); // บอทจบเทิร์นเลย
+                    endTurnLogic(); // บอทจบเทิร์นเลย
+                } else {
+                    // สำหรับ human player ให้เช็คว่าจริง ๆ มีอะไรให้ทำหรือไม่
+                    Tile currentTile = state.getBoard().getTile(currentPlayer.getPosition());
+                    
+                    boolean hasAction = false;
+                    if (currentTile instanceof PropertyTile property) {
+                        if (property.getOwner() == null) {
+                            // มีที่ดินที่ยังไม่มี owner สามารถซื้อได้
+                            hasAction = true;
+                        } else if (property.getOwner().equals(currentPlayer) && property.getBuildingLevel() < 3) {
+                            // เป็นที่ของตัวเอง และ level < 3 สามารถอัปเกรดได้
+                            hasAction = true;
+                        } else if (!property.getOwner().equals(currentPlayer) && property.getBuildingLevel() < 3) {
+                            // ของคนอื่น และ level < 3 สามารถเทคโอเวอร์ได้
+                            hasAction = true;
+                        }
+                    }
+                    
+                    if (!hasAction) {
+                        // ไม่มี action ให้ทำ จบเทิร์นเลย
+                        endTurnLogic();
+                    }
+                    // ถ้า hasAction = true รอให้ผู้เล่นกดปุ่ม
                 }
-                // สำหรับ human player รอให้คลิกปุ่มทำการ
             }
             case MOVING -> {
                 // moving animation hopping to each tile
@@ -573,7 +595,10 @@ public class GameController implements ActionListener {
         }
     }
 
-    private void handleEndTurn() {
+    /**
+     * Core logic for ending a turn - checks win condition and advances turn
+     */
+    private void endTurnLogic() {
         VictoryType vType = victoryChecker.checkWinCondition(state);
 
         if (null == vType) {
@@ -595,6 +620,13 @@ public class GameController implements ActionListener {
                 default -> state.incrementTurn();
             }
         processPhase();
+    }
+
+    /**
+     * Handles end turn button click from UI
+     */
+    private void handleEndTurn() {
+        endTurnLogic();
     }
 
     public void handleExpoSelection(PropertyTile selectedProperty) {
