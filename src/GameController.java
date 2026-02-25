@@ -314,7 +314,7 @@ public class GameController implements ActionListener {
         // int oldPos = player.getPosition();
         // int newPos = state.getBoard().getNextIndex(oldPos, steps);
         // player.setPosition(newPos);
-        startMovement(player.getId(), currentPos, targetPos, false);
+        startMovement(player.getId(), currentPos, targetPos);
 
         state.notifyMessage("🏃 " + player.getName() + " move to " + targetPos);
 
@@ -592,7 +592,7 @@ public class GameController implements ActionListener {
         view.updateView(state);
     }
 
-    public void startMovement(int playerId, int currentPos, int targetPos, boolean isTeleport) {
+    public void startMovement(int playerId, int currentPos, int targetPos) {
         // 1. เปลี่ยน State ล็อกเกมไว้ที่ MOVING
         state.setCurrentPhase(TurnPhase.MOVING);
 
@@ -603,20 +603,16 @@ public class GameController implements ActionListener {
         List<Integer> path = new ArrayList<>();
         int totalTiles = 32;
 
-        if (isTeleport) {
-            // โหมด World Tour: ย้ายไปที่ตำแหน่งนั้นทันทีโดยตรง (กระโดด 1 ทีถึง)
-            path.add(targetPos);
-        } else {
-            // โหมดเดินปกติ: คำนวณทีละช่องจนถึงที่หมาย
-            int tempPos = currentPos;
-            while (tempPos != targetPos) {
-                tempPos = (tempPos + 1) % totalTiles;
-                path.add(tempPos);
-            }
+        int tempPos = currentPos;
+        // จะลูปเพิ่มทีละช่องจนกว่าจะถึงเป้าหมาย
+        while (tempPos != targetPos) {
+            tempPos = (tempPos + 1) % totalTiles;
+            path.add(tempPos);
         }
 
         // 4. สั่ง BoardPanel ให้เริ่ม Animate พร้อมตั้ง Callback เมื่อจบ
         view.boardPanel.animatePlayerMovement(playerId, path, () -> {
+            System.out.println("▶ [DEBUG] Movement animation finished for player " + playerId + " to position " + targetPos);
             onMovementFinished(playerId, targetPos); // เมื่อ UI ขยับเสร็จ ให้เรียก Method นี้
         });
     }
@@ -718,7 +714,7 @@ public class GameController implements ActionListener {
         Player player = state.getCurrentPlayer();
         int oldPos = player.getPosition();
 
-        startMovement(player.getId(), oldPos, targetTileId, true);
+        startMovement(player.getId(), oldPos, targetTileId);
         state.notifyMessage("✈️ " + player.getName() + " fly to target " + targetTileId + "!");
 
         if (targetTileId < oldPos) {
@@ -853,8 +849,9 @@ public class GameController implements ActionListener {
         targetTile.onPlayerEnter(currentPlayer, state);
 
         // *หมายเหตุ* // การเปลี่ยนเป็น Phase.END_TURN ควรเกิดขึ้นภายใน
-        // targetTile.onPlayerEnter()
-        // เพราะบางช่องอาจจะให้เปิดการ์ด, สร้างบ้าน หรือจ่ายเงินก่อนจบเทิร์น
+        targetTile.onPlayerEnter(currentPlayer, state);
+        state.setCurrentPhase(TurnPhase.END_TURN);
+        view.updateView(state);
     }
 
 }
