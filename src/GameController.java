@@ -141,6 +141,7 @@ public class GameController implements ActionListener {
                     state.notifyMessage("BOT " + currentPlayer.getName() + " is playing");
                     handleBotTurn();
                 } else {
+                    view.getControlPanel().setButtonsEnabled(true);
                     view.setRollEnabled(true);
                     view.showPopup("It's now your turn " + currentPlayer.getName());
                 }
