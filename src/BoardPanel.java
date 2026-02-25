@@ -93,6 +93,8 @@ public class BoardPanel extends JPanel {
 
             // สร้างปุ่มเพียงครั้งเดียว
             tiles[i] = new CustomShapeButton(label, fontSize);
+            tiles[i].setActionCommand("TILE_" + i);
+            add(tiles[i]);
 
             // ตั้งค่าสีพื้นหลังปกติ
             tiles[i].setBackground(new Color(220, 220, 220));
@@ -381,5 +383,11 @@ public class BoardPanel extends JPanel {
     // เพิ่มฟังก์ชัน iso ไว้ท้ายไฟล์ BoardPanel.java (ถ้ายังไม่มี)
     private Point2D.Double iso(double startX, double startY, double x, double y) {
         return new Point2D.Double(startX + (x - y), startY + (x + y) * 0.6); // ใช้ 0.6 เพื่อความ "อวบ"
+    }
+
+    public void setTileActionListener(java.awt.event.ActionListener listener) {
+        for (int i = 0; i < 32; i++) {
+            tiles[i].addActionListener(listener);
+        }
     }
 }

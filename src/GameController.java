@@ -21,6 +21,7 @@ public class GameController implements ActionListener {
         this.mapLoader = new MapLoader();
         this.victoryChecker = state.getVictoryChecker();
         this.view.setActionListener(this);
+        this.view.setTileActionListener(this);
     }
 
     /**
@@ -46,6 +47,11 @@ public class GameController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent event) {
         String command = event.getActionCommand();
+        if (command != null && command.startsWith("TILE_")) {
+            int tileIndex = Integer.parseInt(command.substring(5)); // ดึงเอาเฉพาะตัวเลขออกมา
+            handleTileClick(tileIndex);
+            return; // จบการทำงาน ไม่ต้องลงไปเข้า switch
+        }
 
         switch (command) {
             case "ROLL" -> handleRollDice();
@@ -460,7 +466,7 @@ public class GameController implements ActionListener {
             } else if (currentTile instanceof SpecialTile specialTile) {
                 if (specialTile.getEffect() == EffectType.FESTIVAL) {
                     if (player instanceof BotPlayer bot) {
-                        System.out.println("▶ [DEBUG] Bot mobe to tile FESTIVAL (EXPO) selecting...");
+                        System.out.println("▶ [DEBUG] Bot move to tile FESTIVAL (EXPO) selecting...");
                         if (!bot.getOwnedLands().isEmpty()) {
                             PropertyTile firstLand = bot.getOwnedLands().get(0); 
                             handleExpoSelection(firstLand);
@@ -468,7 +474,16 @@ public class GameController implements ActionListener {
                             state.setCurrentPhase(TurnPhase.END_TURN);
                         }
                     } else {
-                        specialTile.onPlayerEnter(player, state);
+                        // --- แก้ไขโค้ดของคนเล่นตรงนี้ ---
+                        if (player.getOwnedLands().isEmpty()) {
+                            view.showPopup("You don't have any property to host the Festival.");
+                            state.setCurrentPhase(TurnPhase.END_TURN);
+                        } else {
+                            // แจ้งให้ผู้เล่นทราบ แล้วเปลี่ยน Phase ของเกมไปรอรับการคลิก
+                            view.showPopup("🎉 You landed on FESTIVAL!\nPlease click on your property on the board to host the event.");
+                            state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
+                        }
+                        // --------------------------------
                     }
                 } else {
                     specialTile.onPlayerEnter(player, state);
@@ -646,4 +661,36 @@ public class GameController implements ActionListener {
         }
         return opponents;
     }
+
+    private void handleTileClick(int tileIndex) {
+        Player player = state.getCurrentPlayer();
+        if (player instanceof BotPlayer) return; // บอทไม่ต้องสนใจการคลิกนี้
+
+        // ตรวจสอบว่า ตอนนี้เกมกำลังรอให้ผู้เล่นคลิกกระดานอยู่หรือเปล่า
+        if (state.getCurrentPhase() == TurnPhase.SELECTING_DESTINATION) {
+            Tile currentTile = state.getBoard().getTile(player.getPosition());
+            
+            // กรณี 1: ผู้เล่นยืนอยู่ที่ช่อง FESTIVAL
+            if (currentTile instanceof SpecialTile specialTile && specialTile.getEffect() == EffectType.FESTIVAL) {
+                Tile clickedTile = state.getBoard().getTile(tileIndex);
+                
+                if (clickedTile instanceof PropertyTile property) {
+                    // ตรวจสอบว่าเป็นที่ดินตัวเองหรือไม่
+                    if (property.getOwner() != null && property.getOwner().equals(player)) {
+                        handleExpoSelection(property); // จัดงานได้เลย!
+                    } else {
+                        view.showPopup("⚠️ Please select your OWN property!");
+                    }
+                } else {
+                    view.showPopup("⚠️ You cannot host Festival here!");
+                }
+            }
+            // กรณี 2: ผู้เล่นยืนอยู่ช่อง WORLD TRAVEL (ได้ฟังก์ชันคลิกกระดานเพื่อบินรอบโลกแถมไปด้วยเลย!)
+            else if (currentTile instanceof ActionTile actionTile && actionTile.getType() == ActionType.WORLD_TRAVEL) {
+                handleWorldTourFlight(tileIndex);
+            }
+        }
+    }
+
+    
 }

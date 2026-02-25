@@ -76,4 +76,8 @@ public class GameWindow extends JFrame {
         // คืนค่า null ไว้ก่อนชั่วคราว หรือใส่ Logic เลือกเป้าหมายของคุณ
         return null;
     }
+
+    public void setTileActionListener(ActionListener listener) {
+        boardPanel.setTileActionListener(listener);
+    }
 }
