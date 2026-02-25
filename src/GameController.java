@@ -144,12 +144,50 @@ public class GameController implements ActionListener {
                     view.showPopup("It's now your turn " + currentPlayer.getName());
                 }
             }
+            case ACTION_REQUIRED -> {
+                // เช็คว่าบอทไม่มีอะไรให้ทำแล้ว
+                if (currentPlayer instanceof BotPlayer) {
+                    endTurnLogic(); // บอทจบเทิร์นเลย
+                } else {
+                    // สำหรับ human player ให้เช็คว่าจริง ๆ มีอะไรให้ทำหรือไม่
+                    Tile currentTile = state.getBoard().getTile(currentPlayer.getPosition());
+
+                    boolean hasAction = false;
+                    if (currentTile instanceof PropertyTile property) {
+                        if (property.getOwner() == null) {
+                            // มีที่ดินที่ยังไม่มี owner สามารถซื้อได้
+                            hasAction = true;
+                        } else if (property.getOwner().equals(currentPlayer) && property.getBuildingLevel() < 3) {
+                            // เป็นที่ของตัวเอง และ level < 3 สามารถอัปเกรดได้
+                            hasAction = true;
+                        } else if (!property.getOwner().equals(currentPlayer) && property.getBuildingLevel() < 3) {
+                            // ของคนอื่น และ level < 3 สามารถเทคโอเวอร์ได้
+                            hasAction = true;
+                        }
+                    }
+
+                    if (!hasAction) {
+                        // ไม่มี action ให้ทำ จบเทิร์นเลย
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                        processPhase();
+                    }
+                    // ถ้า hasAction = true รอให้ผู้เล่นกดปุ่ม
+                }
+            }
             case MOVING -> {
-                // moving animation hopping to each tile
+                // โหมด MOVING
+                // จะถูกใช้ในกรณีที่มีกำหนดที่หมายปลายทายหรือเอฟเฟกต์ที่ทำให้ผู้เล่นต้องเลือกที่จะย้ายไปยังตำแหน่งอื่นบนบอร์ด
+                // (เช่น ROLL WORLD TOUR)
+                // ในโหมดนี้ ผู้เล่นจะไม่สามารถกดปุ่ม ROLL ได้ แต่จะเกิดการเรียก highlightTile()
+                // เพื่อโชว์ตำแหน่งที่กำลังจะไป และทำซ้ำ การเดิน จนกว่าจะถึงตำแหน่งที่เลือก
+                // และเร่งความเร็วการกระโดดไป เริ่มจาก 0.5 เข้าใกล้ 0.2 กระโดดสามครั้ง ถึง 12
+                // ครั้ง หรือถ้าผู้เล่นเป็นบอท จะมีการตัดสินใจเลือกตำแหน่งปลายทางโดยอัตโนมัติ
+                // และเรียก handleWorldTourFlight() เพื่อย้ายไปยังตำแหน่งนั้นทันที
+                // หลังจากที่ผู้เล่นย้ายไปยังตำแหน่งที่เลือกแล้ว จะมีการเรียก onPlayerEnter()
+                // ของ Tile นั้นๆ เพื่อให้เกิดผลกระทบตามประเภทของ Tile และจบเทิร์นด้วยการเปลี่ยน
+                // Phase ไปที่ END_TURN
 
             }
-            // case ACTION_REQUIRED -> view.getControlPanel().setButtonEnabled(false, true,
-            // true, true);
             case END_TURN -> {
                 state.incrementTurn();
                 processPhase();
@@ -259,12 +297,16 @@ public class GameController implements ActionListener {
         state.notifyMessage("🎲 " + player.getName() + " rolls for " + steps);
         GameDialogManager.showDiceRollDialog(view, state.getDice().getDie1(), state.getDice().getDie2());
 
-        int oldPos = player.getPosition();
-        int newPos = state.getBoard().getNextIndex(oldPos, steps);
-        player.setPosition(newPos);
+        int currentPos = player.getPosition();
+        int targetPos = (currentPos + steps) % 32;
+        // int oldPos = player.getPosition();
+        // int newPos = state.getBoard().getNextIndex(oldPos, steps);
+        // player.setPosition(newPos);
+        startMovement(player.getId(), currentPos, targetPos, false);
 
-        state.notifyMessage("🏃 " + player.getName() + " move to " + newPos);
+        state.notifyMessage("🏃 " + player.getName() + " move to " + targetPos);
 
+        // เช็คการทอยเบิ้ล
         if (isDouble) {
             view.setRollEnabled(isDouble);
             player.incrementDoubleRollCount();
@@ -283,14 +325,19 @@ public class GameController implements ActionListener {
             return;
         }
 
-        if (newPos < oldPos) {
+        // เช็คว่าผ่านจุดเริ่มต้นหรือไม่ (ถ้า targetPos < currentPos แปลว่าผ่านแน่นอน)
+        if (targetPos < currentPos) {
             state.getBank().paySalary(player, 5000);
             view.showPopup(player.getName() + " Pass the Start! Receive 5000!");
             state.notifyMessage("💰 " + player.getName() + " Receive salary for 5000");
         }
 
-        Tile currentTile = state.getBoard().getTile(newPos);
+        // หลังจากได้ตำแหน่งปลายทางแล้ว ให้เรียก onPlayerEnter() ของ Tile นั้นๆ
+        // เพื่อให้เกิดผลกระทบตามประเภทของ Tile
+        Tile currentTile = state.getBoard().getTile(targetPos);
 
+        // เรียกใช้ onPlayerEnter() ของ Tile ที่ผู้เล่นเดินไปถึง
+        // เพื่อให้เกิดผลกระทบตามประเภทของ Tile นั้นๆ
         if (currentTile instanceof ChanceTile chanceTile) {
             Card c = chanceTile.drawCard(state);
             if (c != null) {
@@ -336,17 +383,16 @@ public class GameController implements ActionListener {
         } else {
             int beforeMoney = player.getMoney();
             int activeDiscount = player.getDiscountRate();
-            
-            currentTile.onPlayerEnter(player, state);
 
             int afterMoney = player.getMoney();
 
             if (beforeMoney > afterMoney) {
                 int lost = beforeMoney - afterMoney;
-                
+
                 // ตรวจสอบว่าเสียเงิน และตอนแรกมีส่วนลดอยู่ แปลว่าส่วนลดทำงานแล้ว!
                 if (activeDiscount > 0) {
-                    String msg = "🎟️ " + player.getName() + " use discount card " + activeDiscount + "%! final amount is " + lost + "!";
+                    String msg = "🎟️ " + player.getName() + " use discount card " + activeDiscount
+                            + "%! final amount is " + lost + "!";
                     if (player instanceof BotPlayer) {
                         state.notifyMessage(msg);
                     } else {
@@ -461,7 +507,8 @@ public class GameController implements ActionListener {
                             owner.removeAsset(property);
                             property.setOwner(bot);
                             bot.addAsset(property);
-                            state.notifyMessage("😈 " + bot.getName() + " takeover the property of " + owner.getName() + "!");
+                            state.notifyMessage(
+                                    "😈 " + bot.getName() + " takeover the property of " + owner.getName() + "!");
                         }
                     }
                     state.setCurrentPhase(TurnPhase.END_TURN);
@@ -513,7 +560,10 @@ public class GameController implements ActionListener {
 
                         handleWorldTourFlight(targetTileIndex);
                     } else {
-                        actionTile.onPlayerEnter(player, state);
+                        // ให้เลือกช่องได้เหมือน FESTIVAL
+                        view.showPopup(
+                                "✈️ You landed on WORLD TOUR!\nPlease click on a tile on the board to fly there.");
+                        state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
                     }
                 } else {
                     // Action อื่นๆ (JAIL, TAX, START) ให้ทำงานตามปกติ
@@ -538,7 +588,8 @@ public class GameController implements ActionListener {
                             state.setCurrentPhase(TurnPhase.END_TURN);
                         } else {
                             // แจ้งให้ผู้เล่นทราบ แล้วเปลี่ยน Phase ของเกมไปรอรับการคลิก
-                            view.showPopup("You landed on FESTIVAL!\nPlease click on your property on the board to host the event.");
+                            view.showPopup(
+                                    "You landed on FESTIVAL!\nPlease click on your property on the board to host the event.");
                             state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
                         }
                         // --------------------------------
@@ -552,6 +603,35 @@ public class GameController implements ActionListener {
             }
         }
         view.updateView(state);
+    }
+
+    public void startMovement(int playerId, int currentPos, int targetPos, boolean isTeleport) {
+        // 1. เปลี่ยน State ล็อกเกมไว้ที่ MOVING
+        state.setCurrentPhase(TurnPhase.MOVING);
+
+        // 2. ปิดปุ่มลูกเต๋าใน UI กันผู้เล่นกดซ้ำ
+        view.setRollEnabled(false);
+
+        // 3. สร้างเส้นทางการเดิน
+        List<Integer> path = new ArrayList<>();
+        int totalTiles = 32;
+
+        if (isTeleport) {
+            // โหมด World Tour: ย้ายไปที่ตำแหน่งนั้นทันทีโดยตรง (กระโดด 1 ทีถึง)
+            path.add(targetPos);
+        } else {
+            // โหมดเดินปกติ: คำนวณทีละช่องจนถึงที่หมาย
+            int tempPos = currentPos;
+            while (tempPos != targetPos) {
+                tempPos = (tempPos + 1) % totalTiles;
+                path.add(tempPos);
+            }
+        }
+
+        // 4. สั่ง BoardPanel ให้เริ่ม Animate พร้อมตั้ง Callback เมื่อจบ
+        view.boardPanel.animatePlayerMovement(playerId, path, () -> {
+            onMovementFinished(playerId, targetPos); // เมื่อ UI ขยับเสร็จ ให้เรียก Method นี้
+        });
     }
 
     private void handleBuyProperty() {
@@ -580,8 +660,9 @@ public class GameController implements ActionListener {
                         for (int i = 0; i < levelsToUpgrade; i++) {
                             property.upgradeLevel();
                         }
-                        
-                        state.notifyMessage(player.getName() + " build/upgrade " + property.getName() + " to level " + selectedLevel);
+
+                        state.notifyMessage(player.getName() + " build/upgrade " + property.getName() + " to level "
+                                + selectedLevel);
                         view.showPopup("transection complete for price " + totalCost + "!");
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     } else {
@@ -593,7 +674,10 @@ public class GameController implements ActionListener {
         }
     }
 
-    private void handleEndTurn() {
+    /**
+     * Core logic for ending a turn - checks win condition and advances turn
+     */
+    private void endTurnLogic() {
         VictoryType vType = victoryChecker.checkWinCondition(state);
 
         if (null == vType) {
@@ -615,6 +699,13 @@ public class GameController implements ActionListener {
                 default -> state.incrementTurn();
             }
         processPhase();
+    }
+
+    /**
+     * Handles end turn button click from UI
+     */
+    private void handleEndTurn() {
+        endTurnLogic();
     }
 
     public void handleExpoSelection(PropertyTile selectedProperty) {
@@ -640,7 +731,7 @@ public class GameController implements ActionListener {
         Player player = state.getCurrentPlayer();
         int oldPos = player.getPosition();
 
-        player.setPosition(targetTileId);
+        startMovement(player.getId(), oldPos, targetTileId, true);
         state.notifyMessage("✈️ " + player.getName() + " fly to target " + targetTileId + "!");
 
         if (targetTileId < oldPos) {
@@ -759,6 +850,24 @@ public class GameController implements ActionListener {
                 handleWorldTourFlight(tileIndex);
             }
         }
+    }
+
+    // ฟังก์ชันนี้จะถูกเรียกเมื่อการเดินของผู้เล่นเสร็จสมบูรณ์แล้ว (หลังจาก Animation)
+    private void onMovementFinished(int playerId, int finalPos) {
+        Player currentPlayer = state.getCurrentPlayer();
+
+        // 1. เซ็ตค่าตำแหน่งจริงลงใน Data (Model)
+        currentPlayer.setPosition(finalPos);
+
+        // 2. ดึงข้อมูล Tile ที่ตกลงไป
+        Tile targetTile = state.getBoard().getTile(finalPos);
+
+        // 3. เรียก Effect ของช่องให้ทำงาน (onPlayerEnter)
+        targetTile.onPlayerEnter(currentPlayer, state);
+
+        // *หมายเหตุ* // การเปลี่ยนเป็น Phase.END_TURN ควรเกิดขึ้นภายใน
+        // targetTile.onPlayerEnter()
+        // เพราะบางช่องอาจจะให้เปิดการ์ด, สร้างบ้าน หรือจ่ายเงินก่อนจบเทิร์น
     }
 
 }

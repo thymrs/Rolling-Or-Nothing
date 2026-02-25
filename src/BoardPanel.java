@@ -5,6 +5,8 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.List;
 import javax.swing.*;
+import java.util.ArrayList;
+
 
 public class BoardPanel extends JPanel {
     // ปุ่ม ROLL ใหญ่ๆ ตรงกลาง (แยกเป็น CircleButton เพื่อความสวยงาม)
@@ -118,23 +120,31 @@ public class BoardPanel extends JPanel {
 
     }
 
-    private void setupSpacebarRoll() {
-    InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-    ActionMap am = getActionMap();
-    
-    // ใช้คำสั่ง "released" เพื่อให้ทำงานครั้งเดียวตอนปล่อยปุ่ม ลดปัญหาการกดค้าง
-    im.put(KeyStroke.getKeyStroke("released SPACE"), "rollAction");
-    
-    am.put("rollAction", new AbstractAction() {
-        @Override
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            // เช็คทั้ง IsEnabled และ IsVisible เพื่อความชัวร์
-            if (btnRoll != null && btnRoll.isEnabled() && btnRoll.isVisible()) {
-                btnRoll.doClick(); // สั่งคลิกแค่ปุ่ม Roll เท่านั้น
-            }
+    //สร้าง highlight effect ให้กับช่องที่ถูกเลือกโดยการกดปุ่มจาก tile โดยตรงนี้จะถูกเรียกจาก GameController เมื่อมีการเลือกช่อง
+    public void highlightTile(int tileIndex) {
+        if (tileIndex >= 0 && tileIndex < 32) {
+            tiles[tileIndex].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
         }
-    });
-}
+    }
+
+    // ฟังก์ชันสำหรับตั้งค่าให้กด Spacebar เพื่อคลิกปุ่ม ROLL ได้
+    private void setupSpacebarRoll() {
+        InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = getActionMap();
+
+        // ใช้คำสั่ง "released" เพื่อให้ทำงานครั้งเดียวตอนปล่อยปุ่ม ลดปัญหาการกดค้าง
+        im.put(KeyStroke.getKeyStroke("released SPACE"), "rollAction");
+
+        am.put("rollAction", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                // เช็คทั้ง IsEnabled และ IsVisible เพื่อความชัวร์
+                if (btnRoll != null && btnRoll.isEnabled() && btnRoll.isVisible()) {
+                    btnRoll.doClick(); // สั่งคลิกแค่ปุ่ม Roll เท่านั้น
+                }
+            }
+        });
+    }
 
     public void setRollActionListener(java.awt.event.ActionListener listener) {
         btnRoll.addActionListener(listener);
@@ -143,6 +153,50 @@ public class BoardPanel extends JPanel {
     public void setRollEnabled(boolean enabled) {
         btnRoll.setEnabled(enabled);
     }
+
+    // ฟังก์ชันสำหรับทำ Animation การเดินของผู้เล่น (เรียกจาก Controller เมื่อผู้เล่นเดิน)
+    public void animatePlayerMovement(int playerId, List<Integer> path, Runnable onComplete) {
+        if (path == null || path.isEmpty()) {
+            if (onComplete != null) onComplete.run();
+            return;
+        }
+
+        final int[] step = {0};
+        final int[] delay = {500}; // ความเร็วเริ่มต้น 0.5 วินาที (500ms)
+        final int minDelay = 200;  // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
+
+        // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
+        Timer timer = new Timer(delay[0], null);
+        timer.addActionListener(e -> {
+            
+            // 1. เปลี่ยนตำแหน่งใน Array (อ้างอิงจากตัวแปร playerPositions ในโค้ดของคุณ)
+            int nextTileIndex = path.get(step[0]);
+            playerPositions[playerId] = nextTileIndex; 
+
+            // 2. สั่งให้วาดกระดานใหม่ (มันจะไปเรียกโค้ดจัด setBounds ที่คุณเขียนไว้เอง)
+            revalidate();
+            repaint();
+
+            // 3. เร่งความเร็วการกระโดดในครั้งต่อไป
+            if (delay[0] > minDelay) {
+                delay[0] -= 50; // ลดลงทีละ 50ms (จะเร่งความเร็วขึ้น)
+                timer.setDelay(delay[0]);
+            }
+
+            step[0]++;
+
+            // 4. เช็คว่าเดินครบตามเส้นทางหรือยัง
+            if (step[0] >= path.size()) {
+                timer.stop();
+                if (onComplete != null) {
+                    onComplete.run(); // แจ้ง Controller ว่าเดินเสร็จแล้ว!
+                }
+            }
+        });
+        
+        timer.start(); // เริ่มกระโดด
+    }
+
 
     public void updateBoard(GameState state) {
         if (state == null)
@@ -153,45 +207,47 @@ public class BoardPanel extends JPanel {
 
         // 1. อัปเดตข้อมูลและตำแหน่งผู้เล่น
         for (int i = 0; i < 4; i++) {
-        if (i < players.size()) {
-            Player p = players.get(i);
-            playerStatusPanels[i].setVisible(true);
-            playerMarkers[i].setVisible(true);
-            playerPositions[i] = p.getPosition();
+            if (i < players.size()) {
+                Player p = players.get(i);
+                playerStatusPanels[i].setVisible(true);
+                playerMarkers[i].setVisible(true);
+                playerPositions[i] = p.getPosition();
 
-            // --- ส่วนที่ต้องเพิ่ม: ส่งข้อมูลจริงจาก Player เข้าสู่ UI ---
-            String posName = board.getTile(p.getPosition()).getName();
-            
-            // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
-            int totalAssets = p.getMoney();
-            for (PropertyTile land : p.getOwnedLands()) {
-                totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
+                // --- ส่วนที่ต้องเพิ่ม: ส่งข้อมูลจริงจาก Player เข้าสู่ UI ---
+                String posName = board.getTile(p.getPosition()).getName();
+
+                // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
+                int totalAssets = p.getMoney();
+                for (PropertyTile land : p.getOwnedLands()) {
+                    totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
+                }
+
+                // ตัดสินข้อความ Status
+                String status = "Normal";
+                if (p.isBankrupt())
+                    status = "Bankrupt";
+                else if (p.getIsJailed())
+                    status = "In Jail (" + p.getJailTurnCount() + ")";
+                else if (p.isFrozen())
+                    status = "Frozen";
+
+                // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
+                playerStatusPanels[i].updateData(
+                        p.getMoney(),
+                        totalAssets,
+                        status,
+                        p.getIsJailed(),
+                        p.isBankrupt(),
+                        p.getHasShield(),
+                        p.getIsTollFree(),
+                        posName);
+                // --------------------------------------------------
+
+            } else {
+                playerStatusPanels[i].setVisible(false);
+                playerMarkers[i].setVisible(false);
             }
-
-            // ตัดสินข้อความ Status
-            String status = "Normal";
-            if (p.isBankrupt()) status = "Bankrupt";
-            else if (p.getIsJailed()) status = "In Jail (" + p.getJailTurnCount() + ")";
-            else if (p.isFrozen()) status = "Frozen";
-
-            // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
-            playerStatusPanels[i].updateData(
-                p.getMoney(), 
-                totalAssets, 
-                status, 
-                p.getIsJailed(), 
-                p.isBankrupt(), 
-                p.getHasShield(), 
-                p.getIsTollFree(), 
-                posName
-            );
-            // --------------------------------------------------
-
-        } else {
-            playerStatusPanels[i].setVisible(false);
-            playerMarkers[i].setVisible(false);
         }
-    }
 
         // 2. อัปเดตสีช่องกระดาน
         if (board != null) {
@@ -274,9 +330,11 @@ public class BoardPanel extends JPanel {
         double startX = panelW / 2.0;
         double startY = (panelH - (1.2 * G)) / 2.0;
 
-        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลาง (ปรับขนาดตาม Scale)
+        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (responsive กับ dynamicScale)
         int rollSize = (int) (240 * dynamicScale); // ขนาดวงกลมปรับตามขนาดจอ
-        btnRoll.setBounds((panelW - rollSize) / 2, (panelH - rollSize) / 2, rollSize, rollSize);
+        // ตำแหน่ง Y: อยู่ต่ำกว่ากึ่งกลางจอเล็กน้อย โดยสัมพันธ์กับขนาดบอร์ด (เช่น 30% จากขอบบนถึงกึ่งกลางบอร์ด)
+        int centerY = (int) (panelH / 2 + (G * 0.25));
+        btnRoll.setBounds((panelW - rollSize) / 2, centerY - rollSize / 2, rollSize, rollSize);
 
         // --- 3. วางตำแหน่ง Tiles และปรับขนาด Font ให้ Responsive ---
         for (int i = 0; i < 32; i++) {
