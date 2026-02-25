@@ -271,9 +271,9 @@ public class GameController implements ActionListener {
         state.notifyMessage("🏃 " + player.getName() + " move to " + newPos);
 
         if (newPos < oldPos) {
-            state.getBank().paySalary(player, 15000);
-            view.showPopup(player.getName() + " Pass the Start! Receive 15000!");
-            state.notifyMessage("💰 " + player.getName() + " Receive salary for 15000");
+            state.getBank().paySalary(player, 5000);
+            view.showPopup(player.getName() + " Pass the Start! Receive 5000!");
+            state.notifyMessage("💰 " + player.getName() + " Receive salary for 5000");
         }
 
         Tile currentTile = state.getBoard().getTile(newPos);
@@ -495,7 +495,7 @@ public class GameController implements ActionListener {
                             state.setCurrentPhase(TurnPhase.END_TURN);
                         } else {
                             // แจ้งให้ผู้เล่นทราบ แล้วเปลี่ยน Phase ของเกมไปรอรับการคลิก
-                            view.showPopup("🎉 You landed on FESTIVAL!\nPlease click on your property on the board to host the event.");
+                            view.showPopup("You landed on FESTIVAL!\nPlease click on your property on the board to host the event.");
                             state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
                         }
                         // --------------------------------
@@ -594,9 +594,9 @@ public class GameController implements ActionListener {
         state.notifyMessage("✈️ " + player.getName() + " fly to target " + targetTileId + "!");
 
         if (targetTileId < oldPos) {
-            state.getBank().paySalary(player, 15000);
-            view.showPopup(player.getName() + " Pass the Start! Receive 15000!");
-            state.notifyMessage("💰 " + player.getName() + " Receive salary for 15000");
+            state.getBank().paySalary(player, 5000);
+            view.showPopup(player.getName() + " Pass the Start! Receive 5000!");
+            state.notifyMessage("💰 " + player.getName() + " Receive salary for 5000");
         }
 
         Tile currentTile = state.getBoard().getTile(targetTileId);
@@ -613,7 +613,7 @@ public class GameController implements ActionListener {
                         bot.pay(property.getPurchasePrice());
                         property.setOwner(bot);
                         bot.addAsset(property);
-                        state.notifyMessage("🤖 " + bot.getName() + " ซื้อที่ดิน " + property.getName());
+                        state.notifyMessage("🤖 " + bot.getName() + " buy land " + property.getName());
                     }
                 } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                     // บอทเทคโอเวอร์
@@ -626,7 +626,7 @@ public class GameController implements ActionListener {
                         owner.removeAsset(property);
                         property.setOwner(bot);
                         bot.addAsset(property);
-                        state.notifyMessage("😈 🤖 " + bot.getName() + " เทคโอเวอร์ " + property.getName());
+                        state.notifyMessage("😈 🤖 " + bot.getName() + " takeover " + property.getName());
                     }
                 }
                 // บอทบินเสร็จ ตัดจบเทิร์นเลย ไม่ต้องไป ACTION_REQUIRED

@@ -111,12 +111,40 @@ public class PropertyTile extends Tile {
 
     @Override
     public void onPlayerEnter(Player player, GameState state) {
-        if (player == null || state == null)
-            return;
+        if (player == null || state == null) return;
+        
         Player currentOwner = this.owner;
-        if (currentOwner != null && !currentOwner.equals(player) && !isMortgaged) {
-            if (state.getBank() != null) {
-                state.getBank().collectRent(player, this);
+        
+        if (currentOwner != null && !currentOwner.equals(player) && !this.isMortgaged) {
+            
+            int rent = this.calculateRent();
+            int actualPaid = rent;
+            
+            if (player.getIsTollFree()) {
+                System.out.println("▶ [DEBUG] 👼 " + player.getName() + " Use Angel Card! Don't have to pay " + rent);
+                player.setTollFree(false); // ใช้แล้วริบการ์ดคืน
+                return;
+            }
+
+            if (player.getDiscountRate() > 0) {
+                int discount = (rent * player.getDiscountRate()) / 100;
+                actualPaid = rent - discount;
+                System.out.println("▶ [DEBUG] 🎟️ " + player.getName() + " Use discount " + player.getDiscountRate() + "% (final amount is " + actualPaid + ")");
+                player.setDiscountRate(0); // ใช้ส่วนลดแล้วริบการ์ดคืน
+            }
+
+            if (player.getMoney() >= actualPaid) {
+                player.pay(actualPaid); 
+                currentOwner.receiveMoney(actualPaid);
+            
+                if (this.getTollMultiplier() > 1) {
+                    this.setExpo(1, 0); // เคลียร์ตัวคูณกลับเป็น 1 และเวลาเหลือ 0
+                }
+            } else {
+                int allMoneyLeft = player.getMoney();
+                player.pay(allMoneyLeft);
+                currentOwner.receiveMoney(allMoneyLeft); // เจ้าของได้เงินเท่าที่คนตกเหลืออยู่
+                System.out.println("▶ [DEBUG] 💀 " + player.getName() + " gone Bankruptcy!");
             }
         }
     }
