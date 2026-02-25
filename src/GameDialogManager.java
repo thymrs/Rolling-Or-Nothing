@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-
 class GameDialogManager {
 
     // สีหลักสำหรับ Theme
@@ -283,4 +282,61 @@ class GameDialogManager {
         dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
     }
+
+    public static PropertyTile showFestivalDialog(JFrame parent, List<PropertyTile> ownedLands) {
+        final PropertyTile[] selectedTile = {null};
+
+        // 1. สร้าง Panel หลัก
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.setBackground(BG_COLOR);
+
+        JLabel label = new JLabel("Select a city to host the Festival (2x Rent):");
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        label.setForeground(new Color(255, 215, 0)); // สีทองให้ดูพิเศษ
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(label, BorderLayout.NORTH);
+
+        // 2. แปลงรายการ PropertyTile เป็น String เพื่อแสดงผลใน List
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (PropertyTile tile : ownedLands) {
+            // แสดงชื่อเมืองและค่าเช่าปัจจุบัน เพื่อประกอบการตัดสินใจ
+            listModel.addElement(tile.getName() + " (Rent: " + tile.calculateRent() + ")");
+        }
+
+        JList<String> list = new JList<>(listModel);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        list.setBackground(PANEL_COLOR);
+        list.setForeground(TEXT_COLOR);
+        list.setFixedCellHeight(30);
+        
+        // เลือกรายการแรกเป็นค่าเริ่มต้น (ถ้ามี)
+        if (!ownedLands.isEmpty()) {
+            list.setSelectedIndex(0);
+        }
+
+        // ใส่ ScrollPane เผื่อมีเมืองเยอะ
+        JScrollPane scrollPane = new JScrollPane(list);
+        scrollPane.setBorder(BorderFactory.createLineBorder(DISABLED_COLOR));
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // 3. เรียกใช้ createBaseDialog
+        JDialog dialog = createBaseDialog(parent, "🎉 Festival Event", panel,
+            e -> {
+                // ปุ่ม YES (Confirm)
+                int index = list.getSelectedIndex();
+                if (index != -1) {
+                    selectedTile[0] = ownedLands.get(index);
+                }
+            },
+            e -> selectedTile[0] = null // ปุ่ม NO (Cancel)
+        );
+
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+
+        return selectedTile[0];
+    }
+    
 }
