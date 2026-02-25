@@ -15,7 +15,7 @@ public class Main {
                 .maxTurns(50)
                 .mapName("default")
                 .humanCount(0)
-                .botCount(4)
+                .botCount(2)
                 .botDifficulty(DifficultyLevel.HARD)
                 .passGoSalary(5000)
                 .build();

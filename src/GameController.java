@@ -106,6 +106,7 @@ public class GameController implements ActionListener {
                 System.out.println("▶ [DEBUG] game over! enable button false");
                 view.getControlPanel().setButtonsEnabled(false); 
                 view.setRollEnabled(false);
+                view.showPopup("End Game! Winner " + victoryChecker.getWinner(state));
                 return;
             }
             case READY_TO_ROLL -> {
@@ -198,7 +199,6 @@ public class GameController implements ActionListener {
                 state.incrementTurn();
                 processPhase();
             }
-            case GAME_OVER -> view.showPopup("End Game! Winner " + victoryChecker.getWinner(state));
             case SELECTING_DESTINATION -> view.showPopup("You're on a Wolrd Tour! Please select your destination");
         }
 
@@ -322,6 +322,7 @@ public class GameController implements ActionListener {
         if (player.getDoubleRollCount() >= 3) {
             state.notifyMessage("🚔 Got 3 Double in a roll! " + player.getName() + " Jailed immedietely!");
             player.setIsJailed(true);
+            player.addJailTurnCount(3);
             player.setPosition(8);
             player.resetDoubleRollCount(); // ล้างค่าเบิ้ล
 
@@ -434,22 +435,27 @@ public class GameController implements ActionListener {
                             bot.pay(property.getPurchasePrice());
                             property.setOwner(bot);
                             bot.addAsset(property);
-                            state.notifyMessage(bot.getName() + " buy " + property.getName());
-                            view.showPopup(bot.getName() + " buy " + property.getName() + "!");
 
-                            // สร้างรวดเดียวสุดแค่เวล 3 ตอนซื้อครั้งแรก
                             while (property.getBuildingLevel() < 3) {
                                 int upgradeCost = property.getUpgradeCost(1);
                                 boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
                                 
                                 if (wantToUpgrade && bot.getMoney() - upgradeCost >= 500) { 
                                     bot.pay(upgradeCost);
-                                    property.upgradeLevel(); // อัปเกรดทีละเวล
+                                    property.upgradeLevel(); 
                                 } else {
-                                    break; // เงินไม่ถึง
+                                    break; 
                                 }
                             }
-                            state.notifyMessage("🏗️ " + bot.getName() + " upgrade to level " + property.getBuildingLevel() + "!");
+
+                            if (property.getBuildingLevel() > 0) {
+                                state.notifyMessage("🏗️ " + bot.getName() + " buy and upgrade " + property.getName() 
+                                        + " to level " + property.getBuildingLevel() + "!");
+                                view.showPopup(bot.getName() + " bought & upgraded " + property.getName() + "!");
+                            } else {
+                                state.notifyMessage(bot.getName() + " buy " + property.getName());
+                                view.showPopup(bot.getName() + " buy " + property.getName() + "!");
+                            }
                         }
                     } 
                     
