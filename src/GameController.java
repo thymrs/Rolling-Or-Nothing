@@ -101,19 +101,6 @@ public class GameController implements ActionListener {
         Player currentPlayer = state.getCurrentPlayer();
         TurnPhase currentPhase = state.getCurrentPhase();
 
-        if (currentPhase == TurnPhase.READY_TO_ROLL) {
-            if (currentPlayer.isFrozen()) {
-                view.showPopup("❄️ " + currentPlayer.getName() + " Freeze! skip the turns...");
-                // แจ้งเตือนสถานะผิดปกติ
-                state.notifyMessage(
-                        "❄️ " + currentPlayer.getName() + " Unable to roll the dice because you're freeze!");
-                currentPlayer.decrementFrozenTurns();
-                state.setCurrentPhase(TurnPhase.END_TURN);
-                view.updateView(state);
-                return;
-            }
-        }
-
         switch (currentPhase) {
             case READY_TO_ROLL -> {
 
@@ -148,7 +135,8 @@ public class GameController implements ActionListener {
                 // ถ้าไม่ติดคุก ก็ให้เล่นตามปกติ
                 if (currentPlayer instanceof BotPlayer) {
                     view.getControlPanel().setButtonsEnabled(false);
-                    state.notifyMessage("BOT " + currentPlayer.getName() + " is playing");
+                    view.setRollEnabled(false);
+                    state.notifyMessage(currentPlayer.getName() + " is playing...");
                     handleBotTurn();
                 } else {
                     view.getControlPanel().setButtonsEnabled(true);
@@ -181,19 +169,19 @@ public class GameController implements ActionListener {
 
         new Thread(() -> {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(3000);
 
                 if (bot.getHeldCard() != null) {
                     boolean wantToUseCard = bot.makeDecision(DecisionType.USE_CARD, null, state);
 
                     if (wantToUseCard) {
                         handleCardAction();
-                        Thread.sleep(2000);
+                        Thread.sleep(3000);
                     }
                 }
 
                 handleRollDice(); //
-                Thread.sleep(2000);
+                Thread.sleep(3000);
 
                 Tile tile = state.getBoard().getTile(bot.getPosition());
                 if (tile instanceof PropertyTile property && property.getOwner() == null) {
@@ -284,9 +272,9 @@ public class GameController implements ActionListener {
             player.resetDoubleRollCount(); // ถ้าไม่เบิ้ล ให้รีเซ็ตเลย
         }
         if (player.getDoubleRollCount() >= 3) {
-            state.notifyMessage("🚔 ทอยเบิ้ล 3 ครั้งติด! " + player.getName() + " ถูกส่งเข้าคุก!");
+            state.notifyMessage("🚔 Got 3 Double in a roll! " + player.getName() + " Jailed immedietely!");
             player.setIsJailed(true);
-            player.setPosition(8); // **เปลี่ยนเลข 8 ให้ตรงกับ Index ช่องคุกในบอร์ดของคุณ**
+            player.setPosition(8);
             player.resetDoubleRollCount(); // ล้างค่าเบิ้ล
 
             view.updateView(state);
@@ -386,6 +374,8 @@ public class GameController implements ActionListener {
             if (currentTile instanceof PropertyTile property) {
                 // เคสของบอท
                 if (player instanceof BotPlayer bot) {
+                    
+                    // ที่ดินเปล่าตกครั้งแรกให้ซื้อมากสุดได้แค่เวล 3
                     if (property.getOwner() == null) {
                         boolean wantToBuy = bot.makeDecision(DecisionType.BUY_LAND, property, state);
                         if (wantToBuy && bot.getMoney() >= property.getPurchasePrice()) {
@@ -394,18 +384,35 @@ public class GameController implements ActionListener {
                             bot.addAsset(property);
                             state.notifyMessage(bot.getName() + " buy " + property.getName());
                             view.showPopup(bot.getName() + " buy " + property.getName() + "!");
+
+                            // สร้างรวดเดียวสุดแค่เวล 3 ตอนซื้อครั้งแรก
+                            while (property.getBuildingLevel() < 3) {
+                                int upgradeCost = property.getUpgradeCost(1);
+                                boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
+                                
+                                if (wantToUpgrade && bot.getMoney() - upgradeCost >= 500) { 
+                                    bot.pay(upgradeCost);
+                                    property.upgradeLevel(); // อัปเกรดทีละเวล
+                                } else {
+                                    break; // เงินไม่ถึง
+                                }
+                            }
+                            state.notifyMessage("🏗️ " + bot.getName() + " upgrade to level " + property.getBuildingLevel() + "!");
                         }
-                    } else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
-                        System.out.println("▶ [DEBUG] บอทตกที่ตัวเอง กำลังตัดสินใจอัปเกรด...");
+                    } 
+                    
+                    // ตกที่ดินตัวเอง อัปเป็นแลนด์มาร์กได้
+                    else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 4) {
+                        System.out.println("▶ [DEBUG] Bot is on its land, deciding on upgrade...");
                         boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
 
                         if (wantToUpgrade) {
                             int currentLevel = property.getBuildingLevel();
-                            int maxPossibleUpgrades = 3 - currentLevel; // สร้างได้มากสุดอีกกี่ขั้น
+                            int maxPossibleUpgrades = 4 - currentLevel; 
+                            
                             int targetUpgradeLevels = 0;
                             int finalCost = 0;
 
-                            // บอทจะลองคำนวณจากจำนวนขั้นมากสุดก่อน ถ้าเงินไม่พอค่อยลดลงมาทีละขั้น
                             for (int i = maxPossibleUpgrades; i >= 1; i--) {
                                 int cost = property.getUpgradeCost(i);
                                 if (bot.getMoney() - cost >= 500) {
@@ -424,13 +431,18 @@ public class GameController implements ActionListener {
                                     property.upgradeLevel();
                                 }
 
-                                state.notifyMessage("🏗️ 🤖 " + bot.getName() + " upgrade " + property.getName()
-                                        + " to reach " + targetUpgradeLevels + " level!");
+                                // เช็คว่าเป็นแลนด์มาร์กไหม
+                                if (property.getBuildingLevel() == 4) {
+                                    state.notifyMessage("🏰 " + bot.getName() + " built a LANDMARK at " + property.getName() + "!");
+                                } else {
+                                    state.notifyMessage("🏗️ " + bot.getName() + " upgrade " + property.getName() 
+                                            + " to reach level " + property.getBuildingLevel() + "!");
+                                }
                             } else {
-                                System.out.println(
-                                        "▶ [DEBUG] Bot want to upgrade but didn't have enough money (or scared of losing all money)");
+                                System.out.println("▶ [DEBUG] Bot want to upgrade but didn't have enough money (or scared of losing all money)");
                             }
                         }
+                    
 
                     } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                         int takeoverPrice = property.getTotalValue() * 2;
@@ -507,6 +519,7 @@ public class GameController implements ActionListener {
                     // Action อื่นๆ (JAIL, TAX, START) ให้ทำงานตามปกติ
                     actionTile.onPlayerEnter(player, state);
                     state.setCurrentPhase(TurnPhase.END_TURN);
+                    processPhase();
                 }
             } else if (currentTile instanceof SpecialTile specialTile) {
                 if (specialTile.getEffect() == EffectType.FESTIVAL) {
@@ -663,7 +676,7 @@ public class GameController implements ActionListener {
                         owner.removeAsset(property);
                         property.setOwner(bot);
                         bot.addAsset(property);
-                        state.notifyMessage("😈 🤖 " + bot.getName() + " takeover " + property.getName());
+                        state.notifyMessage("😈 " + bot.getName() + " takeover " + property.getName());
                     }
                 }
                 // บอทบินเสร็จ ตัดจบเทิร์นเลย ไม่ต้องไป ACTION_REQUIRED
@@ -734,10 +747,10 @@ public class GameController implements ActionListener {
                     if (property.getOwner() != null && property.getOwner().equals(player)) {
                         handleExpoSelection(property); // จัดงานได้เลย!
                     } else {
-                        view.showPopup("⚠️ Please select your OWN property!");
+                        view.showPopup("▶ Please select your OWN property!");
                     }
                 } else {
-                    view.showPopup("⚠️ You cannot host Festival here!");
+                    view.showPopup("▶ You cannot host Festival here!");
                 }
             }
             // กรณี 2: ผู้เล่นยืนอยู่ช่อง WORLD TRAVEL
