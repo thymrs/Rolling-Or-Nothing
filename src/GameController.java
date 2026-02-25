@@ -322,6 +322,7 @@ public class GameController implements ActionListener {
             }
         } else {
             int beforeMoney = player.getMoney();
+            int activeDiscount = player.getDiscountRate();
             
             currentTile.onPlayerEnter(player, state);
 
@@ -329,15 +330,29 @@ public class GameController implements ActionListener {
             
             if (beforeMoney > afterMoney) {
                 int lost = beforeMoney - afterMoney;
-                if (player instanceof BotPlayer) {
-                    state.notifyMessage("💸 " + player.getName() + " lost " + lost + "!");
+                
+                // ตรวจสอบว่าเสียเงิน และตอนแรกมีส่วนลดอยู่ แปลว่าส่วนลดทำงานแล้ว!
+                if (activeDiscount > 0) {
+                    String msg = "🎟️ " + player.getName() + " use discount card " + activeDiscount + "%! final amount is " + lost + "!";
+                    if (player instanceof BotPlayer) {
+                        state.notifyMessage(msg);
+                    } else {
+                        view.showPopup(msg);
+                        state.notifyMessage(msg);
+                    }
                 } else {
-                    view.showPopup("You paid / lost " + lost + "!");
+                    String msg = "💸 " + player.getName() + " lost money " + lost + "amount!";
+                    if (player instanceof BotPlayer) {
+                        state.notifyMessage(msg);
+                    } else {
+                        view.showPopup("You paid / lost " + lost + "!");
+                    }
                 }
             } else if (afterMoney > beforeMoney) {
                 int gained = afterMoney - beforeMoney;
+                String msg = "🎉 " + player.getName() + " receive money " + gained + "amount!";
                 if (player instanceof BotPlayer) {
-                    state.notifyMessage("🎉 " + player.getName() + " got money " + gained + "!");
+                    state.notifyMessage(msg);
                 } else {
                     view.showPopup("You received " + gained + "!");
                 }
@@ -405,7 +420,7 @@ public class GameController implements ActionListener {
                             owner.removeAsset(property);
                             property.setOwner(bot);
                             bot.addAsset(property);
-                            state.notifyMessage("😈 🤖 " + bot.getName() + " takeover the property of " + owner.getName() + "!");
+                            state.notifyMessage("😈 " + bot.getName() + " takeover the property of " + owner.getName() + "!");
                         }
                     }
                     state.setCurrentPhase(TurnPhase.END_TURN);
@@ -523,7 +538,7 @@ public class GameController implements ActionListener {
                             property.upgradeLevel();
                         }
                         
-                        state.notifyMessage(player.getName() + " buile/upgrade " + property.getName() + " to level " + selectedLevel);
+                        state.notifyMessage(player.getName() + " build/upgrade " + property.getName() + " to level " + selectedLevel);
                         view.showPopup("transection complete for price " + totalCost + "!");
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     } else {

@@ -27,16 +27,25 @@ public abstract class Player {
         this.position += steps;
     }
 
-    public boolean pay(int amount){
-        if(this.money >= amount){
-            if (discountRate > 0) {
-                this.money -= amount * (discountRate / 10);
+    public boolean pay(int amount) {
+        int finalAmount = amount;
+
+        if (this.discountRate > 0) {
+            int discount = (amount * this.discountRate) / 100;
+            finalAmount = amount - discount;
+        }
+
+        if (this.money >= finalAmount) {
+            this.money -= finalAmount; // หักเงินจริง
+
+            if (this.discountRate > 0) {
+                System.out.println("▶ [DEBUG] " + this.name + " use discount! (Final amount: " + finalAmount + " from " + amount + ")");
+                this.discountRate = 0; 
             }
-            this.money -= amount;
             return true;
         }
         
-        return false;
+        return false; // เงินไม่พอจ่ายแม้จะลดแล้ว
     }
 
     public void receiveMoney(int amount){
