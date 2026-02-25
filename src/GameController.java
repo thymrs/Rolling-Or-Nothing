@@ -180,7 +180,8 @@ public class GameController implements ActionListener {
                     
                     if (!hasAction) {
                         // ไม่มี action ให้ทำ จบเทิร์นเลย
-                        endTurnLogic();
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                        processPhase();
                     }
                     // ถ้า hasAction = true รอให้ผู้เล่นกดปุ่ม
                 }
