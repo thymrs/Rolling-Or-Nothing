@@ -15,6 +15,7 @@ public class Card {
         switch (this.type) {
             case ANGEL:
                 player.setTollFree(true);
+                state.notifyMessage("👼 " + player.getName() + " Use Angel Card! No paying in this turn!");
 
                 Tile currentTile = state.getBoard().getTile(player.getPosition());
 
@@ -38,18 +39,22 @@ public class Card {
                 break;
             case SHIELD:
                 player.setHasShield(true);
+                state.notifyMessage("🛡️ " + player.getName() + " Shield on! Prevent abnormal status effects once!");
                 break;
 
             case DISCOUNT:
                 player.setDiscountRate(this.value);
+                state.notifyMessage("🎟️ " + player.getName() + " Got a dicount " + this.value + "% for the next payment!");
                 break;
 
             case ESCAPE:
                 player.setIsJailed(false);
+                state.notifyMessage("🚁 " + player.getName() + " use Escape! Freedom now!");
                 break;
 
             case FORCE_SELL:
                 if (target != null) {
+                    state.notifyMessage("💥 " + player.getName() + " force " + target.getName() + " to sell their lands!");
                     currentTile = state.getBoard().getTile(target.getPosition());
                     
                     if (currentTile instanceof PropertyTile targetProperty) {
@@ -62,15 +67,18 @@ public class Card {
 
             case REWARD:
                 player.receiveMoney(this.value);
+                state.notifyMessage("🎁 " + player.getName() + " got bonus for " + this.value + "!");
                 break;
 
             case PUNISH:
                 if (target != null) {
                     if (target.getIsJailed()) {
                         target.addJailTurnCount(1);
+                        state.notifyMessage("⚡ " + player.getName() + " punish " + target.getName() + " to be in jail for 1 turn!");
                     } else {
                         target.setIsJailed(true);
                         target.addJailTurnCount(1);
+                        state.notifyMessage("⚡ " + player.getName() + " punish " + target.getName() + " to be in jail for 1 turn!");
                     }
                 }
                 break;
