@@ -276,9 +276,11 @@ public class BoardPanel extends JPanel {
         double startX = panelW / 2.0;
         double startY = (panelH - (1.2 * G)) / 2.0;
 
-        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (ปรับขนาดตาม Scale)
+        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (responsive กับ dynamicScale)
         int rollSize = (int) (240 * dynamicScale); // ขนาดวงกลมปรับตามขนาดจอ
-        btnRoll.setBounds((panelW - rollSize) / 2, (panelH - rollSize) / 2 + 150, rollSize, rollSize);
+        // ตำแหน่ง Y: อยู่ต่ำกว่ากึ่งกลางจอเล็กน้อย โดยสัมพันธ์กับขนาดบอร์ด (เช่น 30% จากขอบบนถึงกึ่งกลางบอร์ด)
+        int centerY = (int) (panelH / 2 + (G * 0.25));
+        btnRoll.setBounds((panelW - rollSize) / 2, centerY - rollSize / 2, rollSize, rollSize);
 
         // --- 3. วางตำแหน่ง Tiles และปรับขนาด Font ให้ Responsive ---
         for (int i = 0; i < 32; i++) {
