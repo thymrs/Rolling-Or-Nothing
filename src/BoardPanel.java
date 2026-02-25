@@ -217,10 +217,7 @@ public class BoardPanel extends JPanel {
                 String posName = board.getTile(p.getPosition()).getName();
 
                 // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
-                int totalAssets = p.getMoney();
-                for (PropertyTile land : p.getOwnedLands()) {
-                    totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
-                }
+                
 
                 // ตัดสินข้อความ Status
                 String status = "Normal";
@@ -232,15 +229,15 @@ public class BoardPanel extends JPanel {
                     status = "Frozen";
 
                 // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
-                playerStatusPanels[i].updateData(
-                        p.getMoney(),
-                        totalAssets,
-                        status,
-                        p.getIsJailed(),
-                        p.isBankrupt(),
-                        p.getHasShield(),
-                        p.getIsTollFree(),
-                        posName);
+                playerStatusPanels[i].updateData(p, posName, status);
+                        // p.getMoney(),
+                        // totalAssets,
+                        // status,
+                        // p.getIsJailed(),
+                        // p.isBankrupt(),
+                        // p.getHasShield(),
+                        // p.getIsTollFree(),
+                        // posName);
                 // --------------------------------------------------
 
             } else {
