@@ -5,10 +5,8 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.List;
 import javax.swing.*;
-<<<<<<< HEAD
-=======
 import java.util.ArrayList;
->>>>>>> ระบบเดินใหม่
+
 
 public class BoardPanel extends JPanel {
     // ปุ่ม ROLL ใหญ่ๆ ตรงกลาง (แยกเป็น CircleButton เพื่อความสวยงาม)
@@ -24,7 +22,6 @@ public class BoardPanel extends JPanel {
     // 3. Player Markers (ตัวละครผู้เล่นบนกระดาน)
     private JPanel[] playerMarkers = new JPanel[4];
     private int[] playerPositions = new int[4]; // เก็บตำแหน่งปัจจุบันของผู้เล่น
-    private int animatingPlayerId = -1; // id ของผู้เล่นที่กำลัง animate อยู่ (-1 = ไม่มี)
 
     // สีประจำตัวผู้เล่น
     private final Color[] defaultColors = {
@@ -123,10 +120,7 @@ public class BoardPanel extends JPanel {
 
     }
 
-<<<<<<< HEAD
-=======
-    // สร้าง highlight effect ให้กับช่องที่ถูกเลือกโดยการกดปุ่มจาก tile
-    // โดยตรงนี้จะถูกเรียกจาก GameController เมื่อมีการเลือกช่อง
+    //สร้าง highlight effect ให้กับช่องที่ถูกเลือกโดยการกดปุ่มจาก tile โดยตรงนี้จะถูกเรียกจาก GameController เมื่อมีการเลือกช่อง
     public void highlightTile(int tileIndex) {
         if (tileIndex >= 0 && tileIndex < 32) {
             tiles[tileIndex].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
@@ -134,7 +128,6 @@ public class BoardPanel extends JPanel {
     }
 
     // ฟังก์ชันสำหรับตั้งค่าให้กด Spacebar เพื่อคลิกปุ่ม ROLL ได้
->>>>>>> ระบบเดินใหม่
     private void setupSpacebarRoll() {
         InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = getActionMap();
@@ -161,51 +154,50 @@ public class BoardPanel extends JPanel {
         btnRoll.setEnabled(enabled);
     }
 
-<<<<<<< HEAD
-=======
-    // ฟังก์ชันสำหรับทำ Animation การเดินของผู้เล่น (เรียกจาก Controller
-    // เมื่อผู้เล่นเดิน)
+    // ฟังก์ชันสำหรับทำ Animation การเดินของผู้เล่น (เรียกจาก Controller เมื่อผู้เล่นเดิน)
     public void animatePlayerMovement(int playerId, List<Integer> path, Runnable onComplete) {
         if (path == null || path.isEmpty()) {
-            if (onComplete != null)
-                onComplete.run();
+            if (onComplete != null) onComplete.run();
             return;
         }
 
-        // ล็อกว่าผู้เล่นคนนี้กำลัง animate อยู่ (ป้องกัน updateBoard เขียนทับตำแหน่ง)
-        animatingPlayerId = playerId;
-
-        final int[] step = { 0 };
-        final int STEP_DELAY = 300; // เดินทีละช่อง ช่องละ 300ms (เร็วพอดี เห็นชัด)
+        final int[] step = {0};
+        final int[] delay = {500}; // ความเร็วเริ่มต้น 0.5 วินาที (500ms)
+        final int minDelay = 200;  // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
 
         // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
-        Timer timer = new Timer(STEP_DELAY, null);
+        Timer timer = new Timer(delay[0], null);
         timer.addActionListener(e -> {
-
-            // 1. เปลี่ยนตำแหน่งใน Array ทีละช่อง
+            
+            // 1. เปลี่ยนตำแหน่งใน Array (อ้างอิงจากตัวแปร playerPositions ในโค้ดของคุณ)
             int nextTileIndex = path.get(step[0]);
-            playerPositions[playerId] = nextTileIndex;
+            playerPositions[playerId] = nextTileIndex; 
 
-            // 2. เรียก relayoutBoard เพื่ออัปเดตตำแหน่ง marker บนจอจริงๆ
-            relayoutBoard();
+            // 2. สั่งให้วาดกระดานใหม่ (มันจะไปเรียกโค้ดจัด setBounds ที่คุณเขียนไว้เอง)
+            revalidate();
             repaint();
+
+            // 3. เร่งความเร็วการกระโดดในครั้งต่อไป
+            if (delay[0] > minDelay) {
+                delay[0] -= 50; // ลดลงทีละ 50ms (จะเร่งความเร็วขึ้น)
+                timer.setDelay(delay[0]);
+            }
 
             step[0]++;
 
-            // 3. เช็คว่าเดินครบตามเส้นทางหรือยัง
+            // 4. เช็คว่าเดินครบตามเส้นทางหรือยัง
             if (step[0] >= path.size()) {
                 timer.stop();
-                animatingPlayerId = -1; // ปลดล็อก
                 if (onComplete != null) {
                     onComplete.run(); // แจ้ง Controller ว่าเดินเสร็จแล้ว!
                 }
             }
         });
-
-        timer.start(); // เริ่มเดิน
+        
+        timer.start(); // เริ่มกระโดด
     }
 
->>>>>>> ระบบเดินใหม่
+
     public void updateBoard(GameState state) {
         if (state == null)
             return;
@@ -219,10 +211,7 @@ public class BoardPanel extends JPanel {
                 Player p = players.get(i);
                 playerStatusPanels[i].setVisible(true);
                 playerMarkers[i].setVisible(true);
-                // ถ้าผู้เล่นคนนี้กำลัง animate อยู่ อย่าเขียนทับตำแหน่ง!
-                if (i != animatingPlayerId) {
-                    playerPositions[i] = p.getPosition();
-                }
+                playerPositions[i] = p.getPosition();
 
                 // --- ส่วนที่ต้องเพิ่ม: ส่งข้อมูลจริงจาก Player เข้าสู่ UI ---
                 String posName = board.getTile(p.getPosition()).getName();
@@ -341,11 +330,9 @@ public class BoardPanel extends JPanel {
         double startX = panelW / 2.0;
         double startY = (panelH - (1.2 * G)) / 2.0;
 
-        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (responsive กับ
-        // dynamicScale)
+        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (responsive กับ dynamicScale)
         int rollSize = (int) (240 * dynamicScale); // ขนาดวงกลมปรับตามขนาดจอ
-        // ตำแหน่ง Y: อยู่ต่ำกว่ากึ่งกลางจอเล็กน้อย โดยสัมพันธ์กับขนาดบอร์ด (เช่น 30%
-        // จากขอบบนถึงกึ่งกลางบอร์ด)
+        // ตำแหน่ง Y: อยู่ต่ำกว่ากึ่งกลางจอเล็กน้อย โดยสัมพันธ์กับขนาดบอร์ด (เช่น 30% จากขอบบนถึงกึ่งกลางบอร์ด)
         int centerY = (int) (panelH / 2 + (G * 0.25));
         btnRoll.setBounds((panelW - rollSize) / 2, centerY - rollSize / 2, rollSize, rollSize);
 
