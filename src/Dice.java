@@ -22,8 +22,10 @@ public class Dice {
      * @return Sum of both dice (2-12)
      */
     public int roll() {
-        die1 = random.nextInt(6) + 1; // 1-6
-        die2 = random.nextInt(6) + 1; // 1-6
+        // die1 = random.nextInt(6) + 1; // 1-6
+        // die2 = random.nextInt(6) + 1; // 1-6
+        die1 = 1; // สำหรับทดสอบเบิ้ล
+        die2 = 1; // สำหรับทดสอบเบิ้ล
         return die1 + die2;
     }
     
@@ -50,7 +52,8 @@ public class Dice {
     public int getDie2() {
         return die2;
     }
-    
+
+        
     /**
      * Gets the sum of the last roll
      * @return Sum of both dice

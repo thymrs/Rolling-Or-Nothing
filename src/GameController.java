@@ -15,7 +15,7 @@ public class GameController implements ActionListener {
     /**
      * Constructor for GameController
      */
-    public GameController(GameWindow view, GameState state) { 
+    public GameController(GameWindow view, GameState state) {
         this.view = view;
         this.state = state;
         this.mapLoader = new MapLoader();
@@ -34,7 +34,7 @@ public class GameController implements ActionListener {
         initGame(config);
 
         view.updateView(state);
-        //view.showPopup("Welcome");
+        // view.showPopup("Welcome");
 
         processPhase();
     }
@@ -57,7 +57,7 @@ public class GameController implements ActionListener {
             case "ROLL" -> handleRollDice();
             case "BUY" -> handleBuyProperty();
             case "USE_CARD" -> handleCardAction();
-            case "SURRENDER" -> { 
+            case "SURRENDER" -> {
                 boolean confirm = GameDialogManager.showSurrenderDialog(view);
                 if (confirm) {
                     state.getCurrentPlayer().declareBankruptcy();
@@ -82,16 +82,18 @@ public class GameController implements ActionListener {
         }
 
         for (int i = 0; i < config.getBotCount(); i++) {
-            players.add(new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
+            players.add(
+                    new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
         }
 
         this.victoryChecker = new VictoryChecker();
-        
+
         state.setPlayers(players);
         state.setBoard(mapLoader.loadMap(config.getMapName()));
 
         view.updateView(state);
     }
+
     /**
      * Processes the current turn phase
      */
@@ -103,8 +105,9 @@ public class GameController implements ActionListener {
             if (currentPlayer.isFrozen()) {
                 view.showPopup("❄️ " + currentPlayer.getName() + " Freeze! skip the turns...");
                 // แจ้งเตือนสถานะผิดปกติ
-                state.notifyMessage("❄️ " + currentPlayer.getName() + " Unable to roll the dice because you're freeze!");
-                currentPlayer.decrementFrozenTurns(); 
+                state.notifyMessage(
+                        "❄️ " + currentPlayer.getName() + " Unable to roll the dice because you're freeze!");
+                currentPlayer.decrementFrozenTurns();
                 state.setCurrentPhase(TurnPhase.END_TURN);
                 view.updateView(state);
                 return;
@@ -113,6 +116,7 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
+
                 // 1. ลดเวลา EXPO
                 for (PropertyTile land : currentPlayer.getOwnedLands()) {
                     land.decreaseExpoTurn();
@@ -121,14 +125,15 @@ public class GameController implements ActionListener {
                 // ระบบเช็คคุก
                 if (currentPlayer.getJailTurnCount() > 0) {
                     currentPlayer.decreaseJailTurn(); // ลดจำนวนตา
-                    
+
                     // แจ้งเตือนตามประเภทผู้เล่น
                     if (currentPlayer instanceof BotPlayer) {
-                        state.notifyMessage("👮 Bot " + currentPlayer.getName() + " is in jail! (" + currentPlayer.getJailTurnCount() + " turns remaining...)");
+                        state.notifyMessage("👮 Bot " + currentPlayer.getName() + " is in jail! ("
+                                + currentPlayer.getJailTurnCount() + " turns remaining...)");
                     } else {
                         view.showPopup("Opps you are in jail, " + currentPlayer.getJailTurnCount() + " turns left");
                     }
-                    
+
                     // ถ้าตาติดคุกหมดแล้ว ต้องปลดล็อกสถานะให้มันด้วย!
                     if (currentPlayer.getJailTurnCount() <= 0) {
                         currentPlayer.setIsJailed(false);
@@ -137,11 +142,10 @@ public class GameController implements ActionListener {
                     // สั่งข้ามเทิร์นทันที
                     state.setCurrentPhase(TurnPhase.END_TURN);
                     processPhase();
-
                     return;
                 }
 
-                //  ถ้าไม่ติดคุก ก็ให้เล่นตามปกติ
+                // ถ้าไม่ติดคุก ก็ให้เล่นตามปกติ
                 if (currentPlayer instanceof BotPlayer) {
                     view.getControlPanel().setButtonsEnabled(false);
                     state.notifyMessage("BOT " + currentPlayer.getName() + " is playing");
@@ -153,6 +157,8 @@ public class GameController implements ActionListener {
                 }
             }
             case MOVING -> {
+                // moving animation hopping to each tile
+
             }
             // case ACTION_REQUIRED -> view.getControlPanel().setButtonEnabled(false, true,
             // true, true);
@@ -212,13 +218,13 @@ public class GameController implements ActionListener {
      */
     private void handleCardAction() {
         Player player = state.getCurrentPlayer();
-        Card card = player.getHeldCard(); 
+        Card card = player.getHeldCard();
 
         if (card != null) {
             Player target = null;
 
             if (card.requiresTarget()) {
-                List<Player> opponents = getOpponents(player); 
+                List<Player> opponents = getOpponents(player);
                 if (opponents.isEmpty()) {
                     view.showPopup("No target to use card!");
                     return;
@@ -234,11 +240,11 @@ public class GameController implements ActionListener {
 
                 // ถ้ากดยกเลิกการเลือกเป้าหมาย ให้ Return ออกไปเลย การ์ดจะไม่หาย!
                 if (target == null) {
-                    return; 
+                    return;
                 }
             }
 
-            player.useCard(); 
+            player.useCard();
             card.applyEffect(player, target, state);
             state.getDeck().discard(card); // ทิ้งการ์ดลงกอง
 
@@ -260,6 +266,7 @@ public class GameController implements ActionListener {
         Player player = state.getCurrentPlayer();
         state.getDice().roll();
         int steps = state.getDice().getTotal();
+        boolean isDouble = state.getDice().isDouble();
 
         state.notifyMessage("🎲 " + player.getName() + " rolls for " + steps);
         GameDialogManager.showDiceRollDialog(view, state.getDice().getDie1(), state.getDice().getDie2());
@@ -269,6 +276,24 @@ public class GameController implements ActionListener {
         player.setPosition(newPos);
 
         state.notifyMessage("🏃 " + player.getName() + " move to " + newPos);
+
+        if (isDouble) {
+            view.setRollEnabled(isDouble);
+            player.incrementDoubleRollCount();
+        } else {
+            player.resetDoubleRollCount(); // ถ้าไม่เบิ้ล ให้รีเซ็ตเลย
+        }
+        if (player.getDoubleRollCount() >= 3) {
+            state.notifyMessage("🚔 ทอยเบิ้ล 3 ครั้งติด! " + player.getName() + " ถูกส่งเข้าคุก!");
+            player.setIsJailed(true);
+            player.setPosition(8); // **เปลี่ยนเลข 8 ให้ตรงกับ Index ช่องคุกในบอร์ดของคุณ**
+            player.resetDoubleRollCount(); // ล้างค่าเบิ้ล
+
+            view.updateView(state);
+            state.setCurrentPhase(TurnPhase.END_TURN); // จบเทิร์นทันที
+            processPhase();
+            return;
+        }
 
         if (newPos < oldPos) {
             state.getBank().paySalary(player, 15000);
@@ -322,11 +347,11 @@ public class GameController implements ActionListener {
             }
         } else {
             int beforeMoney = player.getMoney();
-            
+
             currentTile.onPlayerEnter(player, state);
 
             int afterMoney = player.getMoney();
-            
+
             if (beforeMoney > afterMoney) {
                 int lost = beforeMoney - afterMoney;
                 if (player instanceof BotPlayer) {
@@ -358,7 +383,7 @@ public class GameController implements ActionListener {
                     } else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                         System.out.println("▶ [DEBUG] บอทตกที่ตัวเอง กำลังตัดสินใจอัปเกรด...");
                         boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
-                        
+
                         if (wantToUpgrade) {
                             int currentLevel = property.getBuildingLevel();
                             int maxPossibleUpgrades = 3 - currentLevel; // สร้างได้มากสุดอีกกี่ขั้น
@@ -368,7 +393,7 @@ public class GameController implements ActionListener {
                             // บอทจะลองคำนวณจากจำนวนขั้นมากสุดก่อน ถ้าเงินไม่พอค่อยลดลงมาทีละขั้น
                             for (int i = maxPossibleUpgrades; i >= 1; i--) {
                                 int cost = property.getUpgradeCost(i);
-                                if (bot.getMoney() - cost >= 500) { 
+                                if (bot.getMoney() - cost >= 500) {
                                     targetUpgradeLevels = i;
                                     finalCost = cost;
                                     break; // พอเจอเลเวลที่จ่ายไหวจะหยุด
@@ -378,26 +403,30 @@ public class GameController implements ActionListener {
                             // ถ้ามีเงินพออัปเกรดอย่างน้อย 1 ขั้น
                             if (targetUpgradeLevels > 0) {
                                 bot.pay(finalCost);
-                                
+
                                 // วนลูปอัปเกรดตามจำนวนขั้นที่บอทจ่ายเงินไป
                                 for (int i = 0; i < targetUpgradeLevels; i++) {
                                     property.upgradeLevel();
                                 }
-                                
-                                state.notifyMessage("🏗️ 🤖 " + bot.getName() + " upgrade " + property.getName() + " to reach " + targetUpgradeLevels + " level!");
+
+                                state.notifyMessage("🏗️ 🤖 " + bot.getName() + " upgrade " + property.getName()
+                                        + " to reach " + targetUpgradeLevels + " level!");
                             } else {
-                                System.out.println("▶ [DEBUG] Bot want to upgrade but didn't have enough money (or scared of losing all money)");
+                                System.out.println(
+                                        "▶ [DEBUG] Bot want to upgrade but didn't have enough money (or scared of losing all money)");
                             }
                         }
-                        
+
                     } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                         int takeoverPrice = property.getTotalValue() * 2;
                         System.out.println("▶ [DEBUG] Bot " + bot.getName() + " is on " + property.getName());
-                        System.out.println("▶ [DEBUG] current Bot money: " + bot.getMoney() + " | takeover price: " + takeoverPrice);
-                        
+                        System.out.println("▶ [DEBUG] current Bot money: " + bot.getMoney() + " | takeover price: "
+                                + takeoverPrice);
+
                         boolean wantToTakeover = bot.makeDecision(DecisionType.BUY_LAND, property, state);
 
-                        System.out.println("▶ [DEBUG] Does Bot want to buy? (Roll System/Calculate Money): " + wantToTakeover);
+                        System.out.println(
+                                "▶ [DEBUG] Does Bot want to buy? (Roll System/Calculate Money): " + wantToTakeover);
                         if (wantToTakeover && bot.getMoney() >= takeoverPrice) {
                             Player owner = property.getOwner();
                             bot.pay(takeoverPrice);
@@ -405,12 +434,13 @@ public class GameController implements ActionListener {
                             owner.removeAsset(property);
                             property.setOwner(bot);
                             bot.addAsset(property);
-                            state.notifyMessage("😈 🤖 " + bot.getName() + " takeover the property of " + owner.getName() + "!");
+                            state.notifyMessage(
+                                    "😈 🤖 " + bot.getName() + " takeover the property of " + owner.getName() + "!");
                         }
                     }
                     state.setCurrentPhase(TurnPhase.END_TURN);
-                
-                // เคสของคนเล่น
+
+                    // เคสของคนเล่น
                 } else {
                     if (property.getOwner() == null) {
                         state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
@@ -427,7 +457,8 @@ public class GameController implements ActionListener {
                             int takeoverPrice = property.getTotalValue() * 2;
                             if (player.getMoney() >= takeoverPrice) {
                                 int choice = javax.swing.JOptionPane.showConfirmDialog(null,
-                                        "Do you want to takeover " + property.getName() + " of " + owner.getName() + "\nfor the price of " + takeoverPrice + " or not?",
+                                        "Do you want to takeover " + property.getName() + " of " + owner.getName()
+                                                + "\nfor the price of " + takeoverPrice + " or not?",
                                         "Takeover", javax.swing.JOptionPane.YES_NO_OPTION);
                                 if (choice == javax.swing.JOptionPane.YES_OPTION) {
                                     player.pay(takeoverPrice);
@@ -452,8 +483,8 @@ public class GameController implements ActionListener {
                     if (player instanceof BotPlayer bot) {
                         System.out.println("▶ [DEBUG] Bot is on World Tour! Selecting target...");
 
-                        int targetTileIndex = bot.chooseWorldTourDestination(state); 
-                        
+                        int targetTileIndex = bot.chooseWorldTourDestination(state);
+
                         handleWorldTourFlight(targetTileIndex);
                     } else {
                         actionTile.onPlayerEnter(player, state);
@@ -468,7 +499,7 @@ public class GameController implements ActionListener {
                     if (player instanceof BotPlayer bot) {
                         System.out.println("▶ [DEBUG] Bot move to tile FESTIVAL (EXPO) selecting...");
                         if (!bot.getOwnedLands().isEmpty()) {
-                            PropertyTile firstLand = bot.getOwnedLands().get(0); 
+                            PropertyTile firstLand = bot.getOwnedLands().get(0);
                             handleExpoSelection(firstLand);
                         } else {
                             state.setCurrentPhase(TurnPhase.END_TURN);
@@ -480,7 +511,8 @@ public class GameController implements ActionListener {
                             state.setCurrentPhase(TurnPhase.END_TURN);
                         } else {
                             // แจ้งให้ผู้เล่นทราบ แล้วเปลี่ยน Phase ของเกมไปรอรับการคลิก
-                            view.showPopup("🎉 You landed on FESTIVAL!\nPlease click on your property on the board to host the event.");
+                            view.showPopup(
+                                    "🎉 You landed on FESTIVAL!\nPlease click on your property on the board to host the event.");
                             state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
                         }
                         // --------------------------------
@@ -513,17 +545,18 @@ public class GameController implements ActionListener {
 
                     if (player.getMoney() >= totalCost) {
                         player.pay(totalCost);
-                        
+
                         if (property.getOwner() == null) {
                             property.setOwner(player);
                             player.addAsset(property);
                         }
-                        
+
                         for (int i = 0; i < levelsToUpgrade; i++) {
                             property.upgradeLevel();
                         }
-                        
-                        state.notifyMessage(player.getName() + " buile/upgrade " + property.getName() + " to level " + selectedLevel);
+
+                        state.notifyMessage(player.getName() + " buile/upgrade " + property.getName() + " to level "
+                                + selectedLevel);
                         view.showPopup("transection complete for price " + totalCost + "!");
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     } else {
@@ -531,7 +564,7 @@ public class GameController implements ActionListener {
                     }
                 }
             }
-        view.updateView(state);
+            view.updateView(state);
         }
     }
 
@@ -542,12 +575,18 @@ public class GameController implements ActionListener {
             state.incrementTurn();
         } else
             switch (vType) {
-                case LINE_VICTORY -> { view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win LINE VICTORY!"); 
-                    state.setCurrentPhase(TurnPhase.GAME_OVER);}
-                case TRIPLE_VICTORY -> { view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win TRIPLE VICTORY!"); 
-                    state.setCurrentPhase(TurnPhase.GAME_OVER); }
-                case TOURISM_VICTORY -> { view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win TOURISM VICTORY!"); 
-                    state.setCurrentPhase(TurnPhase.GAME_OVER); }
+                case LINE_VICTORY -> {
+                    view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win LINE VICTORY!");
+                    state.setCurrentPhase(TurnPhase.GAME_OVER);
+                }
+                case TRIPLE_VICTORY -> {
+                    view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win TRIPLE VICTORY!");
+                    state.setCurrentPhase(TurnPhase.GAME_OVER);
+                }
+                case TOURISM_VICTORY -> {
+                    view.showPopup("Congrats! " + state.getCurrentPlayer().getName() + " you win TOURISM VICTORY!");
+                    state.setCurrentPhase(TurnPhase.GAME_OVER);
+                }
                 default -> state.incrementTurn();
             }
         processPhase();
@@ -559,7 +598,8 @@ public class GameController implements ActionListener {
         if (selectedProperty != null) {
             selectedProperty.setExpo(2, 3);
 
-            state.notifyMessage("🎪 " + currentPlayer.getName() + " holds Expo at " + selectedProperty.getName() + "! (Rent increase!)");
+            state.notifyMessage("🎪 " + currentPlayer.getName() + " holds Expo at " + selectedProperty.getName()
+                    + "! (Rent increase!)");
             view.showPopup("Expo successfully hosted at " + selectedProperty.getName() + "!");
         } else {
             // ดักไว้เผื่อคนเล่นกดยกเลิก
@@ -574,7 +614,7 @@ public class GameController implements ActionListener {
     public void handleWorldTourFlight(int targetTileId) {
         Player player = state.getCurrentPlayer();
         int oldPos = player.getPosition();
-        
+
         player.setPosition(targetTileId);
         state.notifyMessage("✈️ " + player.getName() + " fly to target " + targetTileId + "!");
 
@@ -588,7 +628,7 @@ public class GameController implements ActionListener {
         currentTile.onPlayerEnter(player, state);
 
         if (currentTile instanceof PropertyTile property) {
-            
+
             // กรณี: บอทเป็นคนบินมาตก
             if (player instanceof BotPlayer bot) {
                 if (property.getOwner() == null) {
@@ -616,8 +656,8 @@ public class GameController implements ActionListener {
                 }
                 // บอทบินเสร็จ ตัดจบเทิร์นเลย ไม่ต้องไป ACTION_REQUIRED
                 state.setCurrentPhase(TurnPhase.END_TURN);
-            } 
-            
+            }
+
             // กรณี: คนเล่น (มนุษย์) เป็นคนบินมาตก
             else {
                 if (property.getOwner() == null) {
@@ -632,9 +672,11 @@ public class GameController implements ActionListener {
                     if (property.getBuildingLevel() < 3) {
                         int takeoverPrice = property.getTotalValue() * 2;
                         if (player.getMoney() >= takeoverPrice) {
-                            int choice = javax.swing.JOptionPane.showConfirmDialog(null, 
-                                "Do you want to takeover " + property.getName() + " of " + property.getOwner().getName() + "\nfor the price of " + takeoverPrice + "?", 
-                                "Takeover", javax.swing.JOptionPane.YES_NO_OPTION);
+                            int choice = javax.swing.JOptionPane.showConfirmDialog(null,
+                                    "Do you want to takeover " + property.getName() + " of "
+                                            + property.getOwner().getName() + "\nfor the price of " + takeoverPrice
+                                            + "?",
+                                    "Takeover", javax.swing.JOptionPane.YES_NO_OPTION);
                             if (choice == javax.swing.JOptionPane.YES_OPTION) {
                             }
                         }
@@ -648,7 +690,7 @@ public class GameController implements ActionListener {
 
         view.updateView(state);
         if (state.getCurrentPhase() == TurnPhase.END_TURN) {
-            processPhase(); 
+            processPhase();
         }
     }
 
@@ -664,16 +706,17 @@ public class GameController implements ActionListener {
 
     private void handleTileClick(int tileIndex) {
         Player player = state.getCurrentPlayer();
-        if (player instanceof BotPlayer) return; // บอทไม่ต้องสนใจการคลิกนี้
+        if (player instanceof BotPlayer)
+            return; // บอทไม่ต้องสนใจการคลิกนี้
 
         // ตรวจสอบว่า ตอนนี้เกมกำลังรอให้ผู้เล่นคลิกกระดานอยู่หรือเปล่า
         if (state.getCurrentPhase() == TurnPhase.SELECTING_DESTINATION) {
             Tile currentTile = state.getBoard().getTile(player.getPosition());
-            
+
             // กรณี 1: ผู้เล่นยืนอยู่ที่ช่อง FESTIVAL
             if (currentTile instanceof SpecialTile specialTile && specialTile.getEffect() == EffectType.FESTIVAL) {
                 Tile clickedTile = state.getBoard().getTile(tileIndex);
-                
+
                 if (clickedTile instanceof PropertyTile property) {
                     // ตรวจสอบว่าเป็นที่ดินตัวเองหรือไม่
                     if (property.getOwner() != null && property.getOwner().equals(player)) {
@@ -685,12 +728,12 @@ public class GameController implements ActionListener {
                     view.showPopup("⚠️ You cannot host Festival here!");
                 }
             }
-            // กรณี 2: ผู้เล่นยืนอยู่ช่อง WORLD TRAVEL (ได้ฟังก์ชันคลิกกระดานเพื่อบินรอบโลกแถมไปด้วยเลย!)
+            // กรณี 2: ผู้เล่นยืนอยู่ช่อง WORLD TRAVEL
+            // (ได้ฟังก์ชันคลิกกระดานเพื่อบินรอบโลกแถมไปด้วยเลย!)
             else if (currentTile instanceof ActionTile actionTile && actionTile.getType() == ActionType.WORLD_TRAVEL) {
                 handleWorldTourFlight(tileIndex);
             }
         }
     }
 
-    
 }
