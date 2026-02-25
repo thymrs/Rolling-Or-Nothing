@@ -115,6 +115,12 @@ public class GameController implements ActionListener {
         }
 
         switch (currentPhase) {
+            case GAME_OVER -> {
+                System.out.println("▶ [DEBUG] game over! enable button false");
+                view.getControlPanel().setButtonsEnabled(false); 
+                view.setRollEnabled(false);
+                return;
+            }
             case READY_TO_ROLL -> {
 
                 // 1. ลดเวลา EXPO
