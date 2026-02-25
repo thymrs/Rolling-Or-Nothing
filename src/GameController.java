@@ -105,11 +105,6 @@ public class GameController implements ActionListener {
             }
         }
 
-        if (currentPlayer instanceof BotPlayer) {
-            handleBotTurn();
-            return;
-        }
-
         switch (currentPhase) {
             case READY_TO_ROLL -> {
                 // 1. ลดเวลา EXPO
@@ -136,6 +131,7 @@ public class GameController implements ActionListener {
                     // สั่งข้ามเทิร์นทันที
                     state.setCurrentPhase(TurnPhase.END_TURN);
                     processPhase();
+
                     return;
                 }
 
@@ -318,7 +314,27 @@ public class GameController implements ActionListener {
                 state.setCurrentPhase(TurnPhase.END_TURN);
             }
         } else {
+            int beforeMoney = player.getMoney();
+            
             currentTile.onPlayerEnter(player, state);
+
+            int afterMoney = player.getMoney();
+            
+            if (beforeMoney > afterMoney) {
+                int lost = beforeMoney - afterMoney;
+                if (player instanceof BotPlayer) {
+                    state.notifyMessage("💸 " + player.getName() + " lost " + lost + "!");
+                } else {
+                    view.showPopup("You paid / lost " + lost + "!");
+                }
+            } else if (afterMoney > beforeMoney) {
+                int gained = afterMoney - beforeMoney;
+                if (player instanceof BotPlayer) {
+                    state.notifyMessage("🎉 " + player.getName() + " got money " + gained + "!");
+                } else {
+                    view.showPopup("You received " + gained + "!");
+                }
+            }
 
             if (currentTile instanceof PropertyTile property) {
                 // เคสของบอท
@@ -415,7 +431,11 @@ public class GameController implements ActionListener {
                                     state.notifyMessage(player.getName() + " takeover " + property.getName() + "!");
                                     view.showPopup("Takeover Successfully!");
                                 }
+                            } else {
+                                view.showPopup("You don't have enough money to takeover! Need: " + takeoverPrice);
                             }
+                        } else {
+                            view.showPopup("Cannot takeover! This property is fully upgraded (Level 3).");
                         }
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     }

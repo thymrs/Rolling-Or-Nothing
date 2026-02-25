@@ -18,7 +18,6 @@ public class Main {
                 .botCount(3)
                 .botDifficulty(DifficultyLevel.HARD)
                 .passGoSalary(15000)
-                .taxPercentage(10)
                 .build();
 
         MapLoader loader = new MapLoader();
