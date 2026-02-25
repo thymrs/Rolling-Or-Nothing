@@ -167,7 +167,7 @@ public class GameController implements ActionListener {
                 } else {
                     // สำหรับ human player ให้เช็คว่าจริง ๆ มีอะไรให้ทำหรือไม่
                     Tile currentTile = state.getBoard().getTile(currentPlayer.getPosition());
-                    
+
                     boolean hasAction = false;
                     if (currentTile instanceof PropertyTile property) {
                         if (property.getOwner() == null) {
@@ -181,7 +181,7 @@ public class GameController implements ActionListener {
                             hasAction = true;
                         }
                     }
-                    
+
                     if (!hasAction) {
                         // ไม่มี action ให้ทำ จบเทิร์นเลย
                         state.setCurrentPhase(TurnPhase.END_TURN);
@@ -348,8 +348,9 @@ public class GameController implements ActionListener {
                         for (int i = 0; i < levelsToUpgrade; i++) {
                             property.upgradeLevel();
                         }
-                        
-                        state.notifyMessage(player.getName() + " build/upgrade " + property.getName() + " to level " + selectedLevel);
+
+                        state.notifyMessage(player.getName() + " build/upgrade " + property.getName() + " to level "
+                                + selectedLevel);
                         view.showPopup("transection complete for price " + totalCost + "!");
                         state.setCurrentPhase(TurnPhase.END_TURN);
                     } else {
@@ -561,7 +562,7 @@ public class GameController implements ActionListener {
 
         // เช็คทอยเบิ้ล 3 ครั้งติด
         if (player.getDoubleRollCount() >= 3) {
-            state.notifyMessage("🚔 ทอยเบิ้ล 3 ครั้งติด! " + player.getName() + " ถูกส่งเข้าคุก!");
+            state.notifyMessage("🚔 Too Much Double !" + player.getName() + " Must Go To Jail!");
             player.setIsJailed(true);
             player.setPosition(8); // **เปลี่ยนเลข 8 ให้ตรงกับ Index ช่องคุกในบอร์ดของคุณ**
             player.resetDoubleRollCount();
@@ -687,7 +688,10 @@ public class GameController implements ActionListener {
                             view.showPopup(bot.getName() + " buy " + property.getName() + "!");
                         }
                     } else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
-                        System.out.println("▶ [DEBUG] บอทตกที่ตัวเอง กำลังตัดสินใจอัปเกรด...");
+                        System.out.println("▶ [DEBUG] Bot is on " + property.getName()
+                                + " and considering to upgrade... current level: "
+                                + property.getBuildingLevel() + " | upgrade cost for next level: "
+                                + property.getUpgradeCost(1));
                         boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
 
                         if (wantToUpgrade) {
