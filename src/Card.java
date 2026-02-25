@@ -68,8 +68,10 @@ public class Card {
                 if (target != null) {
                     if (target.getIsJailed()) {
                         target.addJailTurnCount(1);
-                    } else
+                    } else {
                         target.setIsJailed(true);
+                        target.addJailTurnCount(1);
+                    }
                 }
                 break;
 

@@ -29,6 +29,9 @@ public abstract class Player {
 
     public boolean pay(int amount){
         if(this.money >= amount){
+            if (discountRate > 0) {
+                this.money -= amount * (discountRate / 10);
+            }
             this.money -= amount;
             return true;
         }
@@ -81,7 +84,7 @@ public abstract class Player {
     }
 
     public void addJailTurnCount(int turn){
-        this.jailTurnCount += turn;
+        this.jailTurnCount = turn;
     }
 
     public int getPosition(){
@@ -180,7 +183,7 @@ public abstract class Player {
     public int getTotalAssetsValue() {
     int propertyValue = 0;
     for (PropertyTile land : ownedLands) {
-        // คำนวณตามราคาซื้อ + ราคาอัปเกรด (ถ้ามี)
+        // คำนวณตามราคาซื้อ + ราคาอัปเกรด
         propertyValue += land.getPurchasePrice() * (land.getBuildingLevel() + 1);
     }
     return this.money + propertyValue;
