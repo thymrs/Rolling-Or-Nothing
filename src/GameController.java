@@ -112,24 +112,41 @@ public class GameController implements ActionListener {
 
         switch (currentPhase) {
             case READY_TO_ROLL -> {
+                // 1. ลดเวลา EXPO
                 for (PropertyTile land : currentPlayer.getOwnedLands()) {
                     land.decreaseExpoTurn();
                 }
+
+                // ระบบเช็คคุก
                 if (currentPlayer.getJailTurnCount() > 0) {
-                    currentPlayer.decreaseJailTurn();
-                    view.showPopup("👮 " + currentPlayer.getName() + " You're in Jail! (Only " + currentPlayer.getJailTurnCount() + " lefts)");
+                    currentPlayer.decreaseJailTurn(); // ลดจำนวนตา
                     
-                    state.setCurrentPhase(TurnPhase.END_TURN); // สั่งข้ามเทิร์นไปเลย!
+                    // แจ้งเตือนตามประเภทผู้เล่น
+                    if (currentPlayer instanceof BotPlayer) {
+                        state.notifyMessage("👮 Bot " + currentPlayer.getName() + " is in jail! (" + currentPlayer.getJailTurnCount() + " turns remaining...)");
+                    } else {
+                        view.showPopup("Opps you are in jail, " + currentPlayer.getJailTurnCount() + " turns left");
+                    }
+                    
+                    // ถ้าตาติดคุกหมดแล้ว ต้องปลดล็อกสถานะให้มันด้วย!
+                    if (currentPlayer.getJailTurnCount() <= 0) {
+                        currentPlayer.setIsJailed(false);
+                    }
+
+                    // สั่งข้ามเทิร์นทันที
+                    state.setCurrentPhase(TurnPhase.END_TURN);
                     processPhase();
                     return;
                 }
+
+                //  ถ้าไม่ติดคุก ก็ให้เล่นตามปกติ
                 if (currentPlayer instanceof BotPlayer) {
-                    view.getControlPanel().setButtonsEnabled(false); // ปิดปุ่มทั้งหมด ไม่ให้คนกดแทรก
-                    state.notifyMessage("🤖 it's bot " + currentPlayer.getName() + " turn! deciding..."); // แจ้งเตือนใน Log แทน Popup
+                    view.getControlPanel().setButtonsEnabled(false);
+                    state.notifyMessage("BOT " + currentPlayer.getName() + " is playing");
                     handleBotTurn();
                 } else {
                     view.setRollEnabled(true);
-                    view.showPopup("It's now your turn " + currentPlayer.getName()); // โชว์ Popup ให้คนเตรียมตัว
+                    view.showPopup("It's now your turn " + currentPlayer.getName());
                 }
             }
             case MOVING -> {
