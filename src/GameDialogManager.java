@@ -283,6 +283,11 @@ class GameDialogManager {
         dialog.setVisible(true);
     }
 
+    // =========================================================================
+    // 7. Dialog เลือกเมืองสำหรับจัดงานเทศกาล (Festival) (เลือกได้ 1 อย่าง)และแสดงค่าเช่าปัจจุบันของเมืองนั้นๆ เพื่อประกอบการตัดสินใจ
+    // ทำ highlight เพื่อแสดงว่าอันไหนเลือกได้ และแสดงว่าเลือกอันไหนอยู่  เปลี่ยนสีขอบ และถาม Yes/No เพื่อยืนยันการเลือก
+    // =========================================================================
+
     public static PropertyTile showFestivalDialog(JFrame parent, List<PropertyTile> ownedLands) {
         final PropertyTile[] selectedTile = {null};
 
@@ -338,5 +343,48 @@ class GameDialogManager {
 
         return selectedTile[0];
     }
-    
+
+
+    // =========================================================================
+    // 8. dialog แสดงผลการจบเกม (Game Over) พร้อมแสดงผู้ชนะและอันดับผู้เล่น  
+    // =========================================================================
+    public static void showGameOverDialog(JFrame parent, List<Player> players) {
+        // 1. สร้าง Panel หลัก
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.setBackground(BG_COLOR);
+
+        JLabel label = new JLabel("Game Over! Here are the final standings:", SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 18));
+        label.setForeground(new Color(255, 69, 0)); // สีแดงสดเพื่อความโดดเด่น
+        panel.add(label, BorderLayout.NORTH);
+
+        // 2. แปลงรายการ Player เป็น String เพื่อแสดงผลใน List
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            String status = p.isBankrupt() ? " (Bankrupt)" : " - $" + p.getMoney();
+            listModel.addElement((i + 1) + ". " + p.getName() + status);
+        }
+
+        JList<String> list = new JList<>(listModel);
+        list.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        list.setBackground(PANEL_COLOR);
+        list.setForeground(TEXT_COLOR);
+        list.setFixedCellHeight(30);
+
+        JScrollPane scrollPane = new JScrollPane(list);
+        scrollPane.setBorder(BorderFactory.createLineBorder(DISABLED_COLOR));
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // 3. เรียกใช้ createBaseDialog
+        JDialog dialog = createBaseDialog(parent, "🏆 Final Standings", panel,
+            e -> {}, // ปุ่ม YES (Close)
+            e -> {}  // ปุ่ม NO (Close)
+        );
+
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+    }
+
 }

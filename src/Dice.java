@@ -50,7 +50,8 @@ public class Dice {
     public int getDie2() {
         return die2;
     }
-    
+
+        
     /**
      * Gets the sum of the last roll
      * @return Sum of both dice
