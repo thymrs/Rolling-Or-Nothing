@@ -5,8 +5,6 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.List;
 import javax.swing.*;
-import java.util.ArrayList;
-
 
 public class BoardPanel extends JPanel {
     // ปุ่ม ROLL ใหญ่ๆ ตรงกลาง (แยกเป็น CircleButton เพื่อความสวยงาม)
@@ -120,14 +118,6 @@ public class BoardPanel extends JPanel {
 
     }
 
-    //สร้าง highlight effect ให้กับช่องที่ถูกเลือกโดยการกดปุ่มจาก tile โดยตรงนี้จะถูกเรียกจาก GameController เมื่อมีการเลือกช่อง
-    public void highlightTile(int tileIndex) {
-        if (tileIndex >= 0 && tileIndex < 32) {
-            tiles[tileIndex].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
-        }
-    }
-
-    // ฟังก์ชันสำหรับตั้งค่าให้กด Spacebar เพื่อคลิกปุ่ม ROLL ได้
     private void setupSpacebarRoll() {
         InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = getActionMap();
@@ -153,50 +143,6 @@ public class BoardPanel extends JPanel {
     public void setRollEnabled(boolean enabled) {
         btnRoll.setEnabled(enabled);
     }
-
-    // ฟังก์ชันสำหรับทำ Animation การเดินของผู้เล่น (เรียกจาก Controller เมื่อผู้เล่นเดิน)
-    public void animatePlayerMovement(int playerId, List<Integer> path, Runnable onComplete) {
-        if (path == null || path.isEmpty()) {
-            if (onComplete != null) onComplete.run();
-            return;
-        }
-
-        final int[] step = {0};
-        final int[] delay = {500}; // ความเร็วเริ่มต้น 0.5 วินาที (500ms)
-        final int minDelay = 200;  // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
-
-        // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
-        Timer timer = new Timer(delay[0], null);
-        timer.addActionListener(e -> {
-            
-            // 1. เปลี่ยนตำแหน่งใน Array (อ้างอิงจากตัวแปร playerPositions ในโค้ดของคุณ)
-            int nextTileIndex = path.get(step[0]);
-            playerPositions[playerId] = nextTileIndex; 
-
-            // 2. สั่งให้วาดกระดานใหม่ (มันจะไปเรียกโค้ดจัด setBounds ที่คุณเขียนไว้เอง)
-            revalidate();
-            repaint();
-
-            // 3. เร่งความเร็วการกระโดดในครั้งต่อไป
-            if (delay[0] > minDelay) {
-                delay[0] -= 50; // ลดลงทีละ 50ms (จะเร่งความเร็วขึ้น)
-                timer.setDelay(delay[0]);
-            }
-
-            step[0]++;
-
-            // 4. เช็คว่าเดินครบตามเส้นทางหรือยัง
-            if (step[0] >= path.size()) {
-                timer.stop();
-                if (onComplete != null) {
-                    onComplete.run(); // แจ้ง Controller ว่าเดินเสร็จแล้ว!
-                }
-            }
-        });
-        
-        timer.start(); // เริ่มกระโดด
-    }
-
 
     public void updateBoard(GameState state) {
         if (state == null)
