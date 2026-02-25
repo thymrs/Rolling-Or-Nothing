@@ -552,34 +552,59 @@ public class GameController implements ActionListener {
         currentTile.onPlayerEnter(player, state);
 
         if (currentTile instanceof PropertyTile property) {
-            if (property.getOwner() == null) {
-                state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
-            } else if (property.getOwner().equals(player)) {
-                if (property.getBuildingLevel() < 3) {
-                    state.setCurrentPhase(TurnPhase.ACTION_REQUIRED);
-                } else {
-                    state.setCurrentPhase(TurnPhase.END_TURN);
-                }
-            } else {
-                if (property.getBuildingLevel() < 3) {
+            
+            // กรณี: บอทเป็นคนบินมาตก
+            if (player instanceof BotPlayer bot) {
+                if (property.getOwner() == null) {
+                    // บอทซื้อที่ดิน
+                    boolean wantToBuy = bot.makeDecision(DecisionType.BUY_LAND, property, state);
+                    if (wantToBuy && bot.getMoney() >= property.getPurchasePrice()) {
+                        bot.pay(property.getPurchasePrice());
+                        property.setOwner(bot);
+                        bot.addAsset(property);
+                        state.notifyMessage("🤖 " + bot.getName() + " ซื้อที่ดิน " + property.getName());
+                    }
+                } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
+                    // บอทเทคโอเวอร์
                     int takeoverPrice = property.getTotalValue() * 2;
-                    if (player.getMoney() >= takeoverPrice) {
-                        int choice = javax.swing.JOptionPane.showConfirmDialog(null,
-                                "Do you want to takeover " + property.getName() + " of " + property.getOwner().getName() + "\nfor the price of " + takeoverPrice + "?",
-                                "Takeover", javax.swing.JOptionPane.YES_NO_OPTION);
-                        if (choice == javax.swing.JOptionPane.YES_OPTION) {
-                            Player owner = property.getOwner();
-                            player.pay(takeoverPrice);
-                            owner.receiveMoney(takeoverPrice);
-                            owner.removeAsset(property);
-                            property.setOwner(player);
-                            player.addAsset(property);
-                            state.notifyMessage(player.getName() + " takeover " + property.getName() + "!");
-                            view.showPopup("Takeover Successfully!");
-                        }
+                    boolean wantToTakeover = bot.makeDecision(DecisionType.BUY_LAND, property, state);
+                    if (wantToTakeover && bot.getMoney() >= takeoverPrice) {
+                        Player owner = property.getOwner();
+                        bot.pay(takeoverPrice);
+                        owner.receiveMoney(takeoverPrice);
+                        owner.removeAsset(property);
+                        property.setOwner(bot);
+                        bot.addAsset(property);
+                        state.notifyMessage("😈 🤖 " + bot.getName() + " เทคโอเวอร์ " + property.getName());
                     }
                 }
+                // บอทบินเสร็จ ตัดจบเทิร์นเลย ไม่ต้องไป ACTION_REQUIRED
                 state.setCurrentPhase(TurnPhase.END_TURN);
+            } 
+            
+            // กรณี: คนเล่น (มนุษย์) เป็นคนบินมาตก
+            else {
+                if (property.getOwner() == null) {
+                    state.setCurrentPhase(TurnPhase.ACTION_REQUIRED); // รอให้คนกดปุ่มซื้อ
+                } else if (property.getOwner().equals(player)) {
+                    if (property.getBuildingLevel() < 3) {
+                        state.setCurrentPhase(TurnPhase.ACTION_REQUIRED); // รอให้คนกดปุ่มอัปเกรด
+                    } else {
+                        state.setCurrentPhase(TurnPhase.END_TURN);
+                    }
+                } else {
+                    if (property.getBuildingLevel() < 3) {
+                        int takeoverPrice = property.getTotalValue() * 2;
+                        if (player.getMoney() >= takeoverPrice) {
+                            int choice = javax.swing.JOptionPane.showConfirmDialog(null, 
+                                "Do you want to takeover " + property.getName() + " of " + property.getOwner().getName() + "\nfor the price of " + takeoverPrice + "?", 
+                                "Takeover", javax.swing.JOptionPane.YES_NO_OPTION);
+                            if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                            }
+                        }
+                    }
+                    state.setCurrentPhase(TurnPhase.END_TURN);
+                }
             }
         } else {
             state.setCurrentPhase(TurnPhase.END_TURN);
