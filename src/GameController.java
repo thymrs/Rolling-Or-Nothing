@@ -148,7 +148,7 @@ public class GameController implements ActionListener {
                 // ถ้าไม่ติดคุก ก็ให้เล่นตามปกติ
                 if (currentPlayer instanceof BotPlayer) {
                     view.getControlPanel().setButtonsEnabled(false);
-                    state.notifyMessage("BOT " + currentPlayer.getName() + " is playing");
+                    state.notifyMessage(currentPlayer.getName() + " is playing...");
                     handleBotTurn();
                 } else {
                     view.getControlPanel().setButtonsEnabled(true);
@@ -376,8 +376,6 @@ public class GameController implements ActionListener {
         } else {
             int beforeMoney = player.getMoney();
             int activeDiscount = player.getDiscountRate();
-            
-            currentTile.onPlayerEnter(player, state);
 
             int afterMoney = player.getMoney();
 
