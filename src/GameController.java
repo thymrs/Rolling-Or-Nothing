@@ -156,12 +156,17 @@ public class GameController implements ActionListener {
                     view.showPopup("It's now your turn " + currentPlayer.getName());
                 }
             }
+            case ACTION_REQUIRED -> {
+                // เช็คว่าบอทไม่มีอะไรให้ทำแล้ว
+                if (currentPlayer instanceof BotPlayer) {
+                    handleEndTurn(); // บอทจบเทิร์นเลย
+                }
+                // สำหรับ human player รอให้คลิกปุ่มทำการ
+            }
             case MOVING -> {
                 // moving animation hopping to each tile
 
             }
-            // case ACTION_REQUIRED -> view.getControlPanel().setButtonEnabled(false, true,
-            // true, true);
             case END_TURN -> {
                 state.incrementTurn();
                 processPhase();
