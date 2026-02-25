@@ -515,7 +515,10 @@ public class GameController implements ActionListener {
 
                         handleWorldTourFlight(targetTileIndex);
                     } else {
-                        actionTile.onPlayerEnter(player, state);
+                        // ให้เลือกช่องได้เหมือน FESTIVAL
+                        view.showPopup(
+                                "✈️ You landed on WORLD TOUR!\nPlease click on a tile on the board to fly there.");
+                        state.setCurrentPhase(TurnPhase.SELECTING_DESTINATION);
                     }
                 } else {
                     // Action อื่นๆ (JAIL, TAX, START) ให้ทำงานตามปกติ
