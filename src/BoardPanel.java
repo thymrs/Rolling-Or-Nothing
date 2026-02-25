@@ -119,22 +119,22 @@ public class BoardPanel extends JPanel {
     }
 
     private void setupSpacebarRoll() {
-    InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-    ActionMap am = getActionMap();
-    
-    // ใช้คำสั่ง "released" เพื่อให้ทำงานครั้งเดียวตอนปล่อยปุ่ม ลดปัญหาการกดค้าง
-    im.put(KeyStroke.getKeyStroke("released SPACE"), "rollAction");
-    
-    am.put("rollAction", new AbstractAction() {
-        @Override
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            // เช็คทั้ง IsEnabled และ IsVisible เพื่อความชัวร์
-            if (btnRoll != null && btnRoll.isEnabled() && btnRoll.isVisible()) {
-                btnRoll.doClick(); // สั่งคลิกแค่ปุ่ม Roll เท่านั้น
+        InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = getActionMap();
+
+        // ใช้คำสั่ง "released" เพื่อให้ทำงานครั้งเดียวตอนปล่อยปุ่ม ลดปัญหาการกดค้าง
+        im.put(KeyStroke.getKeyStroke("released SPACE"), "rollAction");
+
+        am.put("rollAction", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                // เช็คทั้ง IsEnabled และ IsVisible เพื่อความชัวร์
+                if (btnRoll != null && btnRoll.isEnabled() && btnRoll.isVisible()) {
+                    btnRoll.doClick(); // สั่งคลิกแค่ปุ่ม Roll เท่านั้น
+                }
             }
-        }
-    });
-}
+        });
+    }
 
     public void setRollActionListener(java.awt.event.ActionListener listener) {
         btnRoll.addActionListener(listener);
@@ -153,45 +153,47 @@ public class BoardPanel extends JPanel {
 
         // 1. อัปเดตข้อมูลและตำแหน่งผู้เล่น
         for (int i = 0; i < 4; i++) {
-        if (i < players.size()) {
-            Player p = players.get(i);
-            playerStatusPanels[i].setVisible(true);
-            playerMarkers[i].setVisible(true);
-            playerPositions[i] = p.getPosition();
+            if (i < players.size()) {
+                Player p = players.get(i);
+                playerStatusPanels[i].setVisible(true);
+                playerMarkers[i].setVisible(true);
+                playerPositions[i] = p.getPosition();
 
-            // --- ส่วนที่ต้องเพิ่ม: ส่งข้อมูลจริงจาก Player เข้าสู่ UI ---
-            String posName = board.getTile(p.getPosition()).getName();
-            
-            // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
-            int totalAssets = p.getMoney();
-            for (PropertyTile land : p.getOwnedLands()) {
-                totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
+                // --- ส่วนที่ต้องเพิ่ม: ส่งข้อมูลจริงจาก Player เข้าสู่ UI ---
+                String posName = board.getTile(p.getPosition()).getName();
+
+                // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
+                int totalAssets = p.getMoney();
+                for (PropertyTile land : p.getOwnedLands()) {
+                    totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
+                }
+
+                // ตัดสินข้อความ Status
+                String status = "Normal";
+                if (p.isBankrupt())
+                    status = "Bankrupt";
+                else if (p.getIsJailed())
+                    status = "In Jail (" + p.getJailTurnCount() + ")";
+                else if (p.isFrozen())
+                    status = "Frozen";
+
+                // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
+                playerStatusPanels[i].updateData(
+                        p.getMoney(),
+                        totalAssets,
+                        status,
+                        p.getIsJailed(),
+                        p.isBankrupt(),
+                        p.getHasShield(),
+                        p.getIsTollFree(),
+                        posName);
+                // --------------------------------------------------
+
+            } else {
+                playerStatusPanels[i].setVisible(false);
+                playerMarkers[i].setVisible(false);
             }
-
-            // ตัดสินข้อความ Status
-            String status = "Normal";
-            if (p.isBankrupt()) status = "Bankrupt";
-            else if (p.getIsJailed()) status = "In Jail (" + p.getJailTurnCount() + ")";
-            else if (p.isFrozen()) status = "Frozen";
-
-            // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
-            playerStatusPanels[i].updateData(
-                p.getMoney(), 
-                totalAssets, 
-                status, 
-                p.getIsJailed(), 
-                p.isBankrupt(), 
-                p.getHasShield(), 
-                p.getIsTollFree(), 
-                posName
-            );
-            // --------------------------------------------------
-
-        } else {
-            playerStatusPanels[i].setVisible(false);
-            playerMarkers[i].setVisible(false);
         }
-    }
 
         // 2. อัปเดตสีช่องกระดาน
         if (board != null) {
@@ -274,9 +276,9 @@ public class BoardPanel extends JPanel {
         double startX = panelW / 2.0;
         double startY = (panelH - (1.2 * G)) / 2.0;
 
-        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลาง (ปรับขนาดตาม Scale)
+        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (ปรับขนาดตาม Scale)
         int rollSize = (int) (240 * dynamicScale); // ขนาดวงกลมปรับตามขนาดจอ
-        btnRoll.setBounds((panelW - rollSize) / 2, (panelH - rollSize) / 2, rollSize, rollSize);
+        btnRoll.setBounds((panelW - rollSize) / 2, (panelH - rollSize) / 2 + 150, rollSize, rollSize);
 
         // --- 3. วางตำแหน่ง Tiles และปรับขนาด Font ให้ Responsive ---
         for (int i = 0; i < 32; i++) {
