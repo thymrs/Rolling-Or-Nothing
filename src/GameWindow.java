@@ -1,3 +1,4 @@
+
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -26,6 +27,17 @@ public class GameWindow extends JFrame {
         // เพิ่ม Event Log (ประวัติเหตุการณ์) ไว้ด้านขวา
         eventLogPanel = new EventLogPanel();
         add(eventLogPanel, BorderLayout.EAST);
+
+        setLayout(null);
+
+        JLabel label = new JLabel();
+        label.setIcon(DinoType.D.getIcon()); // น้ำเงิน
+        label.setBounds(100, 100, 100, 100);
+
+        add(label);
+
+        setSize(800, 600);
+        setVisible(true);
     }
 
     // --- เมธอดที่ GameController เรียกใช้งาน ---
@@ -34,9 +46,9 @@ public class GameWindow extends JFrame {
     }
 
     public void setActionListener(ActionListener listener) {
-    controlPanel.setActionListener(listener);
-    boardPanel.setRollActionListener(listener); 
-}
+        controlPanel.setActionListener(listener);
+        boardPanel.setRollActionListener(listener);
+    }
 
     public ControlPanel getControlPanel() {
         return controlPanel;

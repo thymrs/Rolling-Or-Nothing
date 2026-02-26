@@ -1,6 +1,6 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import javax.swing.*;
 
 public class PlayerStatusPanel extends JPanel {
 
@@ -13,6 +13,7 @@ public class PlayerStatusPanel extends JPanel {
     private JLabel statusAndBuffLabel;
     private JLabel CardLabel; // เพิ่ม: ป้ายแสดงบัฟพิเศษ
     private JLabel positionLabel; // เพิ่ม: ป้ายแสดงตำแหน่งปัจจุบันของผู้เล่น
+    private JLabel avatarLabel; // เพิ่ม: ป้ายแสดงรูปประจำตัว (ถ้าต้องการใช้)
 
     private boolean isBankrupt = false; // เพิ่ม: เก็บสถานะล้มละลายเพื่อเปลี่ยนสีพื้นหลัง
 
@@ -24,40 +25,45 @@ public class PlayerStatusPanel extends JPanel {
         setOpaque(false);
         setLayout(new BorderLayout());
 
+        avatarLabel = new JLabel();
+        avatarLabel.setPreferredSize(new Dimension(90, 90)); // ขนาดกล่องรูป
+        avatarLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        avatarLabel.setVerticalAlignment(SwingConstants.CENTER);
+
         // แผงข้อมูล (เว้นขอบซ้ายเยอะหน่อยเพื่อเว้นที่ให้แถบสีประจำตัว)
         JPanel dataPanel = new JPanel();
         dataPanel.setLayout(new GridLayout(6, 1, 0, 2)); // เปลี่ยนจาก 5 เป็น 6 แถว
         dataPanel.setOpaque(false);
-        dataPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10));
+        dataPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 15));
 
         // 1. ชื่อผู้เล่น
         nameLabel = new JLabel(playerName);
-        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
         nameLabel.setForeground(playerColor); // ให้ชื่อเป็นสีเดียวกับสีประจำตัว
 
         // 2. เงินสด
         cashLabel = new JLabel("Cash: 0");
-        cashLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        cashLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
         cashLabel.setForeground(new Color(80, 200, 120)); // สีเขียวสว่าง
 
         // 3. ทรัพย์สินรวม
         assetsLabel = new JLabel("Assets: 0");
-        assetsLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        assetsLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
         assetsLabel.setForeground(new Color(200, 200, 200)); // สีเทาอ่อน
 
         // 4. สถานะ (เช่น ปกติ, ติดคุก, ล้มละลายมีการ์ดนางฟ้า, โล่)
         statusAndBuffLabel = new JLabel("Status: Normal");
-        statusAndBuffLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        statusAndBuffLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
         statusAndBuffLabel.setForeground(new Color(200, 200, 200));
 
         // 5. บอกว่าถือการ์ดพิเศษอะไรอยู่อันเดียว(ถ้ามี)
         CardLabel = new JLabel("Cards: 0");
-        CardLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        CardLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
         CardLabel.setForeground(new Color(255, 204, 102)); // สีส้มทอง (หรือเปลี่ยนสีตามใจชอบ)
 
         // 6. ตำแหน่งช่องที่อยู่
         positionLabel = new JLabel("Position: Start");
-        positionLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        positionLabel.setFont(new Font("SansSerif", Font.BOLD, 10));
         positionLabel.setForeground(new Color(255, 204, 102)); // สีส้มทอง (หรือเปลี่ยนสีตามใจชอบ)
 
         dataPanel.add(nameLabel);
@@ -67,21 +73,30 @@ public class PlayerStatusPanel extends JPanel {
         dataPanel.add(statusAndBuffLabel);
         dataPanel.add(CardLabel);
 
+        add(avatarLabel, BorderLayout.WEST);
         add(dataPanel, BorderLayout.CENTER);
     }
 
-    public void updateData(Player p, String posName,String status) {
+    public void setAvatarImage(ImageIcon icon) {
+        if (icon != null) {
+            Image img = icon.getImage().getScaledInstance(70, 70, Image.SCALE_SMOOTH);
+            avatarLabel.setIcon(new ImageIcon(img));
+            avatarLabel.setText(""); // ลบตัวอักษรเริ่มต้นออก
+        }
+    }
+
+    public void updateData(Player p, String posName, String status) {
         this.isBankrupt = p.isBankrupt();
         positionLabel.setText("POSITION: " + posName + " [" + p.getPosition() + "]"); // อัปเดตตำแหน่งพร้อมชื่อช่อง
 
         int totalAssets = p.getMoney();
-            for (PropertyTile land : p.getOwnedLands()) {
-                totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
+        for (PropertyTile land : p.getOwnedLands()) {
+            totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
         }
         if (p.getHeldCard() == null) {
             CardLabel.setText("CARDS: NONE ");
         } else {
-            CardLabel.setText("CARDS: " + p.getHeldCard());
+            CardLabel.setText("CARDS: " + p.getHeldCard().getType());
         }
 
         if (isBankrupt) {

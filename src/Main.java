@@ -1,6 +1,9 @@
 /*
  * Main entry point for the Monopoly game
  */
+
+import java.util.jar.Attributes.Name;
+
 public class Main {
 
     /**
@@ -23,7 +26,8 @@ public class Main {
         MapLoader loader = new MapLoader();
 
         Board board = loader.loadMap(config.getMapName());
-
+        NameLoader nameLoader = new NameLoader("NameBot.csv");
+        
         GameWindow view = new GameWindow();
         GameState state = new GameState();
         state.setBoard(board);
