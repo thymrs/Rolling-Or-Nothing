@@ -6,7 +6,7 @@ import javax.swing.*;
 public class GameWindow extends JFrame {
 
     private ControlPanel controlPanel;
-    private BoardPanel boardPanel;
+    public BoardPanel boardPanel;
     private static EventLogPanel eventLogPanel;
 
     public GameWindow() {
