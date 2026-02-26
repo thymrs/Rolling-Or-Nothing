@@ -11,14 +11,15 @@ public class FestivalMultiplyPanel extends JPanel {
 
     /**
      * @param multiplier ตัวคูณ (เช่น 2, 4)
-     * @param angle มุมเอียงของสี่เหลี่ยมด้านขนาน (เช่น 15.0 สำหรับเอียงขวา, -15.0 สำหรับเอียงซ้าย)
+     * @param angle      มุมเอียงของสี่เหลี่ยมด้านขนาน (เช่น 15.0 สำหรับเอียงขวา,
+     *                   -15.0 สำหรับเอียงซ้าย)
      */
     public FestivalMultiplyPanel(int multiplier, double angle) {
         this.multiplier = multiplier;
         this.angle = angle;
-        
+
         // ทำให้พื้นหลังโปร่งใส เพื่อให้เราวาดรูปทรงเองได้
-        setOpaque(false); 
+        setOpaque(false);
         // ไม่ต้องใช้ JLabel แล้ว เราจะวาดข้อความเองใน paintComponent
     }
 
@@ -31,7 +32,8 @@ public class FestivalMultiplyPanel extends JPanel {
     }
 
     /**
-     * อัปเดตมุมเอียง (มีประโยชน์ถ้าช่องแต่ละฝั่งของกระดานต้องการองศาเอียงไม่เหมือนกัน)
+     * อัปเดตมุมเอียง
+     * (มีประโยชน์ถ้าช่องแต่ละฝั่งของกระดานต้องการองศาเอียงไม่เหมือนกัน)
      */
     public void setAngle(double angle) {
         this.angle = angle;

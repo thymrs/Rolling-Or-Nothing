@@ -7,10 +7,11 @@ import java.util.List;
 import javax.swing.*;
 import java.util.ArrayList;
 
-
 public class BoardPanel extends JPanel {
     // ปุ่ม ROLL ใหญ่ๆ ตรงกลาง (แยกเป็น CircleButton เพื่อความสวยงาม)
     private CircleButton btnRoll;
+
+    private FestivalMultiplyPanel[] multiplierPanels = new FestivalMultiplyPanel[32];
 
     // 1. UI Overlays (แผงควบคุมและข้อมูล)
     private TurnDisplayPanel turnDisplay;
@@ -120,7 +121,73 @@ public class BoardPanel extends JPanel {
 
     }
 
-    //สร้าง highlight effect ให้กับช่องที่ถูกเลือกโดยการกดปุ่มจาก tile โดยตรงนี้จะถูกเรียกจาก GameController เมื่อมีการเลือกช่อง
+    @Override
+    public void doLayout() {
+        super.doLayout();
+        // ... (โค้ดจัดหน้าจอเก่าของคุณ) ...
+
+        // [เพิ่มใหม่] อัปเดตตำแหน่งป้ายคูณให้เกาะติดกับช่องเสมอ
+        for (int i = 0; i < 32; i++) {
+            updateMultiplierPosition(i);
+        }
+    }
+
+    public void setTileMultiplier(int tileIndex, int multiplier) {
+        if (tileIndex < 0 || tileIndex >= 32)
+            return;
+
+        // ถ้าตัวคูณเป็น 1 ให้ลบป้ายออก (กลับสู่สถานะปกติ)
+        if (multiplier <= 1) {
+            if (multiplierPanels[tileIndex] != null) {
+                this.remove(multiplierPanels[tileIndex]);
+                multiplierPanels[tileIndex] = null;
+                this.repaint();
+            }
+            return;
+        }
+
+        // ถ้ายังไม่มีป้าย ให้สร้างใหม่
+        if (multiplierPanels[tileIndex] == null) {
+            // คำนวณมุมเอียงตามฝั่งของกระดาน (สมมติ 32 ช่อง)
+            // คุณสามารถปรับตัวเลข 26.5 องศา (มุม Isometric มาตรฐาน) ให้เข้ากับภาพของคุณได้
+            double angle;
+            if (tileIndex < 8 || (tileIndex >= 16 && tileIndex < 24)) {
+                angle = 26.5; // ฝั่งแนวนอนเอียงขวา ( / )
+            } else {
+                angle = -26.5; // ฝั่งแนวตั้งเอียงซ้าย ( \ )
+            }
+
+            multiplierPanels[tileIndex] = new FestivalMultiplyPanel(multiplier, angle);
+            this.add(multiplierPanels[tileIndex]);
+            this.setComponentZOrder(multiplierPanels[tileIndex], 0); // ให้อยู่ชั้นบนสุดเสมอ
+        } else {
+            // ถ้ามีป้ายอยู่แล้ว แค่อัปเดตตัวเลขในป้าย
+            multiplierPanels[tileIndex].setMultiplier(multiplier);
+        }
+
+        // จัดตำแหน่งป้ายให้อยู่บนช่อง
+        updateMultiplierPosition(tileIndex);
+    }
+
+    private void updateMultiplierPosition(int tileIndex) {
+        if (multiplierPanels[tileIndex] != null && tiles[tileIndex] != null) {
+            Rectangle tb = tiles[tileIndex].getBounds();
+
+            // ขนาดของป้ายคูณ (ปรับให้พอดีกับช่องของคุณ)
+            int mWidth = 40;
+            int mHeight = 25;
+
+            // วางให้ป้ายลอยอยู่ "ตรงกลาง-ด้านบน" ของช่องนั้นๆ
+            // (tb.x, tb.y คือพิกัดของช่องกระดาน)
+            int x = tb.x + (tb.width / 2) - (mWidth / 2);
+            int y = tb.y - mHeight + 10; // ลบ mHeight เพื่อดันขึ้นไปข้างบนช่อง
+
+            multiplierPanels[tileIndex].setBounds(x, y, mWidth, mHeight);
+        }
+    }
+
+    // สร้าง highlight effect ให้กับช่องที่ถูกเลือกโดยการกดปุ่มจาก tile
+    // โดยตรงนี้จะถูกเรียกจาก GameController เมื่อมีการเลือกช่อง
     public void highlightTile(int tileIndex) {
         if (tileIndex >= 0 && tileIndex < 32) {
             tiles[tileIndex].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
@@ -154,24 +221,26 @@ public class BoardPanel extends JPanel {
         btnRoll.setEnabled(enabled);
     }
 
-    // ฟังก์ชันสำหรับทำ Animation การเดินของผู้เล่น (เรียกจาก Controller เมื่อผู้เล่นเดิน)
+    // ฟังก์ชันสำหรับทำ Animation การเดินของผู้เล่น (เรียกจาก Controller
+    // เมื่อผู้เล่นเดิน)
     public void animatePlayerMovement(int playerId, List<Integer> path, Runnable onComplete) {
         if (path == null || path.isEmpty()) {
-            if (onComplete != null) onComplete.run();
+            if (onComplete != null)
+                onComplete.run();
             return;
         }
 
-        final int[] step = {0};
-        final int[] delay = {500}; // ความเร็วเริ่มต้น 0.5 วินาที (500ms)
-        final int minDelay = 200;  // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
+        final int[] step = { 0 };
+        final int[] delay = { 500 }; // ความเร็วเริ่มต้น 0.5 วินาที (500ms)
+        final int minDelay = 200; // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
 
         // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
         Timer timer = new Timer(delay[0], null);
         timer.addActionListener(e -> {
-            
+
             // 1. เปลี่ยนตำแหน่งใน Array (อ้างอิงจากตัวแปร playerPositions ในโค้ดของคุณ)
             int nextTileIndex = path.get(step[0]);
-            playerPositions[playerId] = nextTileIndex; 
+            playerPositions[playerId] = nextTileIndex;
 
             // 2. สั่งให้วาดกระดานใหม่ (มันจะไปเรียกโค้ดจัด setBounds ที่คุณเขียนไว้เอง)
             revalidate();
@@ -193,10 +262,9 @@ public class BoardPanel extends JPanel {
                 }
             }
         });
-        
+
         timer.start(); // เริ่มกระโดด
     }
-
 
     public void updateBoard(GameState state) {
         if (state == null)
@@ -217,7 +285,6 @@ public class BoardPanel extends JPanel {
                 String posName = board.getTile(p.getPosition()).getName();
 
                 // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
-                
 
                 // ตัดสินข้อความ Status
                 String status = "Normal";
@@ -230,14 +297,14 @@ public class BoardPanel extends JPanel {
 
                 // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
                 playerStatusPanels[i].updateData(p, posName, status);
-                        // p.getMoney(),
-                        // totalAssets,
-                        // status,
-                        // p.getIsJailed(),
-                        // p.isBankrupt(),
-                        // p.getHasShield(),
-                        // p.getIsTollFree(),
-                        // posName);
+                // p.getMoney(),
+                // totalAssets,
+                // status,
+                // p.getIsJailed(),
+                // p.isBankrupt(),
+                // p.getHasShield(),
+                // p.getIsTollFree(),
+                // posName);
                 // --------------------------------------------------
 
             } else {
@@ -327,9 +394,11 @@ public class BoardPanel extends JPanel {
         double startX = panelW / 2.0;
         double startY = (panelH - (1.2 * G)) / 2.0;
 
-        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (responsive กับ dynamicScale)
+        // จัดตำแหน่งปุ่ม ROLL ใหญ่ๆ ตรงกลางแต่ค่อนมาด้านล่าง (responsive กับ
+        // dynamicScale)
         int rollSize = (int) (240 * dynamicScale); // ขนาดวงกลมปรับตามขนาดจอ
-        // ตำแหน่ง Y: อยู่ต่ำกว่ากึ่งกลางจอเล็กน้อย โดยสัมพันธ์กับขนาดบอร์ด (เช่น 30% จากขอบบนถึงกึ่งกลางบอร์ด)
+        // ตำแหน่ง Y: อยู่ต่ำกว่ากึ่งกลางจอเล็กน้อย โดยสัมพันธ์กับขนาดบอร์ด (เช่น 30%
+        // จากขอบบนถึงกึ่งกลางบอร์ด)
         int centerY = (int) (panelH / 2 + (G * 0.25));
         btnRoll.setBounds((panelW - rollSize) / 2, centerY - rollSize / 2, rollSize, rollSize);
 

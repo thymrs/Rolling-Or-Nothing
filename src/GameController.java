@@ -702,6 +702,8 @@ public class GameController implements ActionListener {
 
         if (selectedProperty != null) {
             selectedProperty.setExpo(2, 3);
+            int tileIndex = selectedProperty.getIndex();
+            view.boardPanel.setTileMultiplier(tileIndex, 2);
 
             state.notifyMessage("🎪 " + currentPlayer.getName() + " holds Expo at " + selectedProperty.getName()
                     + "! (Rent increase!)");
