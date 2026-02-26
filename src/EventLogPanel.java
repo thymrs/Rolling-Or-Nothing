@@ -54,7 +54,7 @@ public class EventLogPanel extends JPanel implements GameEventListener {
             case READY_TO_ROLL -> addLog(">> [" + playerName + "] It's your turn! Roll the dice.");
             case MOVING -> addLog(".. [" + playerName + "] is moving...");
             case ACTION_REQUIRED -> addLog("!! [" + playerName + "] Action required!");
-            case END_TURN -> addLog("-- [" + playerName + "] finished turn.");
+            case END_TURN -> addLog("-- [" + playerName + "] plse end your turn. you have nothing to do.");
             case GAME_OVER -> addLog("========== GAME OVER ==========");
             default -> addLog("SYSTEM: Phase changed to " + newPhase);
         }
