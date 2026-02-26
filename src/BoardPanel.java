@@ -292,13 +292,17 @@ public class BoardPanel extends JPanel {
         for (int i = 0; i < 4; i++) {
             if (i < players.size()) {
                 Player p = players.get(i);
-                // --- Update Dino Sprite ---
                 playerMarkers[i].removeAll();
-                JLabel dinoLabel = new JLabel(p.getDinoType().getIcon());
+
+            ImageIcon icon = p.getDinoType().getIcon();
+
+            if (icon != null) {
+                JLabel dinoLabel = new JLabel(icon);
                 playerMarkers[i].add(dinoLabel);
-                playerMarkers[i].revalidate();
-                playerMarkers[i].repaint();
-// -------------------------
+            }
+
+            playerMarkers[i].revalidate();
+            playerMarkers[i].repaint();
                 playerStatusPanels[i].setVisible(true);
                 playerMarkers[i].setVisible(true);
                 playerPositions[i] = p.getPosition();
