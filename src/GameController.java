@@ -877,6 +877,7 @@ public class GameController implements ActionListener {
         targetTile.onPlayerEnter(currentPlayer, state);
         state.setCurrentPhase(TurnPhase.END_TURN);
         view.updateView(state);
+        processPhase();
     }
 
 }
