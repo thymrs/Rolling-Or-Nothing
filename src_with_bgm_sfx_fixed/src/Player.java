@@ -1,0 +1,209 @@
+import java.util.*;
+
+public abstract class Player {
+    private final int id;
+    private final String name;
+    private int money;
+    private int position;
+    private final List<PropertyTile> ownedLands;
+    protected boolean isJailed;
+    protected int jailTurnCount;
+    protected int frozenTurns = 0;
+    protected boolean hasShield;
+    protected Card heldCard;
+    protected boolean isBankrupt;
+    protected boolean isTollFree;
+    protected int discountRate;
+    private int doubleRollCount = 0;
+
+    public Player(int id, String name, int playerMoney) {
+        this.id = id;
+        this.name = name;
+        this.money = playerMoney;
+        this.position = 0; // จุดเริ่มต้น
+        this.ownedLands = new ArrayList<>();
+    }
+
+    public void move(int steps) {
+        this.position += steps;
+    }
+
+    public boolean pay(int amount) {
+        if (this.money >= amount) {
+            this.money -= amount;
+            return true;
+        }
+
+        return false;
+    }
+
+    // --- Methods สำหรับจัดการการเบิ้ล ---
+    public int getDoubleRollCount() {
+        return doubleRollCount;
+    }
+
+    public void incrementDoubleRollCount() {
+        this.doubleRollCount++;
+    }
+    public void resetDoubleRollCount() {
+        this.doubleRollCount = 0;
+    }
+
+    public void receiveMoney(int amount) {
+        this.money += amount;
+    }
+
+    public Card swapCard(Card newcard) {
+        Card oldCard = this.heldCard;
+        this.heldCard = newcard;
+        return oldCard;
+    }
+
+    public Card useCard() {
+        Card cardToUse = this.heldCard;
+        this.heldCard = null;
+        return cardToUse;
+    }
+
+    public boolean hasCard() {
+        return this.heldCard != null;
+    }
+
+    public boolean receiveCard(Card c) {
+        if (!hasCard()) {
+            this.heldCard = c;
+            return true;
+        }
+
+        return false;
+
+    }
+
+    public abstract boolean makeDecision(DecisionType type, PropertyTile tile, GameState state);
+
+    public void setIsJailed(boolean isJailed) {
+        this.isJailed = isJailed;
+    }
+
+    public boolean getIsJailed() {
+        return this.isJailed;
+    }
+
+    public int getJailTurnCount() {
+        return jailTurnCount;
+    }
+
+    public void addJailTurnCount(int turn) {
+        this.jailTurnCount += turn;
+    }
+
+    public int getPosition() {
+        return this.position;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public void setFrozenTurns(int turns) {
+        this.frozenTurns = turns;
+    }
+
+    public boolean isFrozen() {
+        return this.frozenTurns > 0;
+    }
+
+    public void decrementFrozenTurns() {
+        if (this.frozenTurns > 0) {
+            this.frozenTurns--;
+        }
+    }
+
+    public void declareBankruptcy() {
+        this.isBankrupt = true;
+        this.money = 0;
+
+        for (PropertyTile land : this.ownedLands) {
+            land.setOwner(null);
+            land.resetBuildingLevel();
+        }
+        this.ownedLands.clear();
+
+    }
+
+    public boolean isBankrupt() {
+        return this.isBankrupt;
+    }
+
+    public void addAsset(PropertyTile tile) {
+        this.ownedLands.add(tile);
+    }
+
+    public void removeAsset(PropertyTile tile) {
+        this.ownedLands.remove(tile);
+    }
+
+    public void setTollFree(boolean setToll) {
+        this.isTollFree = setToll;
+    }
+
+    public int getMoney() {
+        return this.money;
+    }
+
+    public void setDiscountRate(int rate) {
+        this.discountRate = rate;
+    }
+
+    public boolean getHasShield() {
+        return this.hasShield;
+    }
+
+    public void setHasShield(boolean status) {
+        this.hasShield = status;
+    }
+
+    public boolean getIsTollFree() {
+        return this.isTollFree;
+    }
+
+    public int getDiscountRate() {
+        return this.discountRate;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public Card getHeldCard() {
+        return heldCard;
+    }
+
+    public void setHeldCard(Card heldCard) {
+        this.heldCard = heldCard;
+    }
+
+    public void setPosition(int newPos) {
+        this.position = newPos;
+    }
+
+    public List<PropertyTile> getOwnedLands() {
+        return this.ownedLands;
+    }
+
+    public int getTotalAssetsValue() {
+        int propertyValue = 0;
+        for (PropertyTile land : ownedLands) {
+            // คำนวณตามราคาซื้อ + ราคาอัปเกรด (ถ้ามี)
+            propertyValue += land.getPurchasePrice() * (land.getBuildingLevel() + 1);
+        }
+        return this.money + propertyValue;
+    }
+
+    public void decreaseJailTurn() {
+        if (this.jailTurnCount > 0) {
+            this.jailTurnCount--;
+        }
+    }
+
+}
