@@ -119,6 +119,7 @@ public class GameController implements ActionListener {
                 System.out.println("▶ [DEBUG] game over! enable button false");
                 view.getControlPanel().setButtonsEnabled(false); 
                 view.setRollEnabled(false);
+                view.showPopup("End Game! Winner " + victoryChecker.getWinner(state));
                 return;
             }
             case READY_TO_ROLL -> {
@@ -210,7 +211,6 @@ public class GameController implements ActionListener {
                 state.incrementTurn();
                 processPhase();
             }
-            case GAME_OVER -> view.showPopup("End Game! Winner " + victoryChecker.getWinner(state));
             case SELECTING_DESTINATION -> view.showPopup("You're on a Wolrd Tour! Please select your destination");
         }
 
