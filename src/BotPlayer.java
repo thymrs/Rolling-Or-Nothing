@@ -30,14 +30,14 @@ public class BotPlayer extends Player {
     @Override
     public boolean makeDecision(DecisionType type, PropertyTile currentTile, GameState state) {
         return switch (this.difficulty) {
-            case EASY -> handleEasyDecision(type, currentTile);
-            case NORMAL -> handleNormalDecision(type, currentTile);
+            case EASY -> handleEasyDecision(type, currentTile, state);
+            case NORMAL -> handleNormalDecision(type, currentTile, state);
             case HARD -> handleHardDecision(type, currentTile, state);
             default -> false;
         };
     }
 
-    public boolean handleEasyDecision(DecisionType type, PropertyTile tile){
+    public boolean handleEasyDecision(DecisionType type, PropertyTile tile, GameState state){
         return switch (type) {
             case BUY_LAND -> evaluateEasyBuyLand(tile);
             case USE_CARD -> evaluateEasyUseCard();
@@ -47,16 +47,19 @@ public class BotPlayer extends Player {
         };
     }
 
-    public boolean handleNormalDecision(DecisionType type, PropertyTile tile){
-        return switch (type) {
-            case BUY_LAND -> evaluateNormalBuyLand(tile);
-            case USE_CARD -> evaluateNormalUseCard();
-            case UPGRADE -> (this.getMoney() > 1000) && chance(60);
-            case PAY_TOLL -> true;
-            case SURRENDER -> this.getMoney() < 0;
-            default -> false;
-        };
-    }
+    public boolean handleNormalDecision(DecisionType type, PropertyTile tile, GameState state) {
+    int salary = state.getConfig().getPassGoSalary();
+    int initialMoney = state.getConfig().getInitialMoney();
+
+    return switch (type) {
+        case BUY_LAND -> evaluateNormalBuyLand(tile, state);
+        case USE_CARD -> evaluateNormalUseCard(state);
+        case UPGRADE -> (this.getMoney() > salary * 2) && chance(60); // ต้องมีเงินมากกว่า 2 เท่าของเงินเดือนถึงจะอัปเกรด
+        case PAY_TOLL -> true;
+        case SURRENDER -> this.getMoney() < 0;
+        default -> false;
+    };
+}
 
     public boolean handleHardDecision(DecisionType type, PropertyTile tile, GameState state){
         switch(type){
@@ -103,24 +106,28 @@ public class BotPlayer extends Player {
         return random.nextInt(state.getBoard().size());
     }
 
-    private boolean evaluateNormalBuyLand(PropertyTile tile) {
-        boolean isTakeover = (tile.getOwner() != null);
-        int price = isTakeover ? tile.getTotalValue() * 2 : tile.getPurchasePrice();
+    private boolean evaluateNormalBuyLand(PropertyTile tile, GameState state) {
+    int salary = state.getConfig().getPassGoSalary();
+    boolean isTakeover = (tile.getOwner() != null);
+    int price = isTakeover ? tile.getTotalValue() * 2 : tile.getPurchasePrice();
 
-        if (this.getMoney() < price) return false;
+    if (this.getMoney() < price) return false;
 
-        if (!isTakeover) {
-            return true; 
-        } else {
-            return chance(60) && (this.getMoney() - price) >= 500;
-        }
+    if (!isTakeover) {
+        return true; 
+    } else {
+        return chance(60) && (this.getMoney() - price) >= salary;
     }
+}
 
-    private boolean evaluateNormalUseCard(){
-        boolean isBestCase = chance(60);
-        if(isBestCase) return (this.getMoney() < 200 || this.isJailed);
-        else return this.hasCard();
+    private boolean evaluateNormalUseCard(GameState state) {
+    int initialMoney = state.getConfig().getInitialMoney();
+    boolean isBestCase = chance(60);
+    if (isBestCase) {
+        return (this.getMoney() < initialMoney * 0.1 || this.isJailed);
     }
+    else return this.hasCard();
+}
 
     private int getNormalWorldTourDestination(GameState state) {
         List<PropertyTile> unownedLands = new java.util.ArrayList<>();
@@ -176,14 +183,12 @@ public class BotPlayer extends Player {
         for (int i = 0; i < state.getBoard().size(); i++) {
             Tile tile = state.getBoard().getTile(i);
             if (tile instanceof PropertyTile prop) {
-                // หาที่ดินเปล่าที่ "แพงที่สุด" และ "เงินเราพอซื้อ"
                 if (prop.getOwner() == null) {
                     if (prop.getPurchasePrice() > maxPrice && this.getMoney() >= prop.getPurchasePrice()) {
                         bestUnowned = prop;
                         maxPrice = prop.getPurchasePrice();
                     }
                 } 
-                // หรือหาที่ดินตัวเองที่ "ยังไม่เต็มเลเวล 3" เพื่อบินไปอัปเกรด
                 else if (prop.getOwner().equals(this) && prop.getBuildingLevel() < 3) {
                     if (prop.getPurchasePrice() > maxUpgradePrice && this.getMoney() >= prop.getUpgradeCost(1)) {
                         bestOwnedToUpgrade = prop;
@@ -193,11 +198,9 @@ public class BotPlayer extends Player {
             }
         }
 
-        // ลำดับความสำคัญ: ซื้อที่ดินเปล่าแพงๆ ก่อน -> ถ้าไม่มี ให้อัปเกรดที่ตัวเอง -> ถ้าไม่มีอีก ไปหาที่จัดงาน EXPO!
         if (bestUnowned != null) return bestUnowned.getIndex();
         if (bestOwnedToUpgrade != null) return bestOwnedToUpgrade.getIndex();
 
-        // ท่าไม้ตาย: ถ้าไม่มีที่ให้ซื้อหรืออัปเกรดเลย บินไปจัดงาน EXPO (FESTIVAL) ซะเลย!
         for (int i = 0; i < state.getBoard().size(); i++) {
             Tile tile = state.getBoard().getTile(i);
             if (tile instanceof SpecialTile special && special.getEffect() == EffectType.FESTIVAL) {
@@ -205,7 +208,7 @@ public class BotPlayer extends Player {
             }
         }
 
-        return getEasyWorldTourDestination(state); // ท้ายที่สุดถ้าทำอะไรไม่ได้เลย ก็สุ่ม
+        return getEasyWorldTourDestination(state);
     }
 
     public boolean evaluateSwapCard(){
@@ -316,21 +319,20 @@ public class BotPlayer extends Player {
     }
 
     private boolean isOpponentCloseToVictory(GameState state) {
-        VictoryChecker vc = state.getVictoryChecker();
-        
-        for (Player opponent : state.getPlayers()) {
-            if (opponent == this) continue;
+    int initialMoney = state.getConfig().getInitialMoney();
+    VictoryChecker vc = state.getVictoryChecker();
+    
+    for (Player opponent : state.getPlayers()) {
+        if (opponent == this) continue;
 
-            if (vc.isPlayerCloseToVictory(state.getBoard(), opponent)) {
-                return true; 
-            }
+        if (vc.isPlayerCloseToVictory(state.getBoard(), opponent)) return true; 
 
-            if (opponent.getMoney() > 3000 || opponent.getOwnedLands().size() > 5) {
-                return true;
-            }
+        if (opponent.getMoney() > initialMoney * 2 || opponent.getOwnedLands().size() > 5) {
+            return true;
         }
-        return false;
     }
+    return false;
+}
 
     private boolean hasExpensiveAssets(){
         for(PropertyTile land : this.getOwnedLands()){
