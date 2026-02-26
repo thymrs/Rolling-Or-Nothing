@@ -41,8 +41,8 @@ public class AudioManager implements GameEventListener {
         return INSTANCE;
     }
     public enum BgmTrack {
-        MAIN("audio/bgm/main.wav", true),
-        GAMEPLAY("audio/bgm/gameplay.wav", true),
+        GAMEPLAY("audio/bgm/main.wav", true),
+        MAIN("audio/bgm/gameplay.wav", true),
         DECISION("audio/bgm/decision.wav", true),
         // ยังไม่มีเพลง travel แยก ใช้ gameplay ไปก่อน
         TRAVEL("audio/bgm/gameplay.wav", true),
