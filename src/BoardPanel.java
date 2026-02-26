@@ -5,7 +5,6 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.List;
 import javax.swing.*;
-import java.util.ArrayList;
 
 public class BoardPanel extends JPanel {
     // ปุ่ม ROLL ใหญ่ๆ ตรงกลาง (แยกเป็น CircleButton เพื่อความสวยงาม)
@@ -235,6 +234,7 @@ public class BoardPanel extends JPanel {
         final int minDelay = 200; // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
 
         // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
+        // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
         Timer timer = new Timer(delay[0], null);
         timer.addActionListener(e -> {
 
@@ -242,13 +242,13 @@ public class BoardPanel extends JPanel {
             int nextTileIndex = path.get(step[0]);
             playerPositions[playerId] = nextTileIndex;
 
-            // 2. สั่งให้วาดกระดานใหม่ (มันจะไปเรียกโค้ดจัด setBounds ที่คุณเขียนไว้เอง)
-            revalidate();
+            // 🌟 2. สั่งให้คำนวณตำแหน่งพิกัด X,Y ของตัวละครใหม่บนจอ (สำคัญมาก!)
+            relayoutBoard(); 
             repaint();
 
             // 3. เร่งความเร็วการกระโดดในครั้งต่อไป
             if (delay[0] > minDelay) {
-                delay[0] -= 50; // ลดลงทีละ 50ms (จะเร่งความเร็วขึ้น)
+                delay[0] -= 50; 
                 timer.setDelay(delay[0]);
             }
 
