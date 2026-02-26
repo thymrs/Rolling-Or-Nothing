@@ -14,7 +14,7 @@ public class Main {
                 .initialMoney(35000)
                 .maxTurns(50)
                 .mapName("default")
-                .humanCount(0)
+                .humanCount(1)
                 .botCount(2)
                 .botDifficulty(DifficultyLevel.HARD)
                 .passGoSalary(5000)

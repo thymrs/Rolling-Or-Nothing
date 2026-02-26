@@ -3,7 +3,7 @@ import java.util.stream.Collectors;
 
 public class VictoryChecker {
 
-    private final int LINE_VICTORY_REQ = 8;
+    private final int LINE_VICTORY_REQ = 6;
     private final int TOURISM_VICTORY_REQ = 5;   
     private final int TRIPLE_VICTORY_REQ = 3;    
 

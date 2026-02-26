@@ -5,7 +5,6 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.List;
 import javax.swing.*;
-import java.util.ArrayList;
 
 
 public class BoardPanel extends JPanel {
@@ -166,20 +165,21 @@ public class BoardPanel extends JPanel {
         final int minDelay = 200;  // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
 
         // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
+        // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
         Timer timer = new Timer(delay[0], null);
         timer.addActionListener(e -> {
             
-            // 1. เปลี่ยนตำแหน่งใน Array (อ้างอิงจากตัวแปร playerPositions ในโค้ดของคุณ)
+            // 1. เปลี่ยนตำแหน่งใน Array
             int nextTileIndex = path.get(step[0]);
             playerPositions[playerId] = nextTileIndex; 
 
-            // 2. สั่งให้วาดกระดานใหม่ (มันจะไปเรียกโค้ดจัด setBounds ที่คุณเขียนไว้เอง)
-            revalidate();
+            // 🌟 2. สั่งให้คำนวณตำแหน่งพิกัด X,Y ของตัวละครใหม่บนจอ (สำคัญมาก!)
+            relayoutBoard(); 
             repaint();
 
             // 3. เร่งความเร็วการกระโดดในครั้งต่อไป
             if (delay[0] > minDelay) {
-                delay[0] -= 50; // ลดลงทีละ 50ms (จะเร่งความเร็วขึ้น)
+                delay[0] -= 50; 
                 timer.setDelay(delay[0]);
             }
 
@@ -197,6 +197,32 @@ public class BoardPanel extends JPanel {
         timer.start(); // เริ่มกระโดด
     }
 
+    //public void animatePlayerMove(int playerIndex, int startPos, int targetPos, Runnable onAnimationFinished) {
+    //    // หน่วงเวลา 250ms (0.25 วินาที) ต่อการเดิน 1 ช่อง (ปรับความไวได้ที่นี่)
+    //    Timer timer = new Timer(250, null);
+        
+    //    timer.addActionListener(e -> {
+    //        // เช็คว่าตำแหน่งปัจจุบันยังไม่ถึงเป้าหมายใช่ไหม?
+    //        if (playerPositions[playerIndex] != targetPos) {
+    //            // ขยับไปข้างหน้า 1 ช่อง (กระดานมี 32 ช่อง วนลูปด้วย % 32)
+    //            playerPositions[playerIndex] = (playerPositions[playerIndex] + 1) % 32;
+                
+    //            // สั่งให้ UI จัดตำแหน่งตัวละครใหม่และวาดใหม่
+    //            doLayout();
+    //            repaint(); 
+    //        } else {
+    //            // เดินถึงเป้าหมายแล้วจะหยุด timer
+    //            timer.stop();
+                
+    //            // แจ้งเตือนกลับไปที่ Controller ว่า "เดินเสร็จแล้วนะ ลุยลอจิกต่อได้เลย!"
+    //            if (onAnimationFinished != null) {
+    //                onAnimationFinished.run(); 
+    //            }
+    //        }
+    //    });
+        
+    //    timer.start(); // เริ่มเดิน
+    //}
 
     public void updateBoard(GameState state) {
         if (state == null)
@@ -217,10 +243,7 @@ public class BoardPanel extends JPanel {
                 String posName = board.getTile(p.getPosition()).getName();
 
                 // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
-                int totalAssets = p.getMoney();
-                for (PropertyTile land : p.getOwnedLands()) {
-                    totalAssets += land.getPurchasePrice(); // หรือราคาซื้อรวมเลเวลบ้าน
-                }
+                
 
                 // ตัดสินข้อความ Status
                 String status = "Normal";
@@ -232,15 +255,15 @@ public class BoardPanel extends JPanel {
                     status = "Frozen";
 
                 // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
-                playerStatusPanels[i].updateData(
-                        p.getMoney(),
-                        totalAssets,
-                        status,
-                        p.getIsJailed(),
-                        p.isBankrupt(),
-                        p.getHasShield(),
-                        p.getIsTollFree(),
-                        posName);
+                playerStatusPanels[i].updateData(p, posName, status);
+                        // p.getMoney(),
+                        // totalAssets,
+                        // status,
+                        // p.getIsJailed(),
+                        // p.isBankrupt(),
+                        // p.getHasShield(),
+                        // p.getIsTollFree(),
+                        // posName);
                 // --------------------------------------------------
 
             } else {
