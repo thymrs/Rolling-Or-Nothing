@@ -16,5 +16,5 @@ public class UIConstants {
     public static final Color ACCENT_WARNING = new Color(0xF1C40F);
     public static final Color ACCENT_DANGER  = new Color(0xE74C3C);
 
-    private UIConstants() {} // กันเผลอ new
+    private UIConstants() {}
 }
