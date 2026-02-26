@@ -14,7 +14,7 @@ public class GameWindow extends JFrame {
         setTitle("Rolling Or Nothing");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH); // เปิดมาเต็มจอ
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout()); // ใช้ระบบจัดหน้าจออัตโนมัติ
 
         // สร้างและจัดวาง Panel
         controlPanel = new ControlPanel();
@@ -28,13 +28,6 @@ public class GameWindow extends JFrame {
         eventLogPanel = new EventLogPanel();
         add(eventLogPanel, BorderLayout.EAST);
 
-        setLayout(null);
-
-        JLabel label = new JLabel();
-        label.setIcon(DinoType.D.getIcon()); // น้ำเงิน
-        label.setBounds(100, 100, 100, 100);
-
-        add(label);
 
         setSize(800, 600);
         setVisible(true);
@@ -91,5 +84,9 @@ public class GameWindow extends JFrame {
 
     public void setTileActionListener(ActionListener listener) {
         boardPanel.setTileActionListener(listener);
+    }
+
+    public BoardPanel getBoardPanel() {
+        return this.boardPanel;
     }
 }

@@ -76,21 +76,14 @@ public class GameController implements ActionListener {
     private void initGame(GameConfig config) {
         List<Player> players = new ArrayList<>();
         int currentId = 0;
-        NameLoader nameLoader = new NameLoader("NameBot.csv");
-        int totalPlayers = config.getHumanCount() + config.getBotCount();
-        for (int i = 0; i < totalPlayers; i++) {
-            if (i >= config.getHumanCount()) {
-                // ถ้าเป็นบอท
-                // 1. ดึงชื่อแบบสุ่มและไม่ซ้ำ
-                String botName = nameLoader.getRandomUniqueName();
 
-                // 3. นำชื่อที่สุ่มได้ไปสร้าง Player
-                players.add(new BotPlayer(currentId++, botName, config.getInitialMoney(), config.getBotDifficulty()));
+        for (int i = 0; i < config.getHumanCount(); i++) {
+            players.add(new HumanPlayer(currentId++, "Player " + (i + 1), config.getInitialMoney()));
+        }
 
-            } else {
-                // ถ้าเป็นคนเล่นปกติ ก็ใช้ชื่อที่รับค่ามาจาก UI
-                players.add(new HumanPlayer(currentId++, "Player " + (i + 1), config.getInitialMoney()));
-            }
+        for (int i = 0; i < config.getBotCount(); i++) {
+            players.add(
+                    new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
         }
 
         this.victoryChecker = new VictoryChecker();
@@ -111,7 +104,7 @@ public class GameController implements ActionListener {
         switch (currentPhase) {
             case GAME_OVER -> {
                 System.out.println("▶ [DEBUG] game over! enable button false");
-                view.getControlPanel().setButtonsEnabled(false);
+                view.getControlPanel().setButtonsEnabled(false); 
                 view.setRollEnabled(false);
                 view.showPopup("End Game! Winner " + victoryChecker.getWinner(state));
                 return;
@@ -434,7 +427,7 @@ public class GameController implements ActionListener {
             if (currentTile instanceof PropertyTile property) {
                 // เคสของบอท
                 if (player instanceof BotPlayer bot) {
-
+                    
                     // ที่ดินเปล่าตกครั้งแรกให้ซื้อมากสุดได้แค่เวล 3
                     if (property.getOwner() == null) {
                         boolean wantToBuy = bot.makeDecision(DecisionType.BUY_LAND, property, state);
@@ -446,17 +439,17 @@ public class GameController implements ActionListener {
                             while (property.getBuildingLevel() < 3) {
                                 int upgradeCost = property.getUpgradeCost(1);
                                 boolean wantToUpgrade = bot.makeDecision(DecisionType.UPGRADE, property, state);
-
-                                if (wantToUpgrade && bot.getMoney() - upgradeCost >= 500) {
+                                
+                                if (wantToUpgrade && bot.getMoney() - upgradeCost >= 500) { 
                                     bot.pay(upgradeCost);
-                                    property.upgradeLevel();
+                                    property.upgradeLevel(); 
                                 } else {
-                                    break;
+                                    break; 
                                 }
                             }
 
                             if (property.getBuildingLevel() > 0) {
-                                state.notifyMessage("🏗️ " + bot.getName() + " buy and upgrade " + property.getName()
+                                state.notifyMessage("🏗️ " + bot.getName() + " buy and upgrade " + property.getName() 
                                         + " to level " + property.getBuildingLevel() + "!");
                                 view.showPopup(bot.getName() + " bought & upgraded " + property.getName() + "!");
                             } else {
@@ -464,8 +457,8 @@ public class GameController implements ActionListener {
                                 view.showPopup(bot.getName() + " buy " + property.getName() + "!");
                             }
                         }
-                    }
-
+                    } 
+                    
                     // ตกที่ดินตัวเอง อัปเป็นแลนด์มาร์กได้
                     else if (property.getOwner().equals(bot) && property.getBuildingLevel() < 4) {
                         System.out.println("▶ [DEBUG] Bot is on its land, deciding on upgrade...");
@@ -473,8 +466,8 @@ public class GameController implements ActionListener {
 
                         if (wantToUpgrade) {
                             int currentLevel = property.getBuildingLevel();
-                            int maxPossibleUpgrades = 4 - currentLevel;
-
+                            int maxPossibleUpgrades = 4 - currentLevel; 
+                            
                             int targetUpgradeLevels = 0;
                             int finalCost = 0;
 
@@ -498,17 +491,16 @@ public class GameController implements ActionListener {
 
                                 // เช็คว่าเป็นแลนด์มาร์กไหม
                                 if (property.getBuildingLevel() == 4) {
-                                    state.notifyMessage(
-                                            "🏰 " + bot.getName() + " built a LANDMARK at " + property.getName() + "!");
+                                    state.notifyMessage("🏰 " + bot.getName() + " built a LANDMARK at " + property.getName() + "!");
                                 } else {
-                                    state.notifyMessage("🏗️ " + bot.getName() + " upgrade " + property.getName()
+                                    state.notifyMessage("🏗️ " + bot.getName() + " upgrade " + property.getName() 
                                             + " to reach level " + property.getBuildingLevel() + "!");
                                 }
                             } else {
-                                System.out.println(
-                                        "▶ [DEBUG] Bot want to upgrade but didn't have enough money (or scared of losing all money)");
+                                System.out.println("▶ [DEBUG] Bot want to upgrade but didn't have enough money (or scared of losing all money)");
                             }
                         }
+                    
 
                     } else if (!property.getOwner().equals(bot) && property.getBuildingLevel() < 3) {
                         int takeoverPrice = property.getTotalValue() * 2;
@@ -645,8 +637,7 @@ public class GameController implements ActionListener {
 
         // 4. สั่ง BoardPanel ให้เริ่ม Animate พร้อมตั้ง Callback เมื่อจบ
         view.boardPanel.animatePlayerMovement(playerId, path, () -> {
-            System.out.println(
-                    "▶ [DEBUG] Movement animation finished for player " + playerId + " to position " + targetPos);
+            System.out.println("▶ [DEBUG] Movement animation finished for player " + playerId + " to position " + targetPos);
             onMovementFinished(playerId, targetPos); // เมื่อ UI ขยับเสร็จ ให้เรียก Method นี้
         });
     }
@@ -869,8 +860,7 @@ public class GameController implements ActionListener {
         }
     }
 
-    // ฟังก์ชันนี้จะถูกเรียกเมื่อการเดินของผู้เล่นเสร็จสมบูรณ์แล้ว (หลังจาก
-    // Animation)
+    // ฟังก์ชันนี้จะถูกเรียกเมื่อการเดินของผู้เล่นเสร็จสมบูรณ์แล้ว (หลังจาก Animation)
     private void onMovementFinished(int playerId, int finalPos) {
         Player currentPlayer = state.getCurrentPlayer();
 

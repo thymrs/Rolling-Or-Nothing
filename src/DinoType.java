@@ -10,11 +10,11 @@ public enum DinoType {
         this.fileName = fileName;
     }
 
-    public ImageIcon getIcon() {
-        URL resource = getClass().getResource("/gifs/" + fileName);
-        if (resource == null) {
-            throw new RuntimeException("Image not found: " + fileName);
-        }
-        return new ImageIcon(resource);
-    }
+    //public ImageIcon getIcon() {
+    //    URL resource = getClass().getResource("/gifs/" + fileName);
+    //    if (resource == null) {
+    //        throw new RuntimeException("Image not found: " + fileName);
+    //    }
+    //    return new ImageIcon(resource);
+    //}
 }
