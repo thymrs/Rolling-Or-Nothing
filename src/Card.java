@@ -44,7 +44,8 @@ public class Card {
 
             case DISCOUNT:
                 player.setDiscountRate(this.value);
-                state.notifyMessage("🎟️ " + player.getName() + " Got a dicount " + this.value + "% for the next payment!");
+                state.notifyMessage(
+                        "🎟️ " + player.getName() + " Got a dicount " + this.value + "% for the next payment!");
                 break;
 
             case ESCAPE:
@@ -54,9 +55,10 @@ public class Card {
 
             case FORCE_SELL:
                 if (target != null) {
-                    state.notifyMessage("💥 " + player.getName() + " force " + target.getName() + " to sell their lands!");
+                    state.notifyMessage(
+                            "💥 " + player.getName() + " force " + target.getName() + " to sell their lands!");
                     currentTile = state.getBoard().getTile(target.getPosition());
-                    
+
                     if (currentTile instanceof PropertyTile targetProperty) {
                         if (targetProperty.getOwner() == target) {
                             state.getBank().processPurchase(player, targetProperty, target);
@@ -74,11 +76,13 @@ public class Card {
                 if (target != null) {
                     if (target.getIsJailed()) {
                         target.addJailTurnCount(1);
-                        state.notifyMessage("⚡ " + player.getName() + " punish " + target.getName() + " to be in jail for 1 turn!");
+                        state.notifyMessage(
+                                "⚡ " + player.getName() + " punish " + target.getName() + " to be in jail for 1 turn!");
                     } else {
                         target.setIsJailed(true);
                         target.addJailTurnCount(1);
-                        state.notifyMessage("⚡ " + player.getName() + " punish " + target.getName() + " to be in jail for 1 turn!");
+                        state.notifyMessage(
+                                "⚡ " + player.getName() + " punish " + target.getName() + " to be in jail for 1 turn!");
                     }
                 }
                 break;
@@ -90,7 +94,12 @@ public class Card {
         return this.type == CardType.FORCE_SELL || this.type == CardType.PUNISH;
     }
 
-    public CardType getTypeCard(){
+    public CardType getTypeCard() {
         return this.type;
+    }
+
+    @Override
+    public String toString() {
+        return this.type.name();
     }
 }
