@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 public enum DinoType {
+=======
+import javax.swing.ImageIcon;
+import java.net.URL;
+
+public enum DinoType {
+
+>>>>>>> main
     D("DinoSprites_doux.gif"),
     T("DinoSprites_tard.gif"),
     M("DinoSprites_mort.gif"),
@@ -12,9 +20,17 @@ public enum DinoType {
 
     public ImageIcon getIcon() {
         URL resource = getClass().getResource("/gifs/" + fileName);
+<<<<<<< HEAD
         if (resource == null) {
             throw new RuntimeException("Image not found: " + fileName);
         }
+=======
+
+        if (resource == null) {
+            throw new RuntimeException("Image not found: " + fileName);
+        }
+
+>>>>>>> main
         return new ImageIcon(resource);
     }
 }

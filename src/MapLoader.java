@@ -135,11 +135,22 @@ public class MapLoader {
     }
 
     private PropertyTile createPropertyTile(String[] data) {
+<<<<<<< HEAD
         int index = parseInt(data, 1);
         String name = data[2];
         int purchasePrice = (data.length > 3) ? parseInt(data, 3) : 0;
         int baseRent = (data.length > 4) ? parseInt(data, 4) : 0;
         return new PropertyTile(index, name, purchasePrice, baseRent);
+=======
+        int index = parseInt(data, 1); //
+        String name = data[2]; //
+        int purchasePrice = (data.length > 3) ? parseInt(data, 3) : 0; //
+        int baseRent = (data.length > 4) ? parseInt(data, 4) : 0; //
+        
+        String colorGroup = (data.length > 5) ? data[5].trim().toUpperCase() : "NONE"; 
+        
+        return new PropertyTile(index, name, purchasePrice, baseRent, colorGroup);
+>>>>>>> main
     }
 
     private SpecialTile createSpecialTile(String[] data) {
