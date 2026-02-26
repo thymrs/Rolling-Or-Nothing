@@ -491,7 +491,7 @@ public class BoardPanel extends JPanel {
         }
 
         // --- 5. จัด Player Status Panels ให้อยู่มุมจอเสมอ ---
-        int spW = (int) (panelW * 0.2); // กว้าง 20% ของจอ
+        int spW = (int) (panelW * 0.3); // กว้าง 20% ของจอ
         int spH = (int) (panelH * 0.16); // สูง 16% ของจอ
         int pad = 25;
         if (playerStatusPanels[0] != null)
