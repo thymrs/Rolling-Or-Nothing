@@ -28,7 +28,7 @@ public class GameWindow extends JFrame {
         eventLogPanel = new EventLogPanel();
         add(eventLogPanel, BorderLayout.EAST);
 
-        setLayout(null); // ถ้าใช้ absolute layout
+        setLayout(null);
 
         JLabel label = new JLabel();
         label.setIcon(DinoType.D.getIcon()); // น้ำเงิน
