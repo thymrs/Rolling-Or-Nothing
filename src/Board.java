@@ -1,4 +1,3 @@
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +31,31 @@ public class Board {
             }
         }
         return owned;
+    }
+
+    public int getMaxRentOnBoard() {
+        int maxRent = 0;
+
+        for (Tile t : this.tiles) {
+            if (t instanceof PropertyTile p) { 
+                int currentRent = p.calculateRent(); //
+                
+                if (currentRent > maxRent) {
+                    maxRent = currentRent;
+                }
+            }
+        }
+
+        return maxRent;
+    }
+
+    public long getTotalTilesByColor(String color) {
+        if (color == null) return 0;
+        return tiles.stream()
+            .filter(t -> t instanceof PropertyTile)
+            .map(t -> (PropertyTile) t)
+            .filter(p -> color.equals(p.getColorGroup()))
+            .count();
     }
 
     public int size() {
