@@ -1,6 +1,6 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import javax.swing.*;
 
 public class PlayerStatusPanel extends JPanel {
 
@@ -96,7 +96,7 @@ public class PlayerStatusPanel extends JPanel {
         if (p.getHeldCard() == null) {
             CardLabel.setText("CARDS: NONE ");
         } else {
-            CardLabel.setText("CARDS: " + p.getHeldCard());
+            CardLabel.setText("CARDS: " + p.getHeldCard().getType());
         }
 
         if (isBankrupt) {
