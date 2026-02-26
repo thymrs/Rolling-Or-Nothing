@@ -30,11 +30,9 @@ public class GameWindow extends JFrame {
 
         setLayout(null);
 
-        JLabel label = new JLabel();
-        label.setIcon(DinoType.D.getIcon()); // น้ำเงิน
-        label.setBounds(100, 100, 100, 100);
-
-        add(label);
+        JLabel dinoLabel = new JLabel(DinoType.D.getIcon());
+        dinoLabel.setBounds(20, 20, 64, 64);
+        add(dinoLabel);
 
         setSize(800, 600);
         setVisible(true);

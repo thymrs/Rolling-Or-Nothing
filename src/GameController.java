@@ -24,6 +24,15 @@ public class GameController implements ActionListener {
         this.view.setTileActionListener(this);
     }
 
+    private DinoType pickDinoType(int id) {
+    return switch (id % 4) {
+        case 0 -> DinoType.D;
+        case 1 -> DinoType.T;
+        case 2 -> DinoType.M;
+        default -> DinoType.V;
+    }
+}
+
     /**
      * Starts a new game with given configuration
      * 
@@ -74,25 +83,28 @@ public class GameController implements ActionListener {
      * Initializes the game state
      */
     private void initGame(GameConfig config) {
-        List<Player> players = new ArrayList<>();
-        int currentId = 0;
+    List<Player> players = new ArrayList<>();
+    int currentId = 0;
 
-        for (int i = 0; i < config.getHumanCount(); i++) {
-            players.add(new HumanPlayer(currentId++, "Player " + (i + 1), config.getInitialMoney()));
-        }
+    DinoType[] dinos = DinoType.values(); // [D, T, M, V]
 
-        for (int i = 0; i < config.getBotCount(); i++) {
-            players.add(
-                    new BotPlayer(currentId++, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty()));
-        }
-
-        this.victoryChecker = new VictoryChecker();
-
-        state.setPlayers(players);
-        state.setBoard(mapLoader.loadMap(config.getMapName()));
-
-        view.updateView(state);
+    for (int i = 0; i < config.getHumanCount(); i++) {
+        DinoType dt = dinos[currentId % dinos.length];
+        players.add(new HumanPlayer(currentId, "Player " + (i + 1), config.getInitialMoney(), dt));
+        currentId++;
     }
+
+    for (int i = 0; i < config.getBotCount(); i++) {
+        DinoType dt = dinos[currentId % dinos.length];
+        players.add(new BotPlayer(currentId, "Bot " + (i + 1), config.getInitialMoney(), config.getBotDifficulty(), dt));
+        currentId++;
+    }
+
+    this.victoryChecker = new VictoryChecker();
+    state.setPlayers(players);
+    state.setBoard(mapLoader.loadMap(config.getMapName()));
+    view.updateView(state);
+}
 
     /**
      * Processes the current turn phase

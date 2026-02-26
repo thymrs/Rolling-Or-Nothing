@@ -1,6 +1,8 @@
+
 import java.util.*;
 
 public abstract class Player {
+
     private final int id;
     private final String name;
     private int money;
@@ -15,13 +17,19 @@ public abstract class Player {
     protected boolean isTollFree;
     protected int discountRate;
     private int doubleRollCount = 0;
+    private DinoType dinoType;
 
-    public Player(int id, String name, int playerMoney) {
+    public Player(int id, String name, int playerMoney, DinoType dinoType) {
         this.id = id;
         this.name = name;
+        this.dinoType = dinoType;
         this.money = playerMoney;
         this.position = 0; // จุดเริ่มต้น
         this.ownedLands = new ArrayList<>();
+    }
+
+    public DinoType getDinoType() {
+        return dinoType;
     }
 
     public void move(int steps) {
@@ -45,6 +53,7 @@ public abstract class Player {
     public void incrementDoubleRollCount() {
         this.doubleRollCount++;
     }
+
     public void resetDoubleRollCount() {
         this.doubleRollCount = 0;
     }

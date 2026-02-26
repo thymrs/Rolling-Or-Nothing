@@ -1,7 +1,6 @@
 public class HumanPlayer extends Player {
-
-    public HumanPlayer(int id, String name, int initialMoney) {
-        super(id, name, initialMoney);
+    public HumanPlayer(int id, String name, int initialMoney, DinoType dinoType) {
+        super(id, name, initialMoney, dinoType);
     }
 
     @Override

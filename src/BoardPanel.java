@@ -1,3 +1,4 @@
+
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -7,6 +8,7 @@ import java.util.List;
 import javax.swing.*;
 
 public class BoardPanel extends JPanel {
+
     // ปุ่ม ROLL ใหญ่ๆ ตรงกลาง (แยกเป็น CircleButton เพื่อความสวยงาม)
     private CircleButton btnRoll;
 
@@ -25,13 +27,16 @@ public class BoardPanel extends JPanel {
 
     // สีประจำตัวผู้เล่น
     private final Color[] defaultColors = {
-            new Color(255, 50, 50), // Player 1 (Red)
-            new Color(50, 255, 50), // Player 2 (Green)
-            new Color(255, 215, 0), // Player 3 (Gold)
-            new Color(50, 200, 255) // Player 4 (Blue)
+        new Color(255, 50, 50), // Player 1 (Red)
+        new Color(50, 255, 50), // Player 2 (Green)
+        new Color(255, 215, 0), // Player 3 (Gold)
+        new Color(50, 200, 255) // Player 4 (Blue)
     };
 
     public BoardPanel() {
+        JLabel dinoLabel = new JLabel(DinoType.D.getIcon());
+        add(dinoLabel);
+
         setBackground(new Color(40, 45, 55)); // สีพื้นหลังบอร์ด
         setLayout(null); // ใช้ Absolute Layout
 
@@ -120,6 +125,13 @@ public class BoardPanel extends JPanel {
 
     }
 
+    private static final DinoType[] DINO_BY_PLAYER = {
+        DinoType.M,
+        DinoType.V,
+        DinoType.D,
+        DinoType.T
+    };
+
     @Override
     public void doLayout() {
         super.doLayout();
@@ -132,8 +144,9 @@ public class BoardPanel extends JPanel {
     }
 
     public void setTileMultiplier(int tileIndex, int multiplier) {
-        if (tileIndex < 0 || tileIndex >= 32)
+        if (tileIndex < 0 || tileIndex >= 32) {
             return;
+        }
 
         // ถ้าตัวคูณเป็น 1 ให้ลบป้ายออก (กลับสู่สถานะปกติ)
         if (multiplier <= 1) {
@@ -224,13 +237,14 @@ public class BoardPanel extends JPanel {
     // เมื่อผู้เล่นเดิน)
     public void animatePlayerMovement(int playerId, List<Integer> path, Runnable onComplete) {
         if (path == null || path.isEmpty()) {
-            if (onComplete != null)
+            if (onComplete != null) {
                 onComplete.run();
+            }
             return;
         }
 
-        final int[] step = { 0 };
-        final int[] delay = { 500 }; // ความเร็วเริ่มต้น 0.5 วินาที (500ms)
+        final int[] step = {0};
+        final int[] delay = {500}; // ความเร็วเริ่มต้น 0.5 วินาที (500ms)
         final int minDelay = 200; // ความเร็วสูงสุดที่เข้าใกล้ 0.2 วินาที (200ms)
 
         // สร้าง Timer สำหรับทำ Animation โดยไม่ทำให้หน้าจอค้าง
@@ -243,12 +257,12 @@ public class BoardPanel extends JPanel {
             playerPositions[playerId] = nextTileIndex;
 
             // 🌟 2. สั่งให้คำนวณตำแหน่งพิกัด X,Y ของตัวละครใหม่บนจอ (สำคัญมาก!)
-            relayoutBoard(); 
+            relayoutBoard();
             repaint();
 
             // 3. เร่งความเร็วการกระโดดในครั้งต่อไป
             if (delay[0] > minDelay) {
-                delay[0] -= 50; 
+                delay[0] -= 50;
                 timer.setDelay(delay[0]);
             }
 
@@ -267,8 +281,9 @@ public class BoardPanel extends JPanel {
     }
 
     public void updateBoard(GameState state) {
-        if (state == null)
+        if (state == null) {
             return;
+        }
 
         List<Player> players = state.getPlayers();
         Board board = state.getBoard();
@@ -277,6 +292,13 @@ public class BoardPanel extends JPanel {
         for (int i = 0; i < 4; i++) {
             if (i < players.size()) {
                 Player p = players.get(i);
+                // --- Update Dino Sprite ---
+                playerMarkers[i].removeAll();
+                JLabel dinoLabel = new JLabel(p.getDinoType().getIcon());
+                playerMarkers[i].add(dinoLabel);
+                playerMarkers[i].revalidate();
+                playerMarkers[i].repaint();
+// -------------------------
                 playerStatusPanels[i].setVisible(true);
                 playerMarkers[i].setVisible(true);
                 playerPositions[i] = p.getPosition();
@@ -285,15 +307,15 @@ public class BoardPanel extends JPanel {
                 String posName = board.getTile(p.getPosition()).getName();
 
                 // คำนวณมูลค่าทรัพย์สินรวม (เงินสด + ราคาที่ดินที่ครอบครอง)
-
                 // ตัดสินข้อความ Status
                 String status = "Normal";
-                if (p.isBankrupt())
+                if (p.isBankrupt()) {
                     status = "Bankrupt";
-                else if (p.getIsJailed())
+                } else if (p.getIsJailed()) {
                     status = "In Jail (" + p.getJailTurnCount() + ")";
-                else if (p.isFrozen())
+                } else if (p.isFrozen()) {
                     status = "Frozen";
+                }
 
                 // เรียก updateData เพื่อเปลี่ยนข้อความบนจอ
                 playerStatusPanels[i].updateData(p, posName, status);
@@ -356,8 +378,9 @@ public class BoardPanel extends JPanel {
     private void relayoutBoard() {
         int panelW = getWidth();
         int panelH = getHeight();
-        if (panelW == 0 || panelH == 0)
+        if (panelW == 0 || panelH == 0) {
             return;
+        }
 
         // 1. จัดตำแหน่ง Turn Display (ปรับให้ยืดหยุ่นตามความกว้าง)
         if (turnDisplay != null) {
@@ -366,7 +389,6 @@ public class BoardPanel extends JPanel {
         }
 
         // --- 2. คำนวณ Dynamic Scale เพื่อให้ "ชิด" ขอบพื้นที่ที่สุด ---
-
         // ขนาดตรรกะพื้นฐานของช่อง (D = มุม, W = ปกติ)
         double baseD = 130.0;
         double baseW = 100.0;
@@ -494,14 +516,18 @@ public class BoardPanel extends JPanel {
         int spW = (int) (panelW * 0.3); // กว้าง 20% ของจอ
         int spH = (int) (panelH * 0.16); // สูง 16% ของจอ
         int pad = 25;
-        if (playerStatusPanels[0] != null)
+        if (playerStatusPanels[0] != null) {
             playerStatusPanels[0].setBounds(pad, pad, spW, spH);
-        if (playerStatusPanels[1] != null)
+        }
+        if (playerStatusPanels[1] != null) {
             playerStatusPanels[1].setBounds(panelW - spW - pad, pad, spW, spH);
-        if (playerStatusPanels[2] != null)
+        }
+        if (playerStatusPanels[2] != null) {
             playerStatusPanels[2].setBounds(pad, panelH - spH - pad, spW, spH);
-        if (playerStatusPanels[3] != null)
+        }
+        if (playerStatusPanels[3] != null) {
             playerStatusPanels[3].setBounds(panelW - spW - pad, panelH - spH - pad, spW, spH);
+        }
     }
 
     // เพิ่มฟังก์ชัน iso ไว้ท้ายไฟล์ BoardPanel.java (ถ้ายังไม่มี)
